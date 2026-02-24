@@ -1,1 +1,0 @@
-Testing Obsidian Git auto commit.
