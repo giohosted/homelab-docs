@@ -9,6 +9,6 @@
 - ✅10GbE NIC: Dell Intel X710-DA2 
 - ✅3x DAC cables 1M (UniFi) 
 - ✅ Patch panel (UniFi)
-- ✅ Patch cables — Intellinet 10-pack
+- ✅ Patch cables — Monoprice SlimRun 10-pack
 - ✅ Keystone couplers — Iwillink 10-pack 
 - ✅ Blank keystone inserts 
