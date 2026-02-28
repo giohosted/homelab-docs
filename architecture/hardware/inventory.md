@@ -5,7 +5,10 @@
 - ✅ 2x NVMe for MS-A2 boot mirror
 - ✅ USW-Pro-Max-24 — paid, incoming
 - ✅ StarTech 4POSTRACK18U — paid, incoming
--  Motherboard: ASUS TUF Gaming Z690-Plus WiFi D4 ✅
-- 10GbE NIC: Dell Intel X710-DA2 ✅
-- 3x DAC cables 1M (UniFi) ✅
-- Patch panel (UniFi) ✅
+- ✅Motherboard: ASUS TUF Gaming Z690-Plus WiFi D4 
+- ✅10GbE NIC: Dell Intel X710-DA2 
+- ✅3x DAC cables 1M (UniFi) 
+- ✅ Patch panel (UniFi)
+- ✅ Patch cables — Intellinet 10-pack
+- ✅ Keystone couplers — Iwillink 10-pack 
+- ✅ Blank keystone inserts 
