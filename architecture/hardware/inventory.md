@@ -10,23 +10,23 @@
 
 **Role:** Primary Proxmox node. Runs all primary VMs and LXCs (docker-prod-01, auth-prod-01, immich-prod-01, dns-prod-01).
 
-|Component|Detail|
-|---|---|
-|**Model**|Minisforum MS-A2|
-|**CPU**|AMD Ryzen 9 7945HX (16C/32T, 5.4GHz boost)|
-|**iGPU**|AMD Radeon 680M (available for future ML/transcoding — not used at launch)|
-|**RAM**|64GB DDR5 SO-DIMM (2x 32GB)|
-|**RAM Max**|96GB|
-|**Boot Drive 1**|Samsung NVMe 1TB _(fill in exact model + serial when installed)_|
-|**Boot Drive 2**|Sabrent NVMe 1TB _(fill in exact model + serial when installed)_|
-|**Boot Config**|ZFS RAID-1 mirror — configured in Proxmox installer|
-|**Networking (LAN)**|2x 2.5GbE RJ45 built-in — uplink to USW-Pro-Max-24|
-|**Networking (Storage)**|2x 10GbE SFP+ built-in — Port 1: DAC to NAS \| Port 2: DAC to switch|
-|**OS**|Proxmox VE _(fill in version when installed)_|
-|**IP**|192.168.10.11 (VLAN 10 — Management)|
-|**Purchased**|2026-02-21|
-|**Source**|Amazon|
-|**Price Paid**|$559 (before tax)|
+| Component                | Detail                                                                     |
+| ------------------------ | -------------------------------------------------------------------------- |
+| **Model**                | Minisforum MS-A2                                                           |
+| **CPU**                  | AMD Ryzen 9 7945HX (16C/32T, 5.4GHz boost)                                 |
+| **iGPU**                 | AMD Radeon 680M (available for future ML/transcoding — not used at launch) |
+| **RAM**                  | 32GB DDR5 SO-DIMM (1x 32GB. Will add 2nd stick in the future)              |
+| **RAM Max**              | 96GB                                                                       |
+| **Boot Drive 1**         | Samsung 980 NVMe 1TB S/N: S64ANS0W120169T                                  |
+| **Boot Drive 2**         | Sabrent Rocket NVMe 1TB                                                    |
+| **Boot Config**          | ZFS RAID-1 mirror — configured in Proxmox installer                        |
+| **Networking (LAN)**     | 2x 2.5GbE RJ45 built-in — uplink to USW-Pro-Max-24 for VMs                 |
+| **Networking (Storage)** | 2x 10GbE SFP+ built-in — Port 1: DAC to NAS on own storage subnet          |
+| **OS**                   | Proxmox VE 9.1.5                                                           |
+| **IP**                   | 192.168.10.11 (VLAN 10 — Management)                                       |
+| **Purchased**            | 2026-02-21                                                                 |
+| **Source**               | Amazon                                                                     |
+| **Price Paid**           | $575                                                                       |
 
 **Notes:**
 
@@ -39,29 +39,29 @@
 
 **Role:** Unraid NAS. Dual-parity array for bulk media and downloads. ZFS mirror pool for precious data (photos, backups). Plex runs here as a Docker container using QuickSync iGPU.
 
-|Component|Detail|
-|---|---|
-|**Chassis**|Rosewill RSV-L4412U (4U, 12-bay)|
-|**CPU**|Intel Core i5-13400 (10C/16T — 6P + 4E cores)|
-|**iGPU**|Intel UHD 730 (QuickSync — used for Plex hardware transcoding)|
-|**Motherboard**|ASUS TUF Gaming Z690-Plus WiFi D4 (ATX, DDR4)|
-|**RAM**|32GB DDR4|
-|**HBA**|LSI SAS 9120-8i (migrated from previous host)|
-|**10GbE NIC**|Dell Intel X710-DA2 (dual-port SFP+, PCIe) — Port 1: DAC to MS-A2 \| Port 2: unused|
-|**Onboard LAN**|Intel 2.5GbE (built-in on TUF Z690) — management uplink to USW-Pro-Max-24|
-|**Boot**|USB flash drive (Unraid OS)|
-|**OS**|Unraid 7.2.3|
-|**IP**|192.168.10.10 (VLAN 10 — Management)|
-|**Chassis Source**|Amazon|
-|**Chassis Price**|$345|
-|**Motherboard Source**|Reddit r/hardwareswap|
-|**Motherboard Price**|~$100|
-|**NIC Source**|eBay|
-|**NIC Price**|~$25|
+| Component              | Detail                                                                              |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| **Chassis**            | Rosewill RSV-L4412U (4U, 12-bay)                                                    |
+| **CPU**                | Intel Core i5-13400 (10C/16T — 6P + 4E cores)                                       |
+| **iGPU**               | Intel UHD 730 (QuickSync — used for Plex hardware transcoding)                      |
+| **Motherboard**        | ASUS TUF Gaming Z690-Plus WiFi D4 (ATX, DDR4)                                       |
+| **RAM**                | 32GB DDR4                                                                           |
+| **HBA**                | LSI SAS 9120-8i (migrated from previous host)                                       |
+| **10GbE NIC**          | Dell Intel X710-DA2 (dual-port SFP+, PCIe) — Port 1: DAC to MS-A2 \| Port 2: unused |
+| **Onboard LAN**        | Intel 2.5GbE (built-in on TUF Z690) — management uplink to USW-Pro-Max-24           |
+| **Boot**               | USB flash drive (Unraid OS)                                                         |
+| **OS**                 | Unraid 7.2.4                                                                        |
+| **IP**                 | 192.168.10.10 (VLAN 10 — Management)                                                |
+| **Chassis Source**     | eBay                                                                                |
+| **Chassis Price**      | $345                                                                                |
+| **Motherboard Source** | Reddit r/hardwareswap                                                               |
+| **Motherboard Price**  | $100                                                                                |
+| **NIC Source**         | eBay                                                                                |
+| **NIC Price**          | $28                                                                                 |
 
 **Notes:**
 
-- Original mobo (Gigabyte B760M DS3H DDR4) was swapped out — it only had 1x usable PCIe slot (x16 physical, no secondary slot). Could not simultaneously fit the LSI HBA (x8 card) and 10GbE NIC (needs x4 minimum). ASUS TUF Z690 has a second x16 slot wired at x4 from the chipset, which solves the conflict cleanly. See `architecture/decisions-log.md`.
+- Original mobo (Gigabyte B760M DS3H DDR4) was swapped out — it only had 1x usable PCIe slot (x16 physical, no secondary slot). Could not simultaneously fit the LSI HBA (x8 card) and 10GbE NIC (needs x4 minimum). ASUS TUF Z690 has a second x16 slot wired at x4 from the chipset, which solves the conflict cleanly. See [[decisions-log]]`architecture/decisions-log.md`.
 - i5-13400 kept over i5-13600 — Unraid is IO-bound not compute-bound. i5-13600 sold to partially offset MS-A2 cost.
 - 32GB DDR4 kept; extra 2x 16GB sticks sold. No heavy VM workloads on Unraid — 32GB is generous for a pure NAS.
 - X710-DA2 chosen over X520 — newer chipset, better long-term driver support, dual port for future flexibility.
