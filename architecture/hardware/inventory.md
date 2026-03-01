@@ -73,16 +73,16 @@
 
 **Role:** Secondary Proxmox node. Runs PBS VM (pbs-prod-01) and secondary AdGuard LXC (dns-prod-02).
 
-|Component|Detail|
-|---|---|
-|**Model**|Dell Optiplex 3070 Micro|
-|**CPU**|Intel Core i5-9500T (6C/6T, 9th gen)|
-|**RAM**|16GB DDR4 SO-DIMM (2x 8GB Micron)|
-|**Boot Storage**|_(fill in — NVMe model + capacity)_|
-|**Networking**|1x GbE RJ45 built-in — uplink to USW-Pro-Max-24|
-|**OS**|Proxmox VE _(fill in version when installed)_|
-|**IP**|192.168.10.12 (VLAN 10 — Management)|
-|**Source**|Work surplus (free)|
+| Component        | Detail                                          |
+| ---------------- | ----------------------------------------------- |
+| **Model**        | Dell Optiplex 3070 Micro                        |
+| **CPU**          | Intel Core i5-9500T (6C/6T, 9th gen)            |
+| **RAM**          | 16GB DDR4 SO-DIMM (2x 8GB Micron)               |
+| **Boot Storage** | 256Gb NVMe                                      |
+| **Networking**   | 1x GbE RJ45 built-in — uplink to USW-Pro-Max-24 |
+| **OS**           | Proxmox VE _(fill in version when installed)_   |
+| **IP**           | 192.168.10.12 (VLAN 10 — Management)            |
+| **Source**       | Work surplus (free)                             |
 
 **Notes:**
 
@@ -96,15 +96,15 @@
 
 **Role:** Lightweight always-on device. Runs Proxmox QDevice (cluster tiebreaker), Uptime Kuma, and Beszel monitoring server.
 
-|Component|Detail|
-|---|---|
-|**Model**|Raspberry Pi 4B|
-|**RAM**|4GB|
-|**Boot Storage**|SD card|
-|**Networking**|1x GbE RJ45 built-in|
-|**OS**|_(fill in — Raspberry Pi OS / Ubuntu)_|
-|**IP**|192.168.10.20 (VLAN 10 — Management)|
-|**Source**|_(fill in — existing? purchased when?)_|
+| Component        | Detail                               |
+| ---------------- | ------------------------------------ |
+| **Model**        | Raspberry Pi 4B                      |
+| **RAM**          | 4GB                                  |
+| **Boot Storage** | SD card                              |
+| **Networking**   | 1x GbE RJ45 built-in                 |
+| **OS**           | Raspberry Pi OS                      |
+| **IP**           | 192.168.10.20 (VLAN 10 — Management) |
+| **Source**       | Microcenter ~ 2023`                  |
 
 **Notes:**
 
@@ -133,14 +133,14 @@
 
 **Role:** Managed 2.5GbE switch. VLAN trunking to all hosts.
 
-|Component|Detail|
-|---|---|
-|**Model**|UniFi USW-Pro-Max-24|
-|**Ports**|24x 2.5GbE RJ45 + 2x 10GbE SFP+|
-|**IP**|192.168.10.2 (VLAN 10 — Management)|
-|**Rack Position**|U3|
-|**Source**|_(fill in — Amazon / UI store?)_|
-|**Price Paid**|$560 bundled with StarTech rack|
+| Component         | Detail                                           |
+| ----------------- | ------------------------------------------------ |
+| **Model**         | UniFi USW-Pro-Max-24                             |
+| **Ports**         | 16x 2.5GbE RJ45 + 8x 2.5GbE RJ45 + 2x 10GbE SFP+ |
+| **IP**            | 192.168.10.2 (VLAN 10 — Management)              |
+| **Rack Position** | U3                                               |
+| **Source**        | Reddit r/homelabsales                            |
+| **Price Paid**    | $560 bundled with StarTech rack                  |
 
 ---
 
