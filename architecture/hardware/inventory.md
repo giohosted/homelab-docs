@@ -61,7 +61,7 @@
 
 **Notes:**
 
-- Original mobo (Gigabyte B760M DS3H DDR4) was swapped out — it only had 1x usable PCIe slot (x16 physical, no secondary slot). Could not simultaneously fit the LSI HBA (x8 card) and 10GbE NIC (needs x4 minimum). ASUS TUF Z690 has a second x16 slot wired at x4 from the chipset, which solves the conflict cleanly. See [[decisions-log]]`architecture/decisions-log.md`.
+- Original mobo (Gigabyte B760M DS3H DDR4) was swapped out — it only had 1x usable PCIe slot (x16 physical, no secondary slot). Could not simultaneously fit the LSI HBA (x8 card) and 10GbE NIC (needs x4 minimum). ASUS TUF Z690 has a second x16 slot wired at x4 from the chipset, which solves the conflict cleanly. See `architecture/decisions-log.md`.
 - i5-13400 kept over i5-13600 — Unraid is IO-bound not compute-bound. i5-13600 sold to partially offset MS-A2 cost.
 - 32GB DDR4 kept; extra 2x 16GB sticks sold. No heavy VM workloads on Unraid — 32GB is generous for a pure NAS.
 - X710-DA2 chosen over X520 — newer chipset, better long-term driver support, dual port for future flexibility.
