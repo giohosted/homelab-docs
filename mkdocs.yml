@@ -1,0 +1,119 @@
+site_name: homelab-docs
+site_url: https://giohosted.github.io/homelab-docs
+site_description: Homelab v3.0 — Architecture, runbooks, and build documentation
+site_author: Gio
+
+repo_name: giohosted/homelab-docs
+repo_url: https://github.com/giohosted/homelab-docs
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: teal
+    accent: teal
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Roadmap: README.md
+  - Architecture:
+    - Decisions Log: architecture/decisions-log.md
+    - Compute:
+      - Overview: architecture/compute/overview.md
+      - pve-prod-01: architecture/compute/pve-prod-01.md
+      - pve-prod-02: architecture/compute/pve-prod-02.md
+      - pi-prod-01: architecture/compute/pi-prod-01.md
+    - Hardware:
+      - Inventory: architecture/hardware/inventory.md
+      - Rack Layout: architecture/hardware/rack-layout.md
+    - Network:
+      - Overview: architecture/network/overview.md
+      - VLAN Design: architecture/network/vlan-design.md
+      - Firewall Rules: architecture/network/firewall-rules.md
+      - IP Addresses: architecture/network/ip-addresses.md
+      - DNS Rewrites: architecture/network/dns-rewrites.md
+      - UniFi Setup: architecture/network/unifi-setup.md
+      - WireGuard VPN: architecture/network/wireguard-vpn.md
+    - Storage:
+      - nas-prod-01: architecture/storage/nas-prod-01.md
+      - nas-prod-02: architecture/storage/nas-prod-02.md
+      - Drives: architecture/storage/drives.md
+  - Services:
+    - Overview: services/services-overview.md
+    - Media:
+      - Plex: services/media/plex.md
+      - Sonarr (TV): services/media/sonarr-tv.md
+      - Sonarr (Anime): services/media/sonarr-anime.md
+      - Radarr (1080p): services/media/radarr-1080p.md
+      - Radarr (4K): services/media/radarr-4k.md
+      - Prowlarr: services/media/prowlarr.md
+      - Bazarr: services/media/bazarr.md
+      - Profilarr: services/media/profilarr.md
+      - Maintainerr: services/media/maintainerr.md
+      - Seerr: services/media/seerr.md
+      - Tautulli: services/media/tautulli.md
+      - Flaresolverr: services/media/flaresolverr.md
+    - Books:
+      - Audiobookshelf: services/books/audiobookshelf.md
+      - Calibre-Web-Automated: services/books/calibre-web-automated.md
+      - Shelfmark: services/books/shelfmark.md
+    - Torrent:
+      - qBittorrent: services/torrent/qbittorrent.md
+      - Gluetun: services/torrent/gluetun.md
+      - MAM Seeding Automation: services/torrent/mam-seeding-automation.md
+    - Infra:
+      - Traefik: services/infra/traefik.md
+      - Authentik: services/infra/authentik.md
+      - AdGuard: services/infra/adguard.md
+      - AdGuard Sync: services/infra/adguardhome-sync.md
+      - Cloudflare Tunnel: services/infra/cloudflare-tunnel.md
+      - Dockman: services/infra/dockman.md
+      - Homarr: services/infra/homarr.md
+    - Monitoring:
+      - Beszel: services/monitoring/beszel.md
+      - Uptime Kuma: services/monitoring/uptime-kuma.md
+      - Healthchecks.io: services/monitoring/healthchecksio.md
+    - Photos:
+      - Immich: services/photos/immich.md
+  - Phases:
+    - Phase 0 — Procurement: phases/phase-0-procurement.md
+    - Phase 1 — Network: phases/phase-1-network.md
+    - Phase 2 — NAS: phases/phase-2-nas.md
+    - Phase 3 — Proxmox: phases/phase-3-proxmox.md
+    - Phase 4 — Services: phases/phase-4-services.md
+    - Phase 5 — Hardening: phases/phase-5-hardening.md
+    - Phase 6 — Kubernetes: phases/phase-6-kubernetes.md
+  - Runbooks:
+    - Backup & Restore: runbooks/backup-restore.md
+    - Drive Replacement: runbooks/drive-replacement.md
+    - Proxmox Update: runbooks/proxmox-update.md
+    - New Service Checklist: runbooks/new-service-checklist.md
+  - Kubernetes: kubernetes/README.md
+
+exclude_docs: |
+  drafts/
+  .obsidian/
+  excalidraw/
