@@ -14,7 +14,6 @@ theme:
     accent: teal
   features:
     - navigation.sections
-    - navigation.expand
     - navigation.top
     - search.suggest
     - search.highlight
@@ -59,7 +58,7 @@ nav:
       - WireGuard VPN: architecture/network/wireguard-vpn.md
     - Storage:
       - nas-prod-01: architecture/storage/nas-prod-01.md
-      - nas-prod-02: architecture/storage/nas-prod-02.md
+      - synology: architecture/storage/synology.md
       - Drives: architecture/storage/drives.md
   - Services:
     - Overview: services/services-overview.md
