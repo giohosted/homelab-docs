@@ -9,9 +9,7 @@ _Update this file once everything is physically racked and cabled._
 ## Unit Layout
 
 
-![rack](docs/assets/diagrams/rack-diagram.png)
-
-
+![Rack Diagram](../../assets/diagrams/rack-diagram.png)
 
 ```
 U1  │ UniFi UDM-SE                  │ Router / Firewall
