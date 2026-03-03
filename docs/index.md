@@ -9,10 +9,10 @@ This is a living knowledge base documenting the full design, build, and operatio
 ## Quick Links
 
 - [Roadmap](roadmap.md) — Full phased build roadmap and architecture overview
-- [Hardware Inventory](inventory.md) — Every device, specs, and role
-- [Rack Layout](rack-layout.md) — Physical rack diagram and cabling
-- [Decisions Log](decisions-log.md) — Why every major decision was made
-- [Phase 0 — Procurement](phase-0-procurement.md) — Current phase
+- [Hardware Inventory](architecture/hardware/inventory.md) — Every device, specs, and role
+- [Rack Layout](architecture/hardware/rack-layout.md) — Physical rack diagram and cabling
+- [Decisions Log](architecture/hardware/decisions-log.md) — Why every major decision was made
+- [Phase 0 — Procurement](phases/phase-0-procurement.md) — Current phase
 
 ---
 
