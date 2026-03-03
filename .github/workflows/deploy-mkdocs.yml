@@ -22,7 +22,7 @@ jobs:
 
       - name: Install MkDocs and Material theme
         run: |
-          pip install mkdocs-material
+          pip install mkdocs==1.6.1 mkdocs-material==9.5.50
 
       - name: Deploy to GitHub Pages
         run: mkdocs gh-deploy --force
