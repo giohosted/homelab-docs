@@ -2,6 +2,7 @@ site_name: homelab-docs
 site_url: https://giohosted.github.io/homelab-docs
 site_description: Homelab v3.0 — Architecture, runbooks, and build documentation
 site_author: Gio
+docs_dir: .
 
 repo_name: giohosted/homelab-docs
 repo_url: https://github.com/giohosted/homelab-docs
