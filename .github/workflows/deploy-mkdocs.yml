@@ -24,5 +24,8 @@ jobs:
         run: |
           pip install mkdocs==1.6.1 mkdocs-material==9.5.50
 
+      - name: Create docs symlink
+        run: ln -s . docs
+
       - name: Deploy to GitHub Pages
         run: mkdocs gh-deploy --force
