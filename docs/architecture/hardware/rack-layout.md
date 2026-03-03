@@ -11,6 +11,7 @@ _Update this file once everything is physically racked and cabled._
 
 ![rack](assets/diagrams/rack-diagram.png)
 
+
 ```
 U1  │ UniFi UDM-SE                  │ Router / Firewall
 U2  │ UniFi UP-PATCH-24             │ Patch Panel (keystone)
