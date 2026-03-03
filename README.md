@@ -821,43 +821,43 @@ _Future Phase_
 
 Decisions made during architecture planning, with rationale. Reference this before second-guessing a choice.
 
-|Decision|Choice Made|Rationale|
-|---|---|---|
-|NAS platform|Unraid 7.2.3|Hybrid ZFS+parity fits risk tolerance; mixed drive sizes; ZFS where it counts|
-|TrueNAS|Retired|Moved to dedicated NAS host; Unraid replaces SCALE|
-|Reverse proxy|Traefik (replaces NPM)|k3s ingress alignment; wildcard cert; Docker labels; more scalable|
-|Container management|Dockman (carries forward from v2)|Individual container restart without stack disruption; Lens/Headlamp for k8s later|
-|UID/GID for services|2000:2000|Clean break from v2; fresh NFS exports; no migration of old ownership mess|
-|Dual Radarr instances|Radarr 1080p + Radarr 4K|4K WebDL for local Infuse/Apple TV 4K viewing; 1080p for shared users to avoid transcoding|
-|Dual Sonarr instances|Sonarr TV + Sonarr Anime|Anime needs different quality profiles and release group logic; single instance gets messy|
-|/data unified mount|Single NFS mount at /data|All media + downloads on one filesystem — required for hardlinks to work across ARR and torrent stack|
-|Ebook seeding fix|Hardlink via Shelfmark → ingest|CWA deleting ingest broke qBit seeding in v2; hardlink means CWA deletes copy, original seeds on|
-|Plex deployment|Unraid native Docker container|QuickSync via i5-13400 iGPU — better than Radeon 680M for transcoding; no NFS hop; no iGPU passthrough complexity on MS-A2|
-|NAS CPU|i5-13400 (sell i5-13600)|Unraid is IO-bound not compute-bound; recoup cost toward MS-A2|
-|NAS RAM|32GB DDR4 (sell 2x 16GB)|No heavy VM workloads on Unraid; 32GB is generous for pure NAS duty|
-|Cache pool|Not installed at launch|Downloads bypass cache (hardlink rule); appdata on Docker VM local disk; no real workload justifies cache at launch. Add 2x 512GB BTRFS RAID1 later if needed.|
-|Downloads share|Parity array direct — no cache|Downloads and media must be on same filesystem. Cache involvement breaks hardlinks. Non-negotiable.|
-|Plex external access|Port forward 32400 direct|Plex handles TLS natively; adding Traefik proxy adds complexity for zero security gain; simple wins|
-|Pangolin|Rejected|VPS relay adds latency for Plex streaming; CF Tunnel is free and works for non-streaming services|
-|Docker VM count|Single docker-prod-01 VM|One VM for all media/app containers. Multi-VM Docker solves HA poorly and gets torn down when k3s arrives anyway.|
-|k3s approach|Sandbox first, then selective production|No production services migrate until cluster is proven stable. Sandbox runs in parallel with zero production impact.|
-|DNS|AdGuard stays|Works; ad-blocking is a bonus; no reason to migrate|
-|Cache pool drives|Mirrored NVMe (never single)|Single cache SSD failure before mover = data loss; always mirror|
-|Proxmox boot|ZFS RAID-1 mirror on MS-A2|Single NVMe was the main fragility in v2; fixed|
-|VLAN 1 for management|Rejected — use dedicated VLAN ID|VLAN 1 is default untagged; management should not be accidental landing zone|
-|Dual parity on array|Yes (2 parity drives)|5+ data drives warrants dual parity; single parity is a risk|
-|SkyHawk drives in NAS|Rejected — Synology cold storage only|Surveillance firmware; not appropriate for NAS parity array|
-|Barracuda in NAS|Rejected — retired|Desktop drive; not rated for always-on NAS duty|
-|qBitrr replaces qbit-automation|qBitrr (single install, web UI)|Manages all 4 ARR instances from one place. Web UI simplifies troubleshooting. Custom Python sidecar + cron was over-engineered.|
-|Cockpit on docker-prod-01|Installed alongside Docker|Day-to-day management: disk usage, network, updates, logs, file browser. Low overhead, high operational value.|
-|Proxmox cluster approach|Cluster without HA + QDevice on Pi|Cluster = unified UI. HA rejected — Optiplex cannot handle MS-A2 workload. QDevice prevents split-brain.|
-|UPS graceful shutdown|NUT server on Unraid, clients on Proxmox nodes|Fully automated shutdown on power loss. Proxmox nodes shut down first, Unraid last. Works unattended.|
-|IP addressing scheme|192.168.x.x (carry forward)|UDM-SE already at 192.168.10.1 — migrating to 10.0.x.x breaks existing config unnecessarily|
-|VLAN 30 name|Services (was Servers)|Services more accurately describes the workload — VMs and containers, not physical servers|
-|Authentik on LXC vs VM|Dedicated VM (auth-prod-01)|LXC officially removed from Proxmox community scripts May 2025 — frequent breakage, 14GB RAM build requirement. VM is the only stable option.|
-|Immich on shared VM vs dedicated|Dedicated VM (immich-prod-01)|ML worker causes CPU spikes during indexing. Isolated VM allows resource caps without affecting media stack.|
-|Secondary AdGuard location|LXC on pve-prod-02 (dns-prod-02)|Two LXCs on different Proxmox nodes = DNS survives either node going down. Pi freed for QDevice + monitoring only.|
-|Container VLAN IPs|No — only VMs/LXCs get IPs|Docker containers share the host VM IP. Traefik routes by hostname. Individual container IPs were a planning mistake caught early.|
+| Decision                         | Choice Made                                    | Rationale                                                                                                                                                      |
+| -------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NAS platform                     | Unraid 7.2.3                                   | Hybrid ZFS+parity fits risk tolerance; mixed drive sizes; ZFS where it counts                                                                                  |
+| TrueNAS                          | Retired                                        | Moved to dedicated NAS host; Unraid replaces SCALE                                                                                                             |
+| Reverse proxy                    | Traefik (replaces NPM)                         | k3s ingress alignment; wildcard cert; Docker labels; more scalable                                                                                             |
+| Container management             | Dockman (carries forward from v2)              | Individual container restart without stack disruption; Lens/Headlamp for k8s later                                                                             |
+| UID/GID for services             | 2000:2000                                      | Clean break from v2; fresh NFS exports; no migration of old ownership mess                                                                                     |
+| Dual Radarr instances            | Radarr 1080p + Radarr 4K                       | 4K WebDL for local Infuse/Apple TV 4K viewing; 1080p for shared users to avoid transcoding                                                                     |
+| Dual Sonarr instances            | Sonarr TV + Sonarr Anime                       | Anime needs different quality profiles and release group logic; single instance gets messy                                                                     |
+| /data unified mount              | Single NFS mount at /data                      | All media + downloads on one filesystem — required for hardlinks to work across ARR and torrent stack                                                          |
+| Ebook seeding fix                | Hardlink via Shelfmark → ingest                | CWA deleting ingest broke qBit seeding in v2; hardlink means CWA deletes copy, original seeds on                                                               |
+| Plex deployment                  | Unraid native Docker container                 | QuickSync via i5-13400 iGPU — better than Radeon 680M for transcoding; no NFS hop; no iGPU passthrough complexity on MS-A2                                     |
+| NAS CPU                          | i5-13400 (sell i5-13600)                       | Unraid is IO-bound not compute-bound; recoup cost toward MS-A2                                                                                                 |
+| NAS RAM                          | 32GB DDR4 (sell 2x 16GB)                       | No heavy VM workloads on Unraid; 32GB is generous for pure NAS duty                                                                                            |
+| Cache pool                       | Not installed at launch                        | Downloads bypass cache (hardlink rule); appdata on Docker VM local disk; no real workload justifies cache at launch. Add 2x 512GB BTRFS RAID1 later if needed. |
+| Downloads share                  | Parity array direct — no cache                 | Downloads and media must be on same filesystem. Cache involvement breaks hardlinks. Non-negotiable.                                                            |
+| Plex external access             | Port forward 32400 direct                      | Plex handles TLS natively; adding Traefik proxy adds complexity for zero security gain; simple wins                                                            |
+| Pangolin                         | Rejected                                       | VPS relay adds latency for Plex streaming; CF Tunnel is free and works for non-streaming services                                                              |
+| Docker VM count                  | Single docker-prod-01 VM                       | One VM for all media/app containers. Multi-VM Docker solves HA poorly and gets torn down when k3s arrives anyway.                                              |
+| k3s approach                     | Sandbox first, then selective production       | No production services migrate until cluster is proven stable. Sandbox runs in parallel with zero production impact.                                           |
+| DNS                              | AdGuard stays                                  | Works; ad-blocking is a bonus; no reason to migrate                                                                                                            |
+| Cache pool drives                | Mirrored NVMe (never single)                   | Single cache SSD failure before mover = data loss; always mirror                                                                                               |
+| Proxmox boot                     | ZFS RAID-1 mirror on MS-A2                     | Single NVMe was the main fragility in v2; fixed                                                                                                                |
+| VLAN 1 for management            | Rejected — use dedicated VLAN ID               | VLAN 1 is default untagged; management should not be accidental landing zone                                                                                   |
+| Dual parity on array             | Yes (2 parity drives)                          | 5+ data drives warrants dual parity; single parity is a risk                                                                                                   |
+| SkyHawk drives in NAS            | Rejected — Synology cold storage only          | Surveillance firmware; not appropriate for NAS parity array                                                                                                    |
+| Barracuda in NAS                 | Rejected — retired                             | Desktop drive; not rated for always-on NAS duty                                                                                                                |
+| qBitrr replaces qbit-automation  | qBitrr (single install, web UI)                | Manages all 4 ARR instances from one place. Web UI simplifies troubleshooting. Custom Python sidecar + cron was over-engineered.                               |
+| Cockpit on docker-prod-01        | Installed alongside Docker                     | Day-to-day management: disk usage, network, updates, logs, file browser. Low overhead, high operational value.                                                 |
+| Proxmox cluster approach         | Cluster without HA + QDevice on Pi             | Cluster = unified UI. HA rejected — Optiplex cannot handle MS-A2 workload. QDevice prevents split-brain.                                                       |
+| UPS graceful shutdown            | NUT server on Unraid, clients on Proxmox nodes | Fully automated shutdown on power loss. Proxmox nodes shut down first, Unraid last. Works unattended.                                                          |
+| IP addressing scheme             | 192.168.x.x (carry forward)                    | UDM-SE already at 192.168.10.1 — migrating to 10.0.x.x breaks existing config unnecessarily                                                                    |
+| VLAN 30 name                     | Services (was Servers)                         | Services more accurately describes the workload — VMs and containers, not physical servers                                                                     |
+| Authentik on LXC vs VM           | Dedicated VM (auth-prod-01)                    | LXC officially removed from Proxmox community scripts May 2025 — frequent breakage, 14GB RAM build requirement. VM is the only stable option.                  |
+| Immich on shared VM vs dedicated | Dedicated VM (immich-prod-01)                  | ML worker causes CPU spikes during indexing. Isolated VM allows resource caps without affecting media stack.                                                   |
+| Secondary AdGuard location       | LXC on pve-prod-02 (dns-prod-02)               | Two LXCs on different Proxmox nodes = DNS survives either node going down. Pi freed for QDevice + monitoring only.                                             |
+| Container VLAN IPs               | No — only VMs/LXCs get IPs                     | Docker containers share the host VM IP. Traefik routes by hostname. Individual container IPs were a planning mistake caught early.                             |
 
 ---
 
