@@ -9,7 +9,8 @@ _Update this file once everything is physically racked and cabled._
 ## Unit Layout
 
 
-![rack](assets/diagrams/rack-diagram.png)
+![rack](docs/assets/diagrams/rack-diagram.png)
+
 
 
 ```
