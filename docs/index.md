@@ -8,7 +8,7 @@ This is a living knowledge base documenting the full design, build, and operatio
 
 ## Quick Links
 
-- [Roadmap](docs/README.md) — Full phased build roadmap and architecture overview
+- [Roadmap](roadmap.md) — Full phased build roadmap and architecture overview
 - [Hardware Inventory](inventory.md) — Every device, specs, and role
 - [Rack Layout](rack-layout.md) — Physical rack diagram and cabling
 - [Decisions Log](decisions-log.md) — Why every major decision was made
