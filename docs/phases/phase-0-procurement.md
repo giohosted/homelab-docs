@@ -14,25 +14,26 @@ Acquire all hardware, build the rack, and validate the physical layer before any
 
 ### What Was Bought
 
-|Item|Model|Source|Price|Date|
-|---|---|---|---|---|
-|Primary Compute|Minisforum MS-A2 (Ryzen 9 7945HX, 64GB DDR5)|Amazon|$559 + tax|2026-02-21|
-|NAS Chassis|Rosewill RSV-L4412U (4U, 12-bay)|Amazon|$345|_(fill in)_|
-|NAS Motherboard|ASUS TUF Gaming Z690-Plus WiFi D4|Reddit r/hardwareswap|~$100|_(fill in)_|
-|10GbE NIC|Dell Intel X710-DA2 (dual-port SFP+)|eBay|~$25|_(fill in)_|
-|UPS|Tripp-Lite SMART1500LCDXL 1500VA|_(fill in)_|~$145|_(fill in)_|
-|Rack|StarTech 4POSTRACK18U (18U open-frame)|_(fill in — bundled with switch)_|Bundled|_(fill in)_|
-|Switch|UniFi USW-Pro-Max-24|_(fill in)_|$560 (bundled with rack)|_(fill in)_|
-|DAC Cable 0.5M|10Gtek SFP+ DAC|Amazon|~$10|_(fill in)_|
-|DAC Cable 1M|Cable Matters SFP+ DAC|Amazon|~$15|_(fill in)_|
-|DAC Cable 2M|Cable Matters SFP+ DAC|Amazon|~$17|_(fill in)_|
-|Patch Panel|UniFi UP-PATCH-24 (keystone)|_(fill in)_|_(fill in)_|_(fill in)_|
-|Keystone Couplers|Iwillink Cat6 shielded 10-pack|Amazon|~$15|_(fill in)_|
-|Patch Cables|Monoprice SlimRun Cat6 0.5ft 10-pack|Amazon|_(fill in)_|_(fill in)_|
-|Blank Keystone Inserts|_(fill in model)_|_(fill in)_|_(fill in)_|_(fill in)_|
-|MS-A2 Shelf|2U custom bracket|Etsy|_(fill in)_|_(fill in)_|
-|Optiplex Shelf|1U shelf mount|Etsy|_(fill in)_|_(fill in)_|
-|Brush Panel|_(fill in model)_|_(fill in)_|_(fill in)_|_(fill in)_|
+| Item                   | Model                                        | Source                    | Price                    | Date       |
+| ---------------------- | -------------------------------------------- | ------------------------- | ------------------------ | ---------- |
+| Primary Compute        | Minisforum MS-A2 (Ryzen 9 7945HX, 64GB DDR5) | Amazon                    | $615                     | 2026-02-21 |
+| NAS Chassis            | Rosewill RSV-L4412U (4U, 12-bay)             | eBay                      | $345                     | 2/26/26    |
+| NAS Motherboard        | ASUS TUF Gaming Z690-Plus WiFi D4            | Reddit r/hardwareswap     | $100                     | 2/27/26    |
+| 10GbE NIC              | Dell Intel X710-DA2 (dual-port SFP+)         | eBay                      | $28                      | 2/27/26    |
+| UPS + new batteries    | Tripp-Lite SMART1500LCDXL 1500VA             | FB + Amazon for batteries | $149                     | 3/1/26     |
+| Rack                   | StarTech 4POSTRACK18U (18U open-frame)       | Reddit                    | Bundled                  | 2/25/26    |
+| Switch                 | UniFi USW-Pro-Max-24                         | Reddit                    | $560 (bundled with rack) | 2/25/26    |
+| DAC Cable 0.5M         | 10Gtek SFP+ DAC                              | Amazon                    | $11                      | 3/1/26     |
+| DAC Cable 1M           | Cable Matters SFP+ DAC                       | Amazon                    | $16                      | 3/1/26     |
+| DAC Cable 2M           | Cable Matters SFP+ DAC                       | Amazon                    | $19                      | 3/1/26     |
+| Patch Panel            | UniFi UP-PATCH-24 (keystone)                 | Ubiquiti                  | $48                      | 2/28/26    |
+| Keystone Couplers      | Iwillink Cat6 shielded 10-pack               | Amazon                    | $16                      | 2/27/26    |
+| Patch Cables           | Monoprice SlimRun Cat6 0.5ft 10-pack         | Amazon                    | $17                      | 2/27/26    |
+| Blank Keystone Inserts | VCE UL                                       | Amazon                    | $9                       | 2/27/26    |
+| MS-A2 Rack Mount       | 2U custom bracket                            | Etsy                      | $69                      | 2/28/26    |
+| Optiplex Shelf         | 1U shelf mount                               | Amazon                    | $22                      | 3/1/26     |
+| Brush Panel            | Suprwin                                      | Amazon                    | $22                      | 3/1/26     |
+| Rack Rails             | iStarUSA TC-RAIL-26                          | eBay                      | $74$                     | 2/28/26    |
 
 ### What Was Already Owned (No Purchase)
 
