@@ -33,7 +33,9 @@ Acquire all hardware, build the rack, and validate the physical layer before any
 | MS-A2 Rack Mount       | 2U custom bracket                            | Etsy                      | $69                      | 2/28/26    |
 | Optiplex Shelf         | 1U shelf mount                               | Amazon                    | $22                      | 3/1/26     |
 | Brush Panel            | Suprwin                                      | Amazon                    | $22                      | 3/1/26     |
-| Rack Rails             | iStarUSA TC-RAIL-26                          | eBay                      | $74$                     | 2/28/26    |
+| Rack Rails             | iStarUSA TC-RAIL-26                          | eBay                      | $74                      | 2/28/26    |
+| RAM for MS-A2          | SK Hynix                                     | FB                        | $140                     | 2/22/26    |
+| USB Drive for Unraid   | SanDisk 16gb                                 | Amazon                    | $15                      | 2/22/26    |
 
 ### What Was Already Owned (No Purchase)
 
