@@ -39,33 +39,38 @@
 
 **Role:** Unraid NAS. Dual-parity array for bulk media and downloads. ZFS mirror pool for precious data (photos, backups). Plex runs here as a Docker container using QuickSync iGPU.
 
-| Component              | Detail                                                                              |
-| ---------------------- | ----------------------------------------------------------------------------------- |
-| **Chassis**            | Rosewill RSV-L4412U (4U, 12-bay)                                                    |
-| **CPU**                | Intel Core i5-13400 (10C/16T — 6P + 4E cores)                                       |
-| **iGPU**               | Intel UHD 730 (QuickSync — used for Plex hardware transcoding)                      |
-| **Motherboard**        | ASUS TUF Gaming Z690-Plus WiFi D4 (ATX, DDR4)                                       |
-| **RAM**                | 32GB DDR4                                                                           |
-| **HBA**                | LSI SAS 9120-8i (migrated from previous host)                                       |
-| **10GbE NIC**          | Dell Intel X710-DA2 (dual-port SFP+, PCIe) — Port 1: DAC to MS-A2 \| Port 2: unused |
-| **Onboard LAN**        | Intel 2.5GbE (built-in on TUF Z690) — management uplink to USW-Pro-Max-24           |
-| **Boot**               | USB flash drive (Unraid OS)                                                         |
-| **OS**                 | Unraid 7.2.4                                                                        |
-| **IP**                 | 192.168.10.10 (VLAN 10 — Management)                                                |
-| **Chassis Source**     | eBay                                                                                |
-| **Chassis Price**      | $345                                                                                |
-| **Motherboard Source** | Reddit r/hardwareswap                                                               |
-| **Motherboard Price**  | $100                                                                                |
-| **NIC Source**         | eBay                                                                                |
-| **NIC Price**          | $28                                                                                 |
+| Component              | Detail                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Chassis**            | Rosewill RSV-L4412U (4U, 12-bay)                                                                                         |
+| **CPU**                | Intel Core i5-13400 (10C/16T — 6P + 4E cores)                                                                            |
+| **iGPU**               | Intel UHD 730 (QuickSync — used for Plex hardware transcoding)                                                           |
+| **Motherboard**        | ASUS TUF Gaming Z690-Plus WiFi D4 (ATX, DDR4)                                                                            |
+| **RAM**                | 32GB DDR4                                                                                                                |
+| **HBA**                | LSI SAS 9120-8i (migrated from previous host)                                                                            |
+| **Onboard LAN**        | Intel 2.5GbE (built-in on TUF Z690) → USW-Pro-Max-24 — VLAN 10 management interface (192.168.10.10). Unraid web UI only. |
+| **10GbE NIC**          | Dell Intel X710-DA2 (dual-port SFP+, PCIe)                                                                               |
+| **X710 Port 1**        | DAC → pve-prod-01 SFP+ Port 1 — dedicated point-to-point storage link (10GbE, no VLAN, off LAN switch)                   |
+| **X710 Port 2**        | DAC → USW-Pro-Max-24 — VLAN 30 data interface (192.168.30.16). NFS exports and Plex container traffic served here.       |
+| **Boot**               | USB flash drive (Unraid OS)                                                                                              |
+| **OS**                 | Unraid 7.2.4                                                                                                             |
+| **IP (Management)**    | 192.168.10.10 — onboard 2.5GbE — VLAN 10 — Unraid UI only                                                                |
+| **IP (Data/NFS)**      | 192.168.30.16 — X710 Port 2 — VLAN 30 — NFS exports, Plex container traffic                                              |
+| **Chassis Source**     | eBay                                                                                                                     |
+| **Chassis Price**      | $345                                                                                                                     |
+| **Motherboard Source** | Reddit r/hardwareswap                                                                                                    |
+| **Motherboard Price**  | $100                                                                                                                     |
+| **NIC Source**         | eBay                                                                                                                     |
+| **NIC Price**          | $28                                                                                                                      |
 
 **Notes:**
 
 - Original mobo (Gigabyte B760M DS3H DDR4) was swapped out — it only had 1x usable PCIe slot (x16 physical, no secondary slot). Could not simultaneously fit the LSI HBA (x8 card) and 10GbE NIC (needs x4 minimum). ASUS TUF Z690 has a second x16 slot wired at x4 from the chipset, which solves the conflict cleanly. See `architecture/decisions-log.md`.
+- Two-interface design intentionally separates management plane from data plane. Services on VLAN 30 reach NFS/Plex via 192.168.30.16 without ever crossing into VLAN 10. Firewall hard-blocks VLAN 30 → VLAN 10, so a compromised service container cannot reach the Unraid UI.
 - i5-13400 kept over i5-13600 — Unraid is IO-bound not compute-bound. i5-13600 sold to partially offset MS-A2 cost.
 - 32GB DDR4 kept; extra 2x 16GB sticks sold. No heavy VM workloads on Unraid — 32GB is generous for a pure NAS.
 - X710-DA2 chosen over X520 — newer chipset, better long-term driver support, dual port for future flexibility.
 - No NVMe cache pool at launch. See `architecture/decisions-log.md` for full rationale.
+
 
 ---
 
