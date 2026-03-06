@@ -1,0 +1,3232 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/architecture/decisions-log/">
+      
+      
+        <link rel="prev" href="../../roadmap/">
+      
+      
+        <link rel="next" href="../compute/overview/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Decisions Log - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#architecture-decisions-log" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Decisions Log
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hardware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nas-motherboard-asus-tuf-gaming-z690-plus-wifi-d4" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Motherboard — ASUS TUF Gaming Z690-Plus WiFi D4
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-10gbe-nic-dell-intel-x710-da2" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS 10GbE NIC — Dell Intel X710-DA2
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-cpu-i5-13400-over-i5-13600" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS CPU — i5-13400 over i5-13600
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-ram-32gb-sold-extra-sticks" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS RAM — 32GB, sold extra sticks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-chassis-rosewill-rsv-l4412u" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Chassis — Rosewill RSV-L4412U
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primary-compute-minisforum-ms-a2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Primary Compute — Minisforum MS-A2
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ms-a2-boot-zfs-raid-1-mirror-samsung-sabrent-nvme" class="md-nav__link">
+    <span class="md-ellipsis">
+      MS-A2 Boot — ZFS RAID-1 Mirror (Samsung + Sabrent NVMe)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-compute-dell-optiplex-3070-micro-existing-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Secondary Compute — Dell Optiplex 3070 Micro (existing hardware)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optiplex-ram-left-at-16gb-for-now" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optiplex RAM — Left at 16GB for now
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ups-tripp-lite-smart1500lcdxl" class="md-nav__link">
+    <span class="md-ellipsis">
+      UPS — Tripp-Lite SMART1500LCDXL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rack-startech-4postrack18u" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rack — StarTech 4POSTRACK18U
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch-unifi-usw-pro-max-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      Switch — UniFi USW-Pro-Max-24
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Networking
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Networking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vlan-design-4-vlans" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN Design — 4 VLANs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-ha-high-availability" class="md-nav__link">
+    <span class="md-ellipsis">
+      No HA (High Availability)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qdevice-on-pi" class="md-nav__link">
+    <span class="md-ellipsis">
+      QDevice on Pi
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dns-adguard-home-carry-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      DNS — AdGuard Home (carry forward)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reverse-proxy-traefik-replaces-npm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reverse Proxy — Traefik (replaces NPM)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#external-access-cloudflare-tunnel-plex-port-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      External Access — Cloudflare Tunnel + Plex Port Forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Storage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nas-platform-unraid-723-replaces-truenas-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Platform — Unraid 7.2.3 (replaces TrueNAS SCALE)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-cache-pool-at-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      No Cache Pool at Launch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#downloads-share-parity-array-direct-no-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      Downloads Share — Parity Array Direct, No Cache
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-parity-on-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dual Parity on Array
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skyhawk-and-barracuda-drives-not-in-unraid-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      SkyHawk and Barracuda Drives — Not in Unraid Array
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uidgid-20002000-for-all-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      UID/GID — 2000:2000 for All Services
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services-compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      Services &amp; Compute
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Services & Compute">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plex-unraid-native-docker-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plex — Unraid Native Docker Container
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-radarr-instances-1080p-and-4k" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dual Radarr Instances — 1080p and 4K
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-sonarr-instances-tv-and-anime" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dual Sonarr Instances — TV and Anime
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qbitrr-replaces-custom-qbit-automation-sidecar" class="md-nav__link">
+    <span class="md-ellipsis">
+      qBitrr Replaces Custom qbit-automation Sidecar
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentik-dedicated-vm-not-lxc" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentik — Dedicated VM, Not LXC
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#immich-dedicated-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Immich — Dedicated VM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-docker-host-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Single Docker Host VM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kubernetes-sandbox-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      Kubernetes — Sandbox First
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cockpit-on-docker-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cockpit on docker-prod-01
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pbs-for-vmlxc-snapshots" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS for VM/LXC Snapshots
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appdata-backups-rsync-separate-from-pbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Appdata Backups — rsync, Separate from PBS
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/unifi-setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/mam-seeding-automation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/cloudflare-tunnel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/homarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/new-service-checklist/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardware
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hardware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nas-motherboard-asus-tuf-gaming-z690-plus-wifi-d4" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Motherboard — ASUS TUF Gaming Z690-Plus WiFi D4
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-10gbe-nic-dell-intel-x710-da2" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS 10GbE NIC — Dell Intel X710-DA2
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-cpu-i5-13400-over-i5-13600" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS CPU — i5-13400 over i5-13600
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-ram-32gb-sold-extra-sticks" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS RAM — 32GB, sold extra sticks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-chassis-rosewill-rsv-l4412u" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Chassis — Rosewill RSV-L4412U
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#primary-compute-minisforum-ms-a2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Primary Compute — Minisforum MS-A2
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ms-a2-boot-zfs-raid-1-mirror-samsung-sabrent-nvme" class="md-nav__link">
+    <span class="md-ellipsis">
+      MS-A2 Boot — ZFS RAID-1 Mirror (Samsung + Sabrent NVMe)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-compute-dell-optiplex-3070-micro-existing-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Secondary Compute — Dell Optiplex 3070 Micro (existing hardware)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optiplex-ram-left-at-16gb-for-now" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optiplex RAM — Left at 16GB for now
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ups-tripp-lite-smart1500lcdxl" class="md-nav__link">
+    <span class="md-ellipsis">
+      UPS — Tripp-Lite SMART1500LCDXL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rack-startech-4postrack18u" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rack — StarTech 4POSTRACK18U
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch-unifi-usw-pro-max-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      Switch — UniFi USW-Pro-Max-24
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Networking
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Networking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vlan-design-4-vlans" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN Design — 4 VLANs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-ha-high-availability" class="md-nav__link">
+    <span class="md-ellipsis">
+      No HA (High Availability)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qdevice-on-pi" class="md-nav__link">
+    <span class="md-ellipsis">
+      QDevice on Pi
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dns-adguard-home-carry-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      DNS — AdGuard Home (carry forward)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reverse-proxy-traefik-replaces-npm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reverse Proxy — Traefik (replaces NPM)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#external-access-cloudflare-tunnel-plex-port-forward" class="md-nav__link">
+    <span class="md-ellipsis">
+      External Access — Cloudflare Tunnel + Plex Port Forward
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Storage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nas-platform-unraid-723-replaces-truenas-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Platform — Unraid 7.2.3 (replaces TrueNAS SCALE)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-cache-pool-at-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      No Cache Pool at Launch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#downloads-share-parity-array-direct-no-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      Downloads Share — Parity Array Direct, No Cache
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-parity-on-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dual Parity on Array
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skyhawk-and-barracuda-drives-not-in-unraid-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      SkyHawk and Barracuda Drives — Not in Unraid Array
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uidgid-20002000-for-all-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      UID/GID — 2000:2000 for All Services
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services-compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      Services &amp; Compute
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Services & Compute">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plex-unraid-native-docker-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plex — Unraid Native Docker Container
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-radarr-instances-1080p-and-4k" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dual Radarr Instances — 1080p and 4K
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-sonarr-instances-tv-and-anime" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dual Sonarr Instances — TV and Anime
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qbitrr-replaces-custom-qbit-automation-sidecar" class="md-nav__link">
+    <span class="md-ellipsis">
+      qBitrr Replaces Custom qbit-automation Sidecar
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentik-dedicated-vm-not-lxc" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentik — Dedicated VM, Not LXC
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#immich-dedicated-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Immich — Dedicated VM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-docker-host-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Single Docker Host VM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kubernetes-sandbox-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      Kubernetes — Sandbox First
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cockpit-on-docker-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cockpit on docker-prod-01
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pbs-for-vmlxc-snapshots" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS for VM/LXC Snapshots
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appdata-backups-rsync-separate-from-pbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Appdata Backups — rsync, Separate from PBS
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="architecture-decisions-log">Architecture Decisions Log<a class="headerlink" href="#architecture-decisions-log" title="Permanent link">&para;</a></h1>
+<p><strong>Last Updated:</strong> 2026-02-28 <em>Living document — add an entry any time a significant decision is made. Include what was chosen, what was considered, and why. Future-you will thank present-you.</em></p>
+<hr />
+<h2 id="hardware">Hardware<a class="headerlink" href="#hardware" title="Permanent link">&para;</a></h2>
+<h3 id="nas-motherboard-asus-tuf-gaming-z690-plus-wifi-d4">NAS Motherboard — ASUS TUF Gaming Z690-Plus WiFi D4<a class="headerlink" href="#nas-motherboard-asus-tuf-gaming-z690-plus-wifi-d4" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Replace original Gigabyte B760M DS3H DDR4 with ASUS TUF Gaming Z690-Plus WiFi D4.</p>
+<p><strong>What was considered:</strong></p>
+<ul>
+<li>Gigabyte B760M DS3H DDR4 (original plan — already owned)</li>
+<li>MSI PRO B660M-A DDR4 (found in IT closet, spare)</li>
+<li>ASUS TUF Gaming Z690-Plus WiFi D4 (purchased used ~$100 on Reddit r/hardwareswap)</li>
+</ul>
+<p><strong>Why:</strong> The Gigabyte board has only 1x usable PCIe slot (one x16 physical slot, two x1 slots). The NAS needs to run both the LSI SAS 9120-8i HBA (x8 card, requires x8 or x16 slot) and the 10GbE SFP+ NIC (requires x4 minimum) simultaneously — physically impossible on the Gigabyte board. The MSI board was ruled out due to known Realtek NIC driver issues in Linux. The ASUS TUF Z690 has a second x16 physical slot wired at x4 from the chipset, which fits both cards with no conflict. ATX form factor, solid VRM, Intel 2.5GbE onboard, and BIOS already updated for 13th gen.</p>
+<hr />
+<h3 id="nas-10gbe-nic-dell-intel-x710-da2">NAS 10GbE NIC — Dell Intel X710-DA2<a class="headerlink" href="#nas-10gbe-nic-dell-intel-x710-da2" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Dell Intel X710-DA2 dual-port SFP+ NIC (~$25 eBay).</p>
+<p><strong>What was considered:</strong></p>
+<ul>
+<li>Intel X520 (older, very common in homelabs)</li>
+<li>Dell Intel X710-DA2 (newer chipset, dual port)</li>
+</ul>
+<p><strong>Why:</strong> X710 has a newer chipset than the X520 with better long-term driver support in Linux. Dual port provides future flexibility at no meaningful cost difference at used prices. Only one port is in use (DAC to MS-A2) but the second is available if needed later.</p>
+<hr />
+<h3 id="nas-cpu-i5-13400-over-i5-13600">NAS CPU — i5-13400 over i5-13600<a class="headerlink" href="#nas-cpu-i5-13400-over-i5-13600" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Keep i5-13400 for the NAS, sell the i5-13600.</p>
+<p><strong>Why:</strong> Unraid is IO-bound, not compute-bound. The performance delta between the two chips is irrelevant for a NAS workload. Selling the i5-13600 partially offsets the MS-A2 cost. The i5-13400 also has Intel UHD 730 iGPU for Plex QuickSync hardware transcoding — which is the only compute-heavy task the NAS does.</p>
+<hr />
+<h3 id="nas-ram-32gb-sold-extra-sticks">NAS RAM — 32GB, sold extra sticks<a class="headerlink" href="#nas-ram-32gb-sold-extra-sticks" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Keep 32GB DDR4 for the NAS, sell the extra 2x 16GB sticks.</p>
+<p><strong>Why:</strong> No heavy VM workloads run on Unraid — it's a pure NAS with one Plex Docker container. 32GB is generous for this role. Selling the extra sticks recoups cost.</p>
+<hr />
+<h3 id="nas-chassis-rosewill-rsv-l4412u">NAS Chassis — Rosewill RSV-L4412U<a class="headerlink" href="#nas-chassis-rosewill-rsv-l4412u" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Rosewill RSV-L4412U 4U 12-bay chassis (~$345).</p>
+<p><strong>Why:</strong> 12 drive bays accommodates current drive inventory (5x 12TB + 5x 4TB + 2x 6TB) with room to expand. 4U rackmount fits the open-frame rack plan. Includes sliding rails which is important for accessing rear cabling in a rack.</p>
+<hr />
+<h3 id="primary-compute-minisforum-ms-a2">Primary Compute — Minisforum MS-A2<a class="headerlink" href="#primary-compute-minisforum-ms-a2" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Minisforum MS-A2 (Ryzen 9 7945HX, 64GB DDR5) as primary Proxmox node.</p>
+<p><strong>Why:</strong> 16-core/32-thread CPU with strong single-thread performance handles multiple concurrent VMs and LXCs without breaking a sweat. Dual 10GbE SFP+ built-in eliminates need for a separate NIC for storage link. Compact form factor fits on a 2U shelf in the rack. 64GB DDR5 is sufficient for all planned workloads with headroom; max is 96GB.</p>
+<hr />
+<h3 id="ms-a2-boot-zfs-raid-1-mirror-samsung-sabrent-nvme">MS-A2 Boot — ZFS RAID-1 Mirror (Samsung + Sabrent NVMe)<a class="headerlink" href="#ms-a2-boot-zfs-raid-1-mirror-samsung-sabrent-nvme" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Two NVMe drives in ZFS RAID-1 mirror configured in the Proxmox installer.</p>
+<p><strong>Why:</strong> Single NVMe boot was the primary fragility in v2 — one drive failure killed the entire hypervisor. Mirrored boot means a single drive can fail and Proxmox keeps running. Selected Proxmox installer ZFS RAID-1 option at install time; no additional configuration needed.</p>
+<hr />
+<h3 id="secondary-compute-dell-optiplex-3070-micro-existing-hardware">Secondary Compute — Dell Optiplex 3070 Micro (existing hardware)<a class="headerlink" href="#secondary-compute-dell-optiplex-3070-micro-existing-hardware" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Use existing Optiplex 3070 Micro as pve-prod-02 rather than building a second full Proxmox host from spare parts.</p>
+<p><strong>What was considered:</strong></p>
+<ul>
+<li>Building a second full node using spare i5-13600, spare mobo, and extra 32GB RAM</li>
+<li>Using the Optiplex as-is (free from work)</li>
+</ul>
+<p><strong>Why:</strong> The Optiplex's workload is intentionally light — PBS VM and one AdGuard LXC. HA is explicitly not enabled in this design (Optiplex cannot absorb MS-A2's workload anyway), so a matched second node provides no real benefit. Building a second powerful node means higher idle power draw and cost for no meaningful gain. Selling the i5-13600 and extra RAM recoups ~$250-300. The Optiplex is free and perfectly adequate for its role.</p>
+<hr />
+<h3 id="optiplex-ram-left-at-16gb-for-now">Optiplex RAM — Left at 16GB for now<a class="headerlink" href="#optiplex-ram-left-at-16gb-for-now" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Leave Optiplex at 16GB DDR4 (2x 8GB Micron, from work). Do not upgrade yet.</p>
+<p><strong>Why:</strong> Current workload (PBS VM + AdGuard LXC) does not justify the upgrade. Revisit if workload grows.</p>
+<hr />
+<h3 id="ups-tripp-lite-smart1500lcdxl">UPS — Tripp-Lite SMART1500LCDXL<a class="headerlink" href="#ups-tripp-lite-smart1500lcdxl" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Tripp-Lite SMART1500LCDXL 1500VA/900W (~$145). First hardware purchased.</p>
+<p><strong>Why:</strong> UPS was a non-negotiable requirement before powering any spinning-rust drives — power loss during a write on HDDs is a data corruption risk. USB interface enables NUT integration for fully automated graceful shutdown. 1500VA handles the full stack (5 devices) with capacity to spare. Purchased before any other hardware as a hard rule.</p>
+<hr />
+<h3 id="rack-startech-4postrack18u">Rack — StarTech 4POSTRACK18U<a class="headerlink" href="#rack-startech-4postrack18u" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> StarTech 4POSTRACK18U 18U open-frame rack (bundled with switch, $560 total).</p>
+<p><strong>Why:</strong> 18U provides enough space for all current hardware (U1-U11 occupied) plus 6 empty U's for future expansion. Open-frame is fine for a basement/closet install and simplifies cable access vs. enclosed cabinet.</p>
+<hr />
+<h3 id="switch-unifi-usw-pro-max-24">Switch — UniFi USW-Pro-Max-24<a class="headerlink" href="#switch-unifi-usw-pro-max-24" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> UniFi USW-Pro-Max-24 24-port 2.5GbE managed switch (bundled with rack).</p>
+<p><strong>Why:</strong> 2.5GbE on all ports future-proofs LAN connections — all current hosts support 2.5GbE or better. Stays in the UniFi ecosystem with the UDM-SE for unified management. SFP+ uplink ports used for DAC connections to UDM-SE and MS-A2.</p>
+<hr />
+<h2 id="networking">Networking<a class="headerlink" href="#networking" title="Permanent link">&para;</a></h2>
+<h3 id="vlan-design-4-vlans">VLAN Design — 4 VLANs<a class="headerlink" href="#vlan-design-4-vlans" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> VLAN 10 (Management), VLAN 20 (Trusted), VLAN 30 (Services), VLAN 40 (IoT).</p>
+<p><strong>Why:</strong> Clean separation of concerns. Management VLAN isolates infrastructure devices (Proxmox hosts, NAS, switches) from everything else. Trusted is personal devices. Services is all v3 VMs and LXCs. IoT is fully isolated with internet-only access. Default VLAN 1 intentionally not used as management — devices should never accidentally land on the management VLAN.</p>
+<hr />
+<h3 id="no-ha-high-availability">No HA (High Availability)<a class="headerlink" href="#no-ha-high-availability" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Proxmox cluster without HA enabled.</p>
+<p><strong>Why:</strong> HA requires matched hardware and a 3+ node quorum to be meaningful. The Optiplex cannot absorb the MS-A2's workload. Enabling HA without these conditions is false security — it creates the illusion of resilience without delivering it. Clustering is enabled for unified management UI only. If pve-prod-01 goes down, services on it are down until it comes back — that is acceptable for a homelab.</p>
+<hr />
+<h3 id="qdevice-on-pi">QDevice on Pi<a class="headerlink" href="#qdevice-on-pi" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Run Proxmox QDevice on pi-prod-01 as cluster tiebreaker.</p>
+<p><strong>Why:</strong> A 2-node Proxmox cluster without a quorum device can suffer split-brain — both nodes think they're the primary and fence each other. QDevice on the Pi costs nothing (10-minute setup) and prevents this. The Pi is lightweight, always-on, and perfectly suited for this role.</p>
+<hr />
+<h3 id="dns-adguard-home-carry-forward">DNS — AdGuard Home (carry forward)<a class="headerlink" href="#dns-adguard-home-carry-forward" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Keep AdGuard Home as the DNS solution. Primary LXC on pve-prod-01 (dns-prod-01), secondary LXC on pve-prod-02 (dns-prod-02), synced via adguardhome-sync.</p>
+<p><strong>Why:</strong> Works well in v2, ad-blocking is a bonus, no reason to migrate. Two instances on different Proxmox nodes means DNS survives either node going down. Secondary AdGuard moved off the Pi (v2 arrangement) — Pi is now dedicated to QDevice and monitoring only.</p>
+<hr />
+<h3 id="reverse-proxy-traefik-replaces-npm">Reverse Proxy — Traefik (replaces NPM)<a class="headerlink" href="#reverse-proxy-traefik-replaces-npm" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Migrate from Nginx Proxy Manager to Traefik in v3.</p>
+<p><strong>Why:</strong> Traefik is the default ingress controller in k3s — learning it now in a Docker context pays dividends when Kubernetes is introduced in Phase 6. Docker label-based routing eliminates per-service config files. Wildcard cert via Cloudflare DNS-01 challenge covers all internal services with one cert. NPM kept running in parallel during migration until all services are confirmed on Traefik — rollback is an AdGuard DNS rewrite flip.</p>
+<hr />
+<h3 id="external-access-cloudflare-tunnel-plex-port-forward">External Access — Cloudflare Tunnel + Plex Port Forward<a class="headerlink" href="#external-access-cloudflare-tunnel-plex-port-forward" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> CF Tunnel for all externally exposed services except Plex. Plex gets a direct port forward on 32400.</p>
+<p><strong>Why:</strong> Cloudflare ToS prohibits video streaming through their tunnel — so Plex cannot use it. Plex handles its own TLS and relay natively, so a direct port forward is simple and proven. Everything else (Authentik, ABS, Seerr, Shelfmark) goes through CF Tunnel with no port forwarding required.</p>
+<p><strong>Pangolin evaluated and rejected:</strong> VPS relay adds latency for Plex streaming, CF Tunnel is free and works, no meaningful reason to add VPS cost.</p>
+<hr />
+<h2 id="storage">Storage<a class="headerlink" href="#storage" title="Permanent link">&para;</a></h2>
+<h3 id="nas-platform-unraid-723-replaces-truenas-scale">NAS Platform — Unraid 7.2.3 (replaces TrueNAS SCALE)<a class="headerlink" href="#nas-platform-unraid-723-replaces-truenas-scale" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Unraid as the NAS OS.</p>
+<p><strong>Why:</strong> Hybrid ZFS + parity array model fits the data risk tolerance perfectly. ZFS used where data integrity is non-negotiable (photos, backups). Parity array used for recoverable bulk media where mixed drive sizes and expandability matter more than ZFS guarantees. TrueNAS ran as a VM in v2 — v3 gives it a dedicated host as it should have always had.</p>
+<hr />
+<h3 id="no-cache-pool-at-launch">No Cache Pool at Launch<a class="headerlink" href="#no-cache-pool-at-launch" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> No NVMe cache pool installed at launch.</p>
+<p><strong>Why:</strong> Downloads must bypass cache entirely — downloads and media must live on the same filesystem for hardlinks and atomic moves to work. If downloads go through cache and media lives on the array, hardlinks break silently and cause file duplication. Container appdata lives on the docker-prod-01 local disk, not NAS. Plex transcode temp points at a local Unraid directory. No real workload justifies cache at launch. If a use case emerges: add 2x 512GB NVMe as BTRFS RAID-1 mirrored cache pool. Cache drives must always be mirrored — a single cache SSD failure before the mover runs means data loss.</p>
+<hr />
+<h3 id="downloads-share-parity-array-direct-no-cache">Downloads Share — Parity Array Direct, No Cache<a class="headerlink" href="#downloads-share-parity-array-direct-no-cache" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Downloads share set to "Use cache: No" in Unraid. Writes go directly to parity array.</p>
+<p><strong>Why:</strong> Hard requirement for hardlinks. Downloads and media must be on the same filesystem. Cache involvement breaks this. Non-negotiable — violations cause silent file duplication and broken seeding.</p>
+<hr />
+<h3 id="dual-parity-on-array">Dual Parity on Array<a class="headerlink" href="#dual-parity-on-array" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> 2x WD Red Pro 12TB as parity drives (dual parity).</p>
+<p><strong>Why:</strong> With 3+ data drives, dual parity is worth the cost. Single parity means two simultaneous drive failures (one during a rebuild) kills the array. Dual parity tolerates two simultaneous failures.</p>
+<hr />
+<h3 id="skyhawk-and-barracuda-drives-not-in-unraid-array">SkyHawk and Barracuda Drives — Not in Unraid Array<a class="headerlink" href="#skyhawk-and-barracuda-drives-not-in-unraid-array" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> 4x Seagate SkyHawk 6TB go to Synology for cold backup storage only. 1x Seagate Barracuda 4TB retired.</p>
+<p><strong>Why:</strong> SkyHawk drives use surveillance firmware — not appropriate for a NAS parity array. Barracuda is a desktop drive not rated for always-on NAS duty. Neither belongs in a production array.</p>
+<hr />
+<h3 id="uidgid-20002000-for-all-services">UID/GID — 2000:2000 for All Services<a class="headerlink" href="#uidgid-20002000-for-all-services" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> All containers run as PUID=2000, PGID=2000. Clean break from v2.</p>
+<p><strong>Why:</strong> v2 had messy ownership from organic growth — some services ran as root, some as gio (1000:1000), inconsistent across NFS mounts. v3 starts clean with a dedicated service UID/GID that is separate from both root and the human user account. NAS share permissions set to allow 2000:2000 read/write on all service shares.</p>
+<hr />
+<h2 id="services-compute">Services &amp; Compute<a class="headerlink" href="#services-compute" title="Permanent link">&para;</a></h2>
+<h3 id="plex-unraid-native-docker-container">Plex — Unraid Native Docker Container<a class="headerlink" href="#plex-unraid-native-docker-container" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Plex runs directly on Unraid as a Docker container, not on docker-prod-01.</p>
+<p><strong>Why:</strong> i5-13400 QuickSync iGPU (Intel UHD 730) is mature, well-supported, and handles multiple simultaneous 1080p transcodes easily. Running Plex on Unraid eliminates an NFS hop — media files are local to the host doing the transcoding. No iGPU passthrough complexity on MS-A2 needed. Radeon 680M on the MS-A2 is available for future use but QuickSync is the better transcoding choice for this workload.</p>
+<hr />
+<h3 id="dual-radarr-instances-1080p-and-4k">Dual Radarr Instances — 1080p and 4K<a class="headerlink" href="#dual-radarr-instances-1080p-and-4k" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Two separate Radarr instances: radarr-1080p and radarr-4k.</p>
+<p><strong>Why:</strong> 4K WebDL for local viewing via Infuse/Apple TV 4K. 1080p for shared users to avoid transcoding overhead. Single Radarr instance managing both quality tiers gets messy with quality profiles and root folders. Separate instances are clean and independently configurable.</p>
+<hr />
+<h3 id="dual-sonarr-instances-tv-and-anime">Dual Sonarr Instances — TV and Anime<a class="headerlink" href="#dual-sonarr-instances-tv-and-anime" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Two separate Sonarr instances: sonarr-tv and sonarr-anime.</p>
+<p><strong>Why:</strong> Anime requires different quality profiles, release group logic, and indexer configuration vs. regular TV. A single instance handling both gets messy. Separate instances are independently configurable.</p>
+<hr />
+<h3 id="qbitrr-replaces-custom-qbit-automation-sidecar">qBitrr Replaces Custom qbit-automation Sidecar<a class="headerlink" href="#qbitrr-replaces-custom-qbit-automation-sidecar" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> qBitrr replaces the custom Python sidecar + cron job used in v2.</p>
+<p><strong>Why:</strong> qBitrr manages all 4 ARR instances from a single installation with a proper web UI. The v2 custom sidecar was over-engineered and fragile. qBitrr handles seeding control, MAM compliance (14-day minimum seed time), and torrent health monitoring out of the box.</p>
+<hr />
+<h3 id="authentik-dedicated-vm-not-lxc">Authentik — Dedicated VM, Not LXC<a class="headerlink" href="#authentik-dedicated-vm-not-lxc" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Authentik runs on a dedicated VM (auth-prod-01), not an LXC.</p>
+<p><strong>Why:</strong> The Proxmox community officially removed the Authentik LXC helper script in May 2025 due to frequent breakage and a 14GB RAM requirement during build. VM is the only stable deployment option. Dedicated VM also isolates the IdP from other workloads — appropriate given Authentik is the SSO gateway for everything.</p>
+<hr />
+<h3 id="immich-dedicated-vm">Immich — Dedicated VM<a class="headerlink" href="#immich-dedicated-vm" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Immich runs on a dedicated VM (immich-prod-01), not on docker-prod-01.</p>
+<p><strong>Why:</strong> The Immich ML worker causes significant CPU spikes during face detection and CLIP indexing. Isolating it on a dedicated VM allows resource caps (CPU limits, RAM limits) without affecting the media stack running on docker-prod-01.</p>
+<hr />
+<h3 id="single-docker-host-vm">Single Docker Host VM<a class="headerlink" href="#single-docker-host-vm" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> One docker-prod-01 VM for all media and application containers.</p>
+<p><strong>Why:</strong> Multi-VM Docker arrangements solve HA poorly and add operational complexity. All these containers will eventually migrate to k3s anyway — over-investing in a multi-VM Docker architecture that gets torn down in Phase 6 is wasteful. One clean VM, one NFS mount, one place to look when something breaks.</p>
+<hr />
+<h3 id="kubernetes-sandbox-first">Kubernetes — Sandbox First<a class="headerlink" href="#kubernetes-sandbox-first" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> k3s introduced as an isolated sandbox cluster in Phase 6. No production services migrate until the cluster is fully understood and stable.</p>
+<p><strong>Why:</strong> A broken k3s cluster on top of an unstable foundation helps nobody. The sandbox runs in parallel with zero impact on running services. Only after the sandbox phase is complete will selective production migration begin. ARR stack, qBittorrent/Gluetun, and books stack intentionally stay in Docker permanently — hardlink and VPN killswitch workflows do not translate cleanly to Kubernetes.</p>
+<hr />
+<h3 id="cockpit-on-docker-prod-01">Cockpit on docker-prod-01<a class="headerlink" href="#cockpit-on-docker-prod-01" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Install Cockpit alongside Docker on docker-prod-01.</p>
+<p><strong>Why:</strong> Provides web-based day-to-day management of the VM — disk usage, network, logs, updates, file browser — without needing to SSH for routine tasks. Low overhead, high operational value.</p>
+<hr />
+<h2 id="backup">Backup<a class="headerlink" href="#backup" title="Permanent link">&para;</a></h2>
+<h3 id="pbs-for-vmlxc-snapshots">PBS for VM/LXC Snapshots<a class="headerlink" href="#pbs-for-vmlxc-snapshots" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Proxmox Backup Server (PBS) on pve-prod-02 as a VM (pbs-prod-01), backing up all VMs on both nodes to the NAS ZFS mirror pool.</p>
+<p><strong>Why:</strong> PBS is the right tool for VM-level backups in a Proxmox environment. Running it on pve-prod-02 means the backup server is on a different node than the primary workloads — a backup server on the same node it's backing up is a single point of failure.</p>
+<hr />
+<h3 id="appdata-backups-rsync-separate-from-pbs">Appdata Backups — rsync, Separate from PBS<a class="headerlink" href="#appdata-backups-rsync-separate-from-pbs" title="Permanent link">&para;</a></h3>
+<p><strong>Decision:</strong> Docker appdata and compose stacks backed up independently via hardened rsync script, separate from PBS.</p>
+<p><strong>Why:</strong> PBS backs up VM disk images — it does not back up application data inside VMs. Container appdata (databases, configs) requires its own backup strategy. rsync to NAS /backups share (ZFS mirror pool) nightly, with Healthchecks.io heartbeat monitoring for silent failure detection.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>
