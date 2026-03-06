@@ -7,6 +7,4 @@ Unchanged from v2. Personal laptops, phones, trusted devices. v2 services (Proxm
 All v3 VMs and LXCs. Containers inside VMs are accessed via Traefik on the VM's IP — they do not get individual VLAN IPs.
 #### VLAN 40 — IoT (192.168.40.0/24)
 
-7 existing IoT devices migrate from 192.168.30.0 during Phase 1. Internet access only. No inter-VLAN routing. Gateway at 192.168.40.1. DHCP pool 192.168.40.100+.
-
-
+7 existing IoT devices migrate from 192.168.30.0 during Phase 1. Internet access only. No inter-VLAN routing. Gateway at 192.168.40.1. DHCP pool 192.168.40.100+
