@@ -21,16 +21,15 @@
 
 ## Firewall Rules Table
 
-|#|Source|Destination|Port / Protocol|Action|Reason|
-|---|---|---|---|---|---|
-|1|Trusted (20)|Services (30)|Any|ALLOW|Users reach all internal services|
-|2|Trusted (20)|Management (10)|TCP 443, 8006, 22|ALLOW|Admin access to Proxmox UI, Unraid UI, SSH|
-|3|Trusted (20)|Management (10)|Any other|DENY|Block everything else into management from trusted|
-|4|Services (30)|Services (30)|Any|ALLOW|Inter-service communication (ARR stack, DNS, etc.)|
-|5|Services (30)|Management (10)|Any|DENY|Services cannot touch infrastructure management interfaces — including Unraid UI|
-|6|Services (30)|Trusted (20)|Any|DENY|Services never initiate connections to user devices|
-|7|IoT (40)|Any internal|Any|DENY|IoT fully isolated from all internal VLANs|
-|8|Any|Internet|Any|ALLOW|All VLANs can reach WAN (unless overridden above)|
+| #   | Source        | Destination     | Port / Protocol   | Action | Reason                                                                           |
+| --- | ------------- | --------------- | ----------------- | ------ | -------------------------------------------------------------------------------- |
+| 1   | Trusted (20)  | Services (30)   | Any               | ALLOW  | Users reach all internal services                                                |
+| 2   | Trusted (20)  | Management (10) | TCP 443, 8006, 22 | ALLOW  | Admin access to Proxmox UI, Unraid UI, SSH                                       |
+| 3   | Trusted (20)  | Management (10) | Any other         | DENY   | Block everything else into management from trusted                               |
+| 4   | Services (30) | Management (10) | Any               | DENY   | Services cannot touch infrastructure management interfaces — including Unraid UI |
+| 5   | Services (30) | Trusted (20)    | Any               | DENY   | Services never initiate connections to user devices                              |
+| 6   | IoT (40)      | Any internal    | Any               | DENY   | IoT fully isolated from all internal VLANs                                       |
+| 7   | Any           | Internet        | Any               | ALLOW  | All VLANs can reach WAN (unless overridden above)                                |
 
 > **Rule evaluation order:** Rules are evaluated top to bottom. The first match wins. Rules 2 and 3 together implement "limited access" from Trusted to Management — allow specific ports, deny everything else. Without Rule 3, the default DENY would handle it, but making it explicit is cleaner and easier to audit.
 
@@ -107,3 +106,16 @@ A compromised container on docker-prod-01 can reach the NFS share it already has
 - Port Groups: `MGMT_ADMIN_PORTS` = TCP 443, 8006, 22
 - Verify IoT isolation with a test device: confirm it cannot ping 192.168.10.1, 192.168.20.x, or 192.168.30.x
 - Verify Rule 5 by attempting to curl the Unraid UI from docker-prod-01 — connection should time out
+
+---
+
+# Traffic Policy Summary
+
+| Source → Destination | Management | Trusted | Services | IoT | Internet |
+|---|---|---|---|---|---|
+| **Management (10)** | — | ✅ Allow | ✅ Allow | ✅ Allow | ✅ Allow |
+| **Trusted (20)** | ⚠️ Admin Ports Only | — | ✅ Allow | ✅ Allow | ✅ Allow |
+| **Services (30)** | ❌ Deny | ❌ Deny | — | ❌ Deny | ✅ Allow |
+| **IoT (40)** | ❌ Deny | ❌ Deny | ❌ Deny | — | ✅ Allow |
+
+
