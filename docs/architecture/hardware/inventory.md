@@ -39,28 +39,28 @@
 
 **Role:** Unraid NAS. Dual-parity array for bulk media and downloads. ZFS mirror pool for precious data (photos, backups). Plex runs here as a Docker container using QuickSync iGPU.
 
-| Component              | Detail                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Chassis**            | Rosewill RSV-L4412U (4U, 12-bay)                                                                                         |
-| **CPU**                | Intel Core i5-13400 (10C/16T — 6P + 4E cores)                                                                            |
-| **iGPU**               | Intel UHD 730 (QuickSync — used for Plex hardware transcoding)                                                           |
-| **Motherboard**        | ASUS TUF Gaming Z690-Plus WiFi D4 (ATX, DDR4)                                                                            |
-| **RAM**                | 32GB DDR4                                                                                                                |
-| **HBA**                | LSI SAS 9120-8i (migrated from previous host)                                                                            |
-| **Onboard LAN**        | Intel 2.5GbE (built-in on TUF Z690) → USW-Pro-Max-24 — VLAN 10 management interface (192.168.10.10). Unraid web UI only. |
-| **10GbE NIC**          | Dell Intel X710-DA2 (dual-port SFP+, PCIe)                                                                               |
-| **X710 Port 1**        | DAC → pve-prod-01 SFP+ Port 1 — dedicated point-to-point storage link (10GbE, no VLAN, off LAN switch)                   |
-| **X710 Port 2**        | DAC → USW-Pro-Max-24 — VLAN 30 data interface (192.168.30.16). NFS exports and Plex container traffic served here.       |
-| **Boot**               | USB flash drive (Unraid OS)                                                                                              |
-| **OS**                 | Unraid 7.2.4                                                                                                             |
-| **IP (Management)**    | 192.168.10.10 — onboard 2.5GbE — VLAN 10 — Unraid UI only                                                                |
-| **IP (Data/NFS)**      | 192.168.30.16 — X710 Port 2 — VLAN 30 — NFS exports, Plex container traffic                                              |
-| **Chassis Source**     | eBay                                                                                                                     |
-| **Chassis Price**      | $345                                                                                                                     |
-| **Motherboard Source** | Reddit r/hardwareswap                                                                                                    |
-| **Motherboard Price**  | $100                                                                                                                     |
-| **NIC Source**         | eBay                                                                                                                     |
-| **NIC Price**          | $28                                                                                                                      |
+| Component              | Detail                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Chassis**            | Rosewill RSV-L4412U (4U, 12-bay)                                                                                               |
+| **CPU**                | Intel Core i5-13400 (10C/16T — 6P + 4E cores)                                                                                  |
+| **iGPU**               | Intel UHD 730 (QuickSync — used for Plex hardware transcoding)                                                                 |
+| **Motherboard**        | ASUS TUF Gaming Z690-Plus WiFi D4 (ATX, DDR4)                                                                                  |
+| **RAM**                | 32GB DDR4                                                                                                                      |
+| **HBA**                | LSI SAS 9120-8i (migrated from previous host)                                                                                  |
+| **Onboard LAN**        | Intel 2.5GbE (built-in on TUF Z690) → USW-Pro-Max-24 — VLAN 10 management interface (192.168.10.10). Unraid web UI only.       |
+| **10GbE NIC**          | Dell Intel X710-DA2 (dual-port SFP+, PCIe)                                                                                     |
+| **X710 Port 1**        | DAC → pve-prod-01 SFP+ Port 1 — dedicated point-to-point storage link (10GbE, no VLAN, off LAN switch)                         |
+| **X710 Port 2**        | DAC → USW-Pro-Max-24 SFP+ Port 2 — VLAN 30 data interface (192.168.30.16). NFS exports and Plex container traffic served here. |
+| **Boot**               | USB flash drive (Unraid OS)                                                                                                    |
+| **OS**                 | Unraid 7.2.4                                                                                                                   |
+| **IP (Management)**    | 192.168.10.10 — onboard 2.5GbE — VLAN 10 — Unraid UI only                                                                      |
+| **IP (Data/NFS)**      | 192.168.30.16 — X710 Port 2 — VLAN 30 — NFS exports, Plex container traffic                                                    |
+| **Chassis Source**     | eBay                                                                                                                           |
+| **Chassis Price**      | $345                                                                                                                           |
+| **Motherboard Source** | Reddit r/hardwareswap                                                                                                          |
+| **Motherboard Price**  | $100                                                                                                                           |
+| **NIC Source**         | eBay                                                                                                                           |
+| **NIC Price**          | $28                                                                                                                            |
 
 **Notes:**
 
@@ -85,7 +85,7 @@
 | **RAM**          | 16GB DDR4 SO-DIMM (2x 8GB Micron)               |
 | **Boot Storage** | 256Gb NVMe                                      |
 | **Networking**   | 1x GbE RJ45 built-in — uplink to USW-Pro-Max-24 |
-| **OS**           | Proxmox VE _(fill in version when installed)_   |
+| **OS**           | Proxmox VE 9.1.5                                |
 | **IP**           | 192.168.10.12 (VLAN 10 — Management)            |
 | **Source**       | Work surplus (free)                             |
 
@@ -185,11 +185,11 @@
 
 ### DAC Cables
 
-|Length|Route|Model|Price|
-|---|---|---|---|
-|0.5M|UDM-SE SFP+ → Switch SFP+ (WAN uplink)|10Gtek|~$10|
-|1M|Switch SFP+ → MS-A2 SFP+ (VM/LXC LAN)|Cable Matters|~$15|
-|2M|NAS SFP+ (X710 Port 1) → MS-A2 SFP+ (storage traffic)|Cable Matters|~$17|
+| Length | Route                                                                   | Model         | Price |
+| ------ | ----------------------------------------------------------------------- | ------------- | ----- |
+| 0.5M   | UDM-SE SFP+ → Switch SFP+ Port 1 (WAN uplink)                           | 10Gtek        | ~$10  |
+| 1M     | nas-prod-01 X710 Port 1 → pve-prod-01 SFP+ Port 1 (storage, off-switch) | Cable Matters | ~$15  |
+| 2M     | nas-prod-01 X710 Port 2 → Switch SFP+ Port 2 (VLAN 30 data/NFS)         | Cable Matters | ~$17  |
 
 **Notes:**
 

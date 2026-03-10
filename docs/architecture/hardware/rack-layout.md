@@ -1,15 +1,13 @@
 # Rack Layout
 
-**Last Updated:** 2026-02-28 **Rack:** StarTech 4POSTRACK18U (18U open-frame) **Status:** Planned — hardware arriving, not yet physically built
-
-_Update this file once everything is physically racked and cabled._
+**Last Updated:** 2026-03-10 **Rack:** StarTech 4POSTRACK18U (18U open-frame) **Status:** Built
 
 ---
 
 ## Unit Layout
 
-
 ![Rack Diagram](../../assets/diagrams/rack-diagram.png)
+
 
 ```
 U1  │ UniFi UDM-SE                  │ Router / Firewall
@@ -34,36 +32,47 @@ U18 │ Tripp-Lite SMART1500LCDXL     │ UPS (bottom)
 
 ---
 
+## Non-Rack Devices
+
+|Device|Location|IP|Notes|
+|---|---|---|---|
+|U6-Pro AP|Wall/ceiling mount|192.168.10.200|PoE via UDM-SE port 7. VLAN 10 Management.|
+
+---
+
 ## DAC Cable Map
 
 |Cable|Length|From|To|Purpose|
 |---|---|---|---|---|
-|10Gtek DAC|0.5M|UDM-SE SFP+|Switch SFP+|WAN uplink|
-|Cable Matters DAC|1M|Switch SFP+|MS-A2 SFP+ (Port 1)|VM/LXC LAN traffic|
-|Cable Matters DAC|2M|NAS SFP+ (X710 Port 1)|MS-A2 SFP+ (Port 2)|Storage traffic — dedicated, off LAN switch|
+|10Gtek DAC|0.5M|UDM-SE SFP+|Switch SFP+ Port 1|WAN/LAN uplink between router and switch|
+|Cable Matters DAC|2M|nas-prod-01 X710 Port 1|pve-prod-01 SFP+ Port 1|Storage traffic — dedicated point-to-point, off LAN switch|
+|Cable Matters DAC|2M|nas-prod-01 X710 Port 2|Switch SFP+ Port 2|NAS data/NFS interface to switch (VLAN 30)|
 
 **Notes:**
 
+- MS-A2 connects to the switch via its **2.5GbE RJ45**, not SFP+. Both SFP+ ports on the MS-A2 are used for the direct NAS storage link only.
 - 2M DAC for NAS ↔ MS-A2 accounts for RSV-L4412U sliding rail extension slack (~1.5M actual path + margin)
-- Storage traffic intentionally kept off the switch — isolated 10GbE link between NAS and primary compute only
+- Storage traffic (X710 Port 1 ↔ MS-A2 SFP+ Port 1) intentionally kept off the switch — isolated 10GbE link between NAS and primary compute only
 
 ---
 
 ## RJ45 Uplinks to Switch
 
-| Device      | Port Type                             | Purpose                                             |
-| ----------- | ------------------------------------- | --------------------------------------------------- |
-| UDM-SE      | 2.5GbE RJ45                           | LAN downlink to switch (in addition to SFP+ uplink) |
-| MS-A2       | 2.5GbE RJ45                           | VM/LXC LAN traffic                                  |
-| nas-prod-01 | 2.5GbE RJ45 (onboard Intel, TUF Z690) | NAS management + Synology replication traffic       |
-| pve-prod-02 | 1GbE RJ45                             | Optiplex management + all traffic                   |
-| pi-prod-01  | 1GbE RJ45                             | Pi management                                       |
+|Device|Interface|Speed|Switch Port|VLAN Profile|
+|---|---|---|---|---|
+|UDM-SE|2.5GbE RJ45|2.5GbE|SW Port 26|— (uplink)|
+|pve-prod-01 (MS-A2)|2.5GbE RJ45|2.5GbE|SW Port 21 (via PP19)|Trunk - All VLANs|
+|nas-prod-01 onboard (TUF Z690)|2.5GbE RJ45|2.5GbE|SW Port 20 (via PP18)|Mgmt - Only|
+|pve-prod-02 (Optiplex)|1GbE RJ45|1GbE|SW Port 19 (via PP17)|Trunk - All VLANs|
+|pi-prod-01 (Raspberry Pi)|1GbE RJ45|1GbE|SW Port 17 (via PP15)|Trunk - All VLANs*|
+
+*pi-prod-01 is temporarily on Trusted Access (VLAN 20) until Phase 3 cutover to VLAN 10 Management. Profile will be updated to Trunk - All VLANs at that time.
 
 ---
 
 ## UPS Outlet Map
 
-_Tripp-Lite SMART1500LCDXL has 8 battery-backed outlets. 5 devices, 3 outlets spare._
+_Tripp-Lite SMART1500LCDXL — 1500VA / 900W — 8 battery-backed outlets. 5 devices connected, 3 spare._
 
 |Outlet|Device|Notes|
 |---|---|---|
@@ -71,36 +80,41 @@ _Tripp-Lite SMART1500LCDXL has 8 battery-backed outlets. 5 devices, 3 outlets sp
 |2|USW-Pro-Max-24||
 |3|pve-prod-01 (MS-A2)||
 |4|pve-prod-02 (Optiplex)||
-|5|nas-prod-01|USB cable from UPS → NAS for NUT|
+|5|nas-prod-01|USB data cable from UPS → NAS for NUT|
 |6|pi-prod-01|Via USB-C power adapter|
 |7|[Spare]||
 |8|[Spare]||
 
-**Notes:**
-
-- UPS USB data cable connects to nas-prod-01 — NUT server runs here and signals all other hosts to shut down gracefully on power loss
-- Shutdown order: Proxmox VMs + LXCs first → pve-prod-01 + pve-prod-02 → nas-prod-01 last
+**Shutdown order on power loss (NUT managed):** Proxmox VMs + LXCs first → pve-prod-01 + pve-prod-02 → nas-prod-01 last
 
 ---
 
-## Patch Panel — Structured Cabling
+## Patch Panel → Switch Port Map
 
-_UniFi UP-PATCH-24 at U2. 7 wall runs terminate here via Cat6 shielded keystone couplers._
+_UniFi UP-PATCH-24 at U2. Short 0.5ft Monoprice SlimRun Cat6 patch cables run from patch panel (U2) to switch (U3)._
 
-|Port|Run|Destination|
-|---|---|---|
-|1–7|Wall runs|_(fill in — label each run when terminated)_|
-|8–24|Blank keystone inserts|Empty|
+|Patch Panel Port|Device|Cable Run|Switch Port|VLAN Profile|
+|---|---|---|---|---|
+|PP15|pi-prod-01 (Raspberry Pi)|Direct|SW Port 17|Trunk - All VLANs (currently Trusted Access — see note above)|
+|PP16|Synology NAS|Direct|SW Port 18|Trusted Access|
+|PP17|pve-prod-02 (Optiplex)|Direct|SW Port 19|Trunk - All VLANs|
+|PP18|nas-prod-01 onboard 2.5GbE|Direct|SW Port 20|Mgmt - Only|
+|PP19|pve-prod-01 (MS-A2)|Direct|SW Port 21|Trunk - All VLANs|
+|PP20|Gio PC (Desktop)|Wall run|SW Port 22|Trusted Access|
+|PP21|Cove Alarm Panel|Wall run|SW Port 23|IoT Access|
+|PP22|Eufy Homebase|Wall run|SW Port 24|IoT Access|
+|PP23|U6-Pro AP|Wall run|UDM-SE Port 7 (PoE)|Trunk - All VLANs|
+|PP24|UDM-SE WAN|Wall run|—|—|
+|SFP+ Port 1|UDM-SE SFP+|Direct DAC|SW SFP+ Port 1|— (uplink)|
+|SFP+ Port 2|nas-prod-01 X710 Port 2|Direct DAC|SW SFP+ Port 2|Services Access|
 
-_Short 0.5ft Monoprice SlimRun Cat6 patch cables run from patch panel (U2) down to switch (U3)._
+**Wall runs (PP1–PP14):** Fill in as additional wall runs are terminated and labeled.
 
 ---
 
 ## Notes & Reminders
 
-- **Label every cable** before or during installation — back out is painful without labels
-- Verify all DAC links are up and showing 10GbE in UniFi and Proxmox before moving to Phase 1 software config
+- Label both sides of every cable run: wall jack → patch panel port number → switch port number
+- Verify all DAC links are showing correct link speeds in UniFi and Proxmox before proceeding with Phase 2
 - RSV-L4412U ships with sliding rails — test rail extension before finalizing DAC cable lengths
-- Label both sides: Wall jack label → Patch panel port number → Switch port number
-- Document it in: homelab-docs → network/physical_topology.md
-
+- Unused switch ports 2–16 are disabled in UniFi — enable individually as devices are connected

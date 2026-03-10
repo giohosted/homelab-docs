@@ -309,3 +309,84 @@
 **Decision:** Docker appdata and compose stacks backed up independently via hardened rsync script, separate from PBS.
 
 **Why:** PBS backs up VM disk images — it does not back up application data inside VMs. Container appdata (databases, configs) requires its own backup strategy. rsync to NAS /backups share (ZFS mirror pool) nightly, with Healthchecks.io heartbeat monitoring for silent failure detection.
+
+---
+
+### NAS Network Interface Design — Dual Interface, Management/Data Separation
+
+**Decision:** nas-prod-01 uses two separate physical network interfaces for two distinct purposes. Onboard 2.5GbE → VLAN 10 (management only, Unraid UI at 192.168.10.10). X710 Port 2 SFP+ → VLAN 30 (data/NFS, at 192.168.30.16).
+
+**What was considered:**
+
+- Single interface on VLAN 30 for everything (management + NFS)
+- Single interface on VLAN 10 for everything (would require firewall hole for services to reach NFS)
+- Dual interface separating management and data planes (chosen)
+
+**Why:** The NAS holds backups, photos, and all irreplaceable data. Putting the Unraid management UI on VLAN 30 alongside services means a compromised container could reach it. Putting everything on VLAN 10 requires poking holes in the management VLAN for NFS traffic, undermining its isolation. Dual interface solves both problems cleanly — services on VLAN 30 reach NFS via 192.168.30.16, the firewall hard-blocks VLAN 30 → VLAN 10, so no compromised container can ever reach the Unraid UI at 192.168.10.10. Management UI is only reachable from Trusted (VLAN 20) on TCP 443.
+
+---
+
+### NAS X710 Port 2 — DAC to Switch (not spare 2.5GbE PCIe NIC)
+
+**Decision:** NAS VLAN 30 data interface uses X710 Port 2 SFP+ via DAC to USW-Pro-Max-24 SFP+ port, giving 10GbE on the NFS/Plex traffic path. Spare 2.5GbE PCIe NIC not used.
+
+**What was considered:**
+
+- Spare 2.5GbE PCIe NIC installed in NAS for VLAN 30 interface
+- X710 Port 2 DAC to switch SFP+ port (chosen)
+
+**Why:** The NAS data interface is the busiest path in the entire setup — NFS mounts for the ARR stack, Plex streaming, PBS backup traffic all flow through it simultaneously. 10GbE on this path is the highest-value use of the switch's remaining SFP+ port. The MS-A2 VM/LXC traffic (Traefik, ARR API calls, DNS) never approaches 2.5GbE saturation, so the MS-A2 uses its onboard 2.5GbE RJ45 for LAN instead.
+
+---
+
+### MS-A2 LAN Interface — Onboard 2.5GbE RJ45 (not DAC to switch)
+
+**Decision:** MS-A2 uses its onboard 2.5GbE RJ45 port for VM/LXC LAN traffic to the switch. The 1M DAC cable originally purchased for MS-A2 → switch is repurposed for NAS X710 Port 2 → switch.
+
+**What was considered:**
+
+- 1M DAC from MS-A2 SFP+ to switch SFP+ (original plan)
+- Onboard 2.5GbE RJ45 to switch RJ45 (chosen)
+
+**Why:** VM/LXC workloads on pve-prod-01 (Traefik, ARR stack, Authentik, Immich, DNS) do not come close to saturating 2.5GbE. Using the DAC on MS-A2 would consume the switch's last SFP+ port for no meaningful performance gain, while the NAS data interface benefits significantly from 10GbE. Repurposing the 1M DAC to the NAS eliminates the need to purchase an additional cable.
+
+---
+
+### pi-prod-01 — VLAN 10 (Management), Not VLAN 30
+
+**Decision:** pi-prod-01 remains on VLAN 10 at 192.168.10.20.
+
+**What was considered:**
+
+- VLAN 30 (Services) — would co-locate Pi with services it monitors, but requires explicit firewall rule for QDevice traffic to reach Proxmox nodes on VLAN 10
+- VLAN 10 (Management) — chosen
+
+**Why:** QDevice is infrastructure — it belongs on the management network with the Proxmox nodes it serves as a tiebreaker. VLAN 10 has outbound reach to all VLANs, so Beszel and Uptime Kuma can probe services on VLAN 30 without any extra firewall rules. Return traffic is handled by the stateful firewall (allow established connections). Placing the Pi on VLAN 30 would require punching a hole from VLAN 30 → VLAN 10 for QDevice, which is exactly the kind of management VLAN exposure the design aims to avoid.
+
+---
+
+### IP Addressing Scheme — 192.168.x.x Retained
+
+**Decision:** Keep 192.168.x.x addressing. VLAN 10 = 192.168.10.0/24, VLAN 20 = 192.168.20.0/24, VLAN 30 = 192.168.30.0/24, VLAN 40 = 192.168.40.0/24.
+
+**What was considered:**
+
+- 10.0.x.x (e.g. 10.0.10.0/24 per VLAN)
+- 10.10.x.x (e.g. 10.10.10.0/24 per VLAN — aesthetically cleaner, NAS would be 10.10.10.10)
+- 192.168.x.x (chosen — carry forward)
+
+**Why:** No practical benefit to switching. Both 10.x.x.x and 192.168.x.x are RFC 1918 private ranges with identical routing behavior. 192.168.x.x gives 254 hosts per VLAN which is more than sufficient for a homelab. The UDM-SE is already configured, v2 devices are already on 192.168.20.x, and all documentation is already written around 192.168.x.x. Switching creates documentation churn, reconfiguration work, and risk to the live v2 setup for zero functional gain.
+
+---
+
+### TrueNAS Media Migration — VM on pve-prod-01 (Option 2)
+
+**Decision:** Migrate 3.32TiB of media from TrueNAS RAIDZ1 to Unraid by spinning up a temporary TrueNAS VM on pve-prod-01 with LSI HBA passthrough, importing the existing pool, and copying directly to Unraid over the network.
+
+**What was considered:**
+
+- Boot existing v2 Proxmox SSD on MS-A2 hardware — rejected due to Secure Boot and MAC address/hardware mismatch issues
+- Copy TrueNAS → Synology → Unraid (double transfer, ~28-30 hours total) — rejected as unnecessarily slow
+- TrueNAS VM on pve-prod-01 → Unraid direct copy (~14-15 hours, single transfer) — chosen
+
+**Why:** ZFS RAIDZ1 cannot be natively read by Unraid. A temporary TrueNAS VM with HBA passthrough is the cleanest single-transfer path — import the existing pool, copy to Unraid over LAN, decommission the VM. Avoids double transfer time and keeps the LSI HBA in use without extra steps. v2 Proxmox host Gigabyte mobo was sold before this decision was finalized, making Option 1 (booting old SSD on new hardware) the only alternative, which was rejected due to hardware compatibility issues.
