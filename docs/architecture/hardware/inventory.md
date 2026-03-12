@@ -1,6 +1,6 @@
 # Hardware Inventory
 
-**Last Updated:** 2026-02-28 _Update this file whenever hardware is added, swapped, or retired._
+**Last Updated:** 2026-03-12 
 
 ---
 
@@ -166,7 +166,9 @@
 
 **Notes:**
 
-- NUT server on nas-prod-01, NUT clients on pve-prod-01 and pve-prod-02. On low-battery signal: Proxmox VMs and LXCs shut down first → hypervisors shut down → Unraid shuts down last.
+- NUT server configured and running on nas-prod-01 (Netserver mode, usbhid-ups driver). UPS confirmed: On Line, 100% battery, 1500VA nominal, 15% load at current draw.
+- Shutdown timer: 6 minutes on battery before initiating shutdown sequence. Proxmox nodes (NUT clients) shut down VMs/LXCs then hypervisor → Unraid shuts down last.
+- NUT clients on pve-prod-01 and pve-prod-02 to be configured in Phase 3.
 - First hardware purchased — non-negotiable before spinning up any HDDs.
 
 ---

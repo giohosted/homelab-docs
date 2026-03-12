@@ -3,7 +3,7 @@
 **Host:** nas-prod-01  
 **OS:** Unraid 7.2.4  
 **Chassis:** Rosewill RSV-L4412U (4U, 12-bay)  
-**Last Updated:** 2026-03-11
+**Last Updated:** 2026-03-12
 
 ---
 
@@ -78,11 +78,15 @@
 
 ## UPS & Graceful Shutdown
 
-- **UPS:** Tripp-Lite SMART1500LCDXL connected via USB
-- **NUT server:** runs on nas-prod-01 (Unraid NUT plugin by dmacias)
-- **NUT clients:** pve-prod-01, pve-prod-02 (configured in Phase 3)
-- **Shutdown order:** Proxmox VMs/LXCs → Proxmox hypervisors → Unraid last
-- **Status:** NUT installed, pending USB-B cable (arriving 2026-03-12)
+* **UPS:** Tripp-Lite SMART1500LCDXL connected via USB-B cable to nas-prod-01
+* **NUT plugin:** dmacias/Network UPS Tools, NUT 2.8.4
+* **NUT mode:** Netserver — nas-prod-01 is the NUT server, Proxmox nodes connect as clients (Phase 3)
+* **Driver:** usbhid-ups (auto-detected), port: auto
+* **UPS confirmed:*** On Line, 100% battery, 34 min runtime at 15% load (225 VA), 1500VA nominal
+* **Shutdown timer:** 6 minutes on battery before initiating shutdown sequence
+* **Shutdown order:** Proxmox nodes receive NUT signal and shut down VMs/LXCs then hypervisor → NAS shuts down last
+* **NUT clients:** pve-prod-01, pve-prod-02 — to be configured in Phase 3
+
 
 ---
 

@@ -1,7 +1,8 @@
 # Phase 2 — NAS Build & Storage Commissioning
 
-**Status:** In Progress  
+**Status:** Completed
 **Started:** 2026-03-10  
+**Completed:** 2026-03-12  
 **Hardware:** nas-prod-01 (Rosewill RSV-L4412U, i5-13400, 32GB DDR4, ASUS TUF Z690-Plus WiFi D4)
 
 ---
@@ -29,13 +30,7 @@
 - Enabled Docker, configured Plex container on eth1 (192.168.30.2), iGPU /dev/dri passthrough confirmed, Intel Raptor Lake-S UHD Graphics (QuickSync) active in Plex transcoder settings
 - Configured Discord webhook notifications
 - Installed plugins: ZFS Master, ZnapZend, NUT, Intel-GPU-TOP, Dynamix System Temp, Unassigned Devices, Fix Common Problems
-
----
-
-## Remaining
-
-- [ ] NUT configuration — USB-B cable arriving 2026-03-12
-- [ ] eth2 configuration (point-to-point DAC link to pve-prod-01) — Phase 3
+- Configured NUT (Network UPS Tools) — Netserver mode, usbhid-ups driver, USB-B cable connected to Tripp-Lite SMART1500LCDXL. UPS confirmed: On Line, 100% battery, 34 min runtime at 15% load (225 VA). Shutdown timer: 6 minutes on battery before initiating shutdown sequence. NAS shuts down last by design — Proxmox nodes are NUT clients and shut down first when they receive the signal.
 
 ---
 
@@ -45,5 +40,7 @@
 - No cache pool at launch — confirmed per roadmap, no workload justifies it
 - ZnapZend chosen over cron jobs for ZFS snapshots — cleaner, purpose-built tool
 - Plex bound to eth1 (192.168.30.16 network, container IP 192.168.30.2) not eth0 — services belong on VLAN 30, not management VLAN 10
-- lnxserver Plex template used (ich777 template not available)
+- linxserver Plex template used (ich777 template not available)
 - PUID/PGID set to 2000:2000 on Plex container, consistent with all service containers
+- NUT mode set to Netserver (not Standalone) — Proxmox nodes will connect as NUT clients in Phase 3. Netserver required for multi-host shutdown coordination.
+- Shutdown timer set to 6 minutes on battery — provides blip protection and enough time for Proxmox nodes to gracefully shut down VMs before NAS powers off.
