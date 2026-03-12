@@ -1,6 +1,6 @@
 # IP Address Plan
 
-**Last updated:** 2026-03-05
+**Last updated:** 2026-03-11
 
 ---
 
@@ -40,16 +40,17 @@ Personal laptops, phones, trusted client devices. v2 services remain here during
 
 All v3 VMs, LXCs, and the NAS data interface. Containers inside VMs are accessed via Traefik on the VM's IP — they do not get individual VLAN IPs.
 
-| Device                                      | IP            | Interface             | Notes                                                                      |
-| ------------------------------------------- | ------------- | --------------------- | -------------------------------------------------------------------------- |
-| dns-prod-01 (AdGuard LXC, pve-prod-01)      | 192.168.30.10 | Virtual (VLAN tag 30) | Primary DNS — AdGuard Home                                                 |
-| docker-prod-01 (media/apps VM, pve-prod-01) | 192.168.30.11 | Virtual (VLAN tag 30) | All media stack containers behind Traefik                                  |
-| pbs-prod-01 (PBS VM, pve-prod-02)           | 192.168.30.12 | Virtual (VLAN tag 30) | Proxmox Backup Server                                                      |
-| auth-prod-01 (Authentik VM, pve-prod-01)    | 192.168.30.13 | Virtual (VLAN tag 30) | Authentik IdP — dedicated VM                                               |
-| immich-prod-01 (Immich VM, pve-prod-01)     | 192.168.30.14 | Virtual (VLAN tag 30) | Immich — isolated for resource tuning                                      |
-| dns-prod-02 (AdGuard LXC, pve-prod-02)      | 192.168.30.15 | Virtual (VLAN tag 30) | Secondary DNS — synced from dns-prod-01                                    |
-| nas-prod-01 — **data/NFS**                  | 192.168.30.16 | X710 Port 2 SFP+      | NFS exports, Plex container traffic. Services mount NFS from this IP only. |
-| 192.168.30.100+                             | —             | —                     | DHCP / sandbox / test / future k3s nodes                                   |
+| Device                                      | IP            | Interface             | Notes                                                                        |
+| ------------------------------------------- | ------------- | --------------------- | ---------------------------------------------------------------------------- |
+| dns-prod-01 (AdGuard LXC, pve-prod-01)      | 192.168.30.10 | Virtual (VLAN tag 30) | Primary DNS — AdGuard Home                                                   |
+| docker-prod-01 (media/apps VM, pve-prod-01) | 192.168.30.11 | Virtual (VLAN tag 30) | All media stack containers behind Traefik                                    |
+| pbs-prod-01 (PBS VM, pve-prod-02)           | 192.168.30.12 | Virtual (VLAN tag 30) | Proxmox Backup Server                                                        |
+| auth-prod-01 (Authentik VM, pve-prod-01)    | 192.168.30.13 | Virtual (VLAN tag 30) | Authentik IdP — dedicated VM                                                 |
+| immich-prod-01 (Immich VM, pve-prod-01)     | 192.168.30.14 | Virtual (VLAN tag 30) | Immich — isolated for resource tuning                                        |
+| dns-prod-02 (AdGuard LXC, pve-prod-02)      | 192.168.30.15 | Virtual (VLAN tag 30) | Secondary DNS — synced from dns-prod-01                                      |
+| nas-prod-01 — **data/NFS**                  | 192.168.30.16 | X710 Port 2 SFP+      | NFS exports, Plex container traffic. Services mount NFS from this IP only.   |
+| plex (Docker container, nas-prod-01)        | 192.168.30.2  | X710 Port 2 SFP+      | Plex Media Server — Docker container on nas-prod-01, bound to eth1 (VLAN 30) |
+| 192.168.30.100+                             | —             | —                     | DHCP / sandbox / test / future k3s nodes                                     |
 
 > **NAS dual-interface design:** nas-prod-01 has two logical network presences. The **onboard 2.5GbE at 192.168.10.10** is management-only (Unraid UI). The **X710 Port 2 at 192.168.30.16** is the data plane (NFS, Plex). Services on VLAN 30 mount NFS from 192.168.30.16 without ever crossing into VLAN 10. The firewall hard-blocks VLAN 30 → VLAN 10, so a compromised service container cannot reach the Unraid management UI.
 

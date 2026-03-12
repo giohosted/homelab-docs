@@ -269,14 +269,14 @@ Rules enforced at UDM-SE. Default policy is DENY ALL inter-VLAN. Explicit ALLOW 
 
 #### Unraid NAS Shares (/mnt/user/)
 
-|Share|Pool|NAS Path|Contents|
-|---|---|---|---|
-|media|Parity Array|/mnt/user/media|All media — movies (1080p+4K), TV, anime, books|
-|downloads|Parity Array|/mnt/user/downloads|Active download staging for all categories|
-|photos|ZFS Mirror|/mnt/user/photos|Immich library (irreplaceable — ZFS protected)|
-|backups|ZFS Mirror|/mnt/user/backups|PBS backups, Docker appdata, Plex DB, Proxmox dumps|
-|appdata|Parity Array|/mnt/user/appdata|Docker/app config from NAS perspective — container appdata actually lives on docker-prod-01 local disk|
-|isos|Parity Array|/mnt/user/isos|Proxmox ISO images|
+| Share     | Pool         | NAS Path            | Contents                                                                                               |
+| --------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------------------ |
+| media     | Parity Array | /mnt/user/media     | All media — movies (1080p+4K), TV, anime, books                                                        |
+| downloads | Parity Array | /mnt/user/downloads | Active download staging for all categories                                                             |
+| photos    | ZFS Mirror   | /mnt/user/photos    | Immich library (irreplaceable — ZFS protected)                                                         |
+| backups   | ZFS Mirror   | /mnt/user/backups   | PBS backups, Docker appdata, Plex DB, Proxmox dumps                                                    |
+| appdata   | Parity Array | /mnt/user/appdata   | Docker/app config from NAS perspective — container appdata actually lives on docker-prod-01 local disk |
+| isos      | Parity Array | /mnt/user/isos      | Proxmox ISO images                                                                                     |
 
 > **CRITICAL:** `/mnt/user` is Unraid's internal path and cannot be renamed. This path is never seen by containers — the docker-host VM mounts the NFS export as `/data`. All compose files reference `/data` paths only.
 
