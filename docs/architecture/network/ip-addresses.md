@@ -8,17 +8,17 @@
 
 Strictly for infrastructure control plane interfaces — devices you administer, not services you consume.
 
-|Device|IP|Interface|Notes|
-|---|---|---|---|
-|UDM-SE|192.168.10.1|Built-in|Gateway — already configured, do not change|
-|Core Switch (UniFi USW-Pro-Max-24)|192.168.10.2|Management|Switch management interface|
-|UPS (if networked later)|192.168.10.3|—|Reserved — NUT handles shutdown via USB for now|
-|nas-prod-01 — **mgmt only**|192.168.10.10|Onboard 2.5GbE|Unraid web UI access only. NFS is NOT served here.|
-|pve-prod-01 (MS-A2)|192.168.10.11|2.5GbE RJ45|Proxmox management UI|
-|pve-prod-02 (Optiplex)|192.168.10.12|GbE RJ45|Proxmox management UI|
-|pi-prod-01 (Raspberry Pi)|192.168.10.20|GbE RJ45|QDevice + Uptime Kuma + Beszel server. VLAN 10 outbound reach covers all VLANs — Beszel/Kuma probes work without extra rules. Return traffic allowed via stateful firewall.|
-|192.168.10.30–.49|—|—|Reserved — future expansion / IPMI / OOB|
-|192.168.10.100+|—|—|DHCP pool if needed|
+| Device                             | IP            | Interface      | Notes                                                                                                                                                                       |
+| ---------------------------------- | ------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UDM-SE                             | 192.168.10.1  | Built-in       | Gateway — already configured, do not change                                                                                                                                 |
+| Core Switch (UniFi USW-Pro-Max-24) | 192.168.10.2  | Management     | Switch management interface                                                                                                                                                 |
+| UPS (if networked later)           | 192.168.10.3  | —              | Reserved — NUT handles shutdown via USB for now                                                                                                                             |
+| nas-prod-01 — **mgmt only**        | 192.168.10.10 | Onboard 2.5GbE | Unraid web UI access only. NFS is NOT served here.                                                                                                                          |
+| pve-prod-01 (MS-A2)                | 192.168.10.11 | 2.5GbE RJ45    | Proxmox management UI                                                                                                                                                       |
+| pve-prod-02 (Optiplex)             | 192.168.10.12 | GbE RJ45       | Proxmox management UI                                                                                                                                                       |
+| pi-prod-01 (Raspberry Pi)          | 192.168.10.20 | GbE RJ45       | QDevice + Uptime Kuma + Beszel server. VLAN 10 outbound reach covers all VLANs — Beszel/Kuma probes work without extra rules. Return traffic allowed via stateful firewall. |
+| 192.168.10.30–.49                  | —             | —              | Reserved — future expansion / IPMI / OOB                                                                                                                                    |
+| 192.168.10.100+                    | —             | —              | DHCP pool if needed                                                                                                                                                         |
 
 > **Note:** VLAN 10 is reachable from Trusted (VLAN 20) on TCP 443, 8006, 22 only. All other VLANs are hard-blocked from reaching VLAN 10. See `firewall-rules.md`.
 

@@ -120,3 +120,10 @@ A compromised container on docker-prod-01 can reach the NFS share it already has
 | **IoT (40)** | ❌ Deny | ❌ Deny | ❌ Deny | — | ✅ Allow |
 
 
+**Pending Rule (add during Beszel setup in Phase 5):**
+
+- Source: VLAN 30 (Services)
+- Destination: 192.168.10.20 (pi-prod-01) specifically — not all of VLAN 10
+- Port: TCP 45876 (Beszel agent default)
+- Action: ALLOW
+- Reason: Beszel agents on VLAN 30 hosts initiate connections to Beszel server on pi-prod-01 (VLAN 10). Rule 5 blocks this by default. Targeted rule keeps blast radius small — does not open broad VLAN 30 → VLAN 10 access.

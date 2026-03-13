@@ -1,0 +1,1 @@
+**Beszel firewall rule:** Before deploying Beszel, add the VLAN 30 → 192.168.10.20 TCP 45876 allow rule in UniFi. See `firewall-rules.md` for full details.
