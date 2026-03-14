@@ -79,15 +79,13 @@ Host and VM metrics server. Beszel agents on VLAN 30 hosts connect inbound to pi
 
 ## SSH Access
 
-Root SSH login is currently enabled (required for QDevice setup). 
-
-> ⚠️ **TODO:** Disable root SSH once QDevice is confirmed stable over several days.  
-> Edit `/etc/ssh/sshd_config` — set `PermitRootLogin no` then `sudo systemctl restart ssh`
-
 Normal access:
 ```bash
 ssh gdelgado@192.168.10.20
 ```
+
+- Root SSH was enabled temporarily during QDevice setup — disabled after QDevice confirmed stable
+- `PermitRootLogin no` set in `/etc/ssh/sshd_config` ✅
 
 ---
 
@@ -96,3 +94,4 @@ ssh gdelgado@192.168.10.20
 - SD card boot is acceptable given the lightweight role — monitor for SD card issues, consider USB SSD if problems arise
 - Pi must remain powered and reachable for cluster quorum — if Pi goes offline, cluster still operates but loses tiebreaker protection
 - Do NOT move Pi off VLAN 10 — QDevice must be on the same management network as Proxmox nodes
+- Phase 5 TODO: Set up SSH key-based authentication across all hosts including pi-prod-01

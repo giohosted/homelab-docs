@@ -42,7 +42,7 @@
 
 | Interface | Type | Role |
 |-----------|------|------|
-| eno1 (or similar) | 1GbE RJ45 | Management + VM/LXC traffic via vmbr0 |
+| eno1 | 1GbE RJ45 | Management + VM/LXC traffic via vmbr0 |
 | vmbr0 | Linux bridge | VLAN-aware — management untagged, VMs/LXCs tagged per guest |
 
 ---
@@ -50,9 +50,9 @@
 ## Proxmox Configuration
 
 ### Apt Repositories
-- Enterprise repos removed
+- Enterprise repos removed: `pve-enterprise.sources`
 - No-subscription repo added (trixie)
-- Subscription nag popup removed
+- Subscription nag popup removed from proxmoxlib.js
 
 ### Cluster
 - Member of cluster `homelab-v3`
@@ -61,19 +61,24 @@
 - QDevice configured — pi-prod-01 (192.168.10.20) acts as tiebreaker
 
 ### Storage
+
 | Storage | Type | Notes |
 |---------|------|-------|
 | local | Directory | ISO images, CT templates |
 | local-lvm | LVM-thin | VM disks, LXC rootfs |
+| pbs-prod-01 | PBS | nas-backups datastore at 192.168.30.12 |
+
+> local-zfs ghost entry was present after install and removed via `pvesm remove local-zfs` — pve-prod-02 uses local-lvm for VM disks.  
+> local-lvm entry was also lost and re-added via: `pvesm add lvmthin local-lvm --vgname pve --thinpool data --content rootdir,images`
 
 ---
 
 ## Guests
 
-| ID | Name | Type | VLAN | IP | Status |
-|----|------|------|------|----|--------|
-| — | pbs-prod-01 | VM (Debian) | 30 | 192.168.30.12 | Pending |
-| — | dns-prod-02 | LXC (Debian 12) | 30 | 192.168.30.15 | Pending |
+| ID  | Name | Type | VLAN | IP | Status |
+|-----|------|------|------|----|--------|
+| 102 | dns-prod-02 | LXC (Debian 12) | 30 | 192.168.30.15 | Running |
+| 103 | pbs-prod-01 | VM (PBS 4.1.0) | 30 | 192.168.30.12 | Running |
 
 ---
 
@@ -95,3 +100,5 @@ RAM left at 16GB for now — current workload is light (PBS VM + one AdGuard LXC
 ### Issues Encountered
 - Proxmox installer showed "no supported hard disk found" on first boot — resolved by changing SATA controller mode from RAID/RST to AHCI in Dell BIOS (F2 → System Configuration → SATA Operation → AHCI)
 - Windows was previously installed on the NVMe drive — AHCI mode change resolved installer detection issue
+- local-zfs ghost entry present after install — removed with `pvesm remove local-zfs`
+- local-lvm entry missing after local-zfs removal — re-added with `pvesm add lvmthin`
