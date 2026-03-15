@@ -165,21 +165,80 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 
 ---
 
-## Wave 2 — Media Stack (Pending — Next Chat)
+## Wave 2 — Media Stack ✅ Complete
 
-| Service | Status |
-|---------|--------|
-| Plex (already on Unraid) | ⬜ Restore DB from backup, verify QuickSync |
-| Sonarr TV | ⬜ Pending |
-| Sonarr Anime | ⬜ Pending |
-| Radarr 1080p | ⬜ Pending |
-| Radarr 4K | ⬜ Pending |
-| Prowlarr | ⬜ Pending |
-| Bazarr | ⬜ Pending |
-| Profilarr | ⬜ Pending |
-| Maintainerr | ⬜ Pending |
-| Seerr | ⬜ Pending |
-| Tautulli | ⬜ Pending |
+### NFS Restructure
+
+Before deploying the ARR stack, the NFS export structure was restructured to support hardlinks. Previously `media` and `downloads` were separate Unraid shares exported individually — this caused docker-prod-01 to receive them as separate NFS mounts, breaking hardlinks across them.
+
+**Fix:** Created a single `data` share on Unraid containing `media/` and `downloads/` as subfolders. Exported `data` as a single NFS share. docker-prod-01 mounts `192.168.30.16:/mnt/user/data` as `/data` via NFSv3 — one filesystem, hardlinks work correctly.
+
+Unraid's Max Server Protocol was changed from NFSv4 to NFSv3. NFSv4's pseudo-root behavior was causing sub-share automounting on top of the parent mount, which recreated the separate-filesystem problem even with a single fstab entry.
+
+See `architecture/decisions-log.md` for full rationale.
+
+### Plex
+
+- **Host:** nas-prod-01 (Docker container, bound to 192.168.30.2)
+- **DB restored from:** `/mnt/user/backups/plex/db/plex-db-2026-03-10.tar.gz`
+- **Libraries:** Movies (`/data/media/movies`), TV Shows (`/data/media/tv`), Anime (`/data/media/anime`)
+- **Hardware transcoding:** Intel Raptor Lake-S UHD Graphics (QuickSync) — confirmed active
+- **HEVC encoding:** Set to "HEVC sources only"
+- **Plex container media path updated:** `/mnt/user/data` → `/data` (updated from `/mnt/user` after NFS restructure)
+
+#### Issues Encountered
+- Permissions error on DB restore — extracted files owned by root, Plex runs as 2000:2000. Fixed with `chown -R 2000:2000` on restored files.
+
+### ARR Stack
+
+- **Host:** docker-prod-01 (192.168.30.11)
+- **Compose:** `/opt/stacks/arr/compose.yaml`
+- **All containers:** PUID=2000, PGID=2000, TZ=America/Chicago
+- **Network:** proxy (external, shared with Traefik)
+- **Middleware:** `local-only@docker` on all internal services
+
+| Container | Image | Port | URL | Config Source |
+|-----------|-------|------|-----|---------------|
+| sonarr-tv | lscr.io/linuxserver/sonarr:latest | 8989 | sonarr-tv.giohosted.com | Restored from v2 backup |
+| sonarr-anime | lscr.io/linuxserver/sonarr:latest | 8989 | sonarr-anime.giohosted.com | Fresh |
+| radarr-1080p | lscr.io/linuxserver/radarr:latest | 7878 | radarr-1080p.giohosted.com | Restored from v2 backup |
+| radarr-4k | lscr.io/linuxserver/radarr:latest | 7878 | radarr-4k.giohosted.com | Fresh |
+| prowlarr | lscr.io/linuxserver/prowlarr:latest | 9696 | prowlarr.giohosted.com | Restored from v2 backup |
+| bazarr | lscr.io/linuxserver/bazarr:latest | 6767 | bazarr.giohosted.com | Restored from v2 backup |
+| profilarr | santiagosayshey/profilarr:latest | 6868 | profilarr.giohosted.com | Restored from v2 backup |
+| maintainerr | ghcr.io/maintainerr/maintainerr:latest | 6246 | maintainerr.giohosted.com | Restored from v2 backup |
+| seerr | ghcr.io/seerr-team/seerr:latest | 5055 | request.giohosted.com | Restored from v2 backup |
+| tautulli | lscr.io/linuxserver/tautulli:latest | 8181 | tautulli.giohosted.com | Restored from v2 backup |
+| flaresolverr | ghcr.io/flaresolverr/flaresolverr:latest | 8191 | Internal only | Restored from v2 backup |
+
+#### Root Folders
+
+| Container | Root Folder |
+|-----------|-------------|
+| sonarr-tv | `/data/media/tv` |
+| sonarr-anime | `/data/media/anime` |
+| radarr-1080p | `/data/media/movies/1080p` |
+| radarr-4k | `/data/media/movies/4k` |
+
+#### Prowlarr Applications
+
+| App | URL |
+|-----|-----|
+| Sonarr TV | `http://sonarr-tv:8989` |
+| Sonarr Anime | `http://sonarr-anime:8989` |
+| Radarr 1080p | `http://radarr-1080p:7878` |
+| Radarr 4K | `http://radarr-4k:7878` |
+
+#### Bazarr
+- Connected to Sonarr TV and Radarr 1080p only — Bazarr 1.5.6 supports only one Sonarr and one Radarr instance
+- Sonarr Anime and Radarr 4K have no Bazarr coverage — acceptable, anime subtitles typically embedded
+- Connected to Plex at 192.168.30.2:32400 for subtitle notifications
+
+#### Issues Encountered
+- `local-only@file` middleware reference in ARR compose — should be `local-only@docker`. Middleware is defined in Traefik container labels, not a file provider. Fixed with `sed`.
+- Maintainerr crash-looping — v2.0.0+ runs as internal `node` user (UID 1000), not root. Fixed with `chown -R 1000:1000` on appdata.
+- Seerr crash-looping — v3 runs internally as `node:node` (UID 1000:1000). v2 appdata was owned by `service` user (UID 2000). Fixed with `chown -R 1000:1000` on appdata.
+- Seerr repeatedly falling off proxy network — caused by crash-loop. Resolved once permissions fixed and container stabilized.
 
 ---
 
@@ -218,6 +277,16 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 | `traefik.giohosted.com` | 192.168.30.11 | Traefik dashboard — internal only |
 | `auth.giohosted.com` | 192.168.30.11 | Authentik via Traefik |
 | `dockman.giohosted.com` | 192.168.30.11 | Dockman — internal only |
+| `sonarr-tv.giohosted.com` | 192.168.30.11 | Sonarr TV |
+| `sonarr-anime.giohosted.com` | 192.168.30.11 | Sonarr Anime |
+| `radarr-1080p.giohosted.com` | 192.168.30.11 | Radarr 1080p |
+| `radarr-4k.giohosted.com` | 192.168.30.11 | Radarr 4K |
+| `prowlarr.giohosted.com` | 192.168.30.11 | Prowlarr |
+| `bazarr.giohosted.com` | 192.168.30.11 | Bazarr |
+| `profilarr.giohosted.com` | 192.168.30.11 | Profilarr |
+| `maintainerr.giohosted.com` | 192.168.30.11 | Maintainerr |
+| `request.giohosted.com` | 192.168.30.11 | Seerr |
+| `tautulli.giohosted.com` | 192.168.30.11 | Tautulli |
 
 ---
 
@@ -245,6 +314,10 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 | No TLS Verify on cloudflared routes | Traefik cert is hostname-based — IP connections fail cert validation. Safe on private LAN inside encrypted Cloudflare Tunnel. |
 | Homarr removed from scope | No longer needed — Dockman covers compose management, individual service UIs cover operations. |
 | Beszel + Uptime Kuma moved to Phase 5 | Monitoring tools belong in the hardening/operations phase, not service migration. |
+| Single `data` NFS share instead of separate `media` and `downloads` | Hardlinks require files to be on the same filesystem. Separate NFS mounts — even from the same NAS — are separate filesystems. Single share with subfolders is the correct pattern per TRaSH guide. |
+| NFSv3 instead of NFSv4 | NFSv4 pseudo-root behavior caused sub-share automounting on top of the parent mount, recreating the separate-filesystem problem. NFSv3 does not have this behavior. |
+| Bazarr covers Sonarr TV and Radarr 1080p only | Bazarr supports one Sonarr and one Radarr instance. Anime subtitles are typically embedded — no meaningful loss from excluding Sonarr Anime and Radarr 4K. |
+| Seerr appdata ownership set to 1000:1000 | Seerr v3 runs internally as node:node (UID 1000). v2 appdata was owned by service user (2000) — mismatch caused crash-loop. |
 
 ---
 
@@ -255,4 +328,5 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 - ⬜ PBS backing up all VMs nightly
 - ⬜ Backup scripts running with Healthchecks heartbeats
 - ✅ Wave 1 complete — Traefik, Authentik, cloudflared, adguardhome-sync, Dockman deployed
+- ✅ Wave 2 complete — Plex restored, full ARR stack deployed, NFS restructured for hardlinks
 - ✅ Media/photos/books data migrated to nas-prod-01

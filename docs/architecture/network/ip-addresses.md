@@ -33,7 +33,7 @@ Personal laptops, phones, trusted client devices. v2 services remain here during
 | v2 Proxmox host  | 192.168.20.2  | Decommission after Phase 4 cutover             |
 | v2 Docker host   | 192.168.20.10 | Decommission after Phase 4 cutover             |
 | Personal devices | DHCP          | Laptops, phones, trusted clients               |
-| Synology NAS     | 192.168.20.9  | needs to move to VLAN 30 after Phase 4 cutover |
+| Synology NAS     | 192.168.20.9  | Needs to move to VLAN 30 after Phase 4 cutover |
 
 ---
 
@@ -44,7 +44,7 @@ All v3 VMs, LXCs, and the NAS data interface. Containers inside VMs are accessed
 | Device                                      | IP            | Interface             | Notes                                                                        |
 | ------------------------------------------- | ------------- | --------------------- | ---------------------------------------------------------------------------- |
 | dns-prod-01 (AdGuard LXC, pve-prod-01)      | 192.168.30.10 | Virtual (VLAN tag 30) | Primary DNS — AdGuard Home                                                   |
-| docker-prod-01 (media/apps VM, pve-prod-01) | 192.168.30.11 | Virtual (VLAN tag 30) | All media stack containers behind Traefik                                    |
+| docker-prod-01 (media/apps VM, pve-prod-01) | 192.168.30.11 | Virtual (VLAN tag 30) | All media stack containers behind Traefik. Mounts `192.168.30.16:/mnt/user/data` as `/data` via NFSv3 — single mount covering all media and downloads. |
 | pbs-prod-01 (PBS VM, pve-prod-02)           | 192.168.30.12 | Virtual (VLAN tag 30) | Proxmox Backup Server                                                        |
 | auth-prod-01 (Authentik VM, pve-prod-01)    | 192.168.30.13 | Virtual (VLAN tag 30) | Authentik IdP — dedicated VM — deployed Phase 4                              |
 | immich-prod-01 (Immich VM, pve-prod-01)     | 192.168.30.14 | Virtual (VLAN tag 30) | Immich — isolated for resource tuning — Pending Phase 4                      |
@@ -63,17 +63,17 @@ All v3 VMs, LXCs, and the NAS data interface. Containers inside VMs are accessed
 
 Internet access only. No inter-VLAN routing.
 
-| Device      | IP                    | Notes                                     |
-|-------------|-----------------------|-------------------------------------------|
-| Gateway     | 192.168.40.1          | UDM-SE                                    |
-| IoT devices | DHCP 192.168.40.100+  | Smart home, printers, untrusted endpoints |
+| Device      | IP                   | Notes                                     |
+|-------------|----------------------|-------------------------------------------|
+| Gateway     | 192.168.40.1         | UDM-SE                                    |
+| IoT devices | DHCP 192.168.40.100+ | Smart home, printers, untrusted endpoints |
 
 ---
 
 ## Storage Network — Point-to-Point (No VLAN)
 
-| Link        | Interface A                  | Interface B               | IP A        | IP B        | Subnet       | Purpose |
-|-------------|------------------------------|---------------------------|-------------|-------------|--------------|---------|
+| Link        | Interface A                    | Interface B                    | IP A        | IP B        | Subnet      | Purpose |
+|-------------|--------------------------------|--------------------------------|-------------|-------------|-------------|---------|
 | NAS ↔ MS-A2 | nas-prod-01 X710 Port 1 (eth2) | pve-prod-01 SFP+ Port 1 (nic3) | 10.0.0.2/30 | 10.0.0.1/30 | 10.0.0.0/30 | Dedicated 10GbE storage traffic. Not on LAN switch. Not routed. |
 
 > This link is isolated — only these two devices can see it. Proxmox on pve-prod-01 uses this link for NFS storage mounts (nas-isos). VMs running on pve-prod-01 (including docker-prod-01) cannot access this link — they use VLAN 30 (192.168.30.16) for NFS instead.

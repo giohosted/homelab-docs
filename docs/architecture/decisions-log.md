@@ -1,6 +1,6 @@
 # Architecture Decisions Log
 
-**Last Updated:** 2026-02-28 _Living document — add an entry any time a significant decision is made. Include what was chosen, what was considered, and why. Future-you will thank present-you._
+**Last Updated:** 2026-03-15  
 
 ---
 
@@ -220,6 +220,34 @@
 
 ---
 
+### Single `data` NFS Share for Media and Downloads
+
+**Decision:** Consolidate `media` and `downloads` Unraid shares into a single `data` share with `media/` and `downloads/` as subfolders. Export only `data` via NFS to docker-prod-01.
+
+**What was considered:**
+
+- Separate `media` and `downloads` shares exported individually (original v3 setup)
+- Single `data` share containing both as subfolders (chosen)
+
+**Why:** Hardlinks require files to be on the same filesystem. Separate NFS mounts — even from the same NAS — are separate filesystems from the client's perspective. When Radarr imports a file from `/data/downloads` to `/data/media`, hardlinks only work if both paths resolve to the same underlying mount. With separate mounts they silently fall back to copy+delete, breaking seeding and wasting IO. A single `data` share with subfolders presents one filesystem to docker-prod-01. This is the correct pattern per the TRaSH guide for Unraid setups.
+
+**Migration:** Existing `media` and `downloads` share contents moved into `/mnt/user/data/media/` and `/mnt/user/data/downloads/` respectively. Old shares deleted. docker-prod-01 fstab updated to mount `192.168.30.16:/mnt/user/data` → `/data`. All container paths unchanged (`/data/media/...` and `/data/downloads/...`) — no ARR reconfiguration required.
+
+---
+
+### NFSv3 Instead of NFSv4
+
+**Decision:** Set Unraid's Max Server Protocol to NFSv3.
+
+**What was considered:**
+
+- NFSv4 (Unraid default)
+- NFSv3 (chosen)
+
+**Why:** NFSv4 uses a pseudo-root filesystem that automatically automounts sub-shares on top of a parent mount as the client traverses into them. Even after switching to a single `data` share fstab entry, NFSv4 was causing `media` and `downloads` to be automounted as separate NFS mounts on docker-prod-01 — recreating the separate-filesystem problem. NFSv3 does not have this pseudo-root behavior. Mounts are explicit and static. The `data` share mounts once at `/data` and stays that way.
+
+---
+
 ## Services & Compute
 
 ### Plex — Unraid Native Docker Container
@@ -291,6 +319,19 @@
 **Decision:** Install Cockpit alongside Docker on docker-prod-01.
 
 **Why:** Provides web-based day-to-day management of the VM — disk usage, network, logs, updates, file browser — without needing to SSH for routine tasks. Low overhead, high operational value.
+
+---
+
+### Bazarr — Covers Sonarr TV and Radarr 1080p Only
+
+**Decision:** Bazarr connected to Sonarr TV and Radarr 1080p only. Sonarr Anime and Radarr 4K have no Bazarr coverage.
+
+**What was considered:**
+
+- Two Bazarr instances (one per Sonarr/Radarr pair)
+- Single Bazarr covering TV + Movies only (chosen)
+
+**Why:** Bazarr 1.5.6 supports only one Sonarr and one Radarr instance. Running two Bazarr instances adds operational overhead with minimal benefit — anime subtitles are typically embedded in the release or not needed at all. 4K movies are for local viewing via Infuse which handles embedded subtitles natively. The value of automatic subtitle hunting is highest for regular TV and 1080p movies.
 
 ---
 

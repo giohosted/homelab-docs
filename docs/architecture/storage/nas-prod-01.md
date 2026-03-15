@@ -3,7 +3,7 @@
 **Host:** nas-prod-01  
 **OS:** Unraid 7.2.4  
 **Chassis:** Rosewill RSV-L4412U (4U, 12-bay)  
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-03-15
 
 ---
 
@@ -50,16 +50,45 @@
 
 | Share | Pool | Path | Purpose |
 |---|---|---|---|
-| media | Parity Array | /mnt/user/media | All media — movies, TV, anime, books |
-| downloads | Parity Array | /mnt/user/downloads | Active download staging |
+| data | Parity Array | /mnt/user/data | Single share for all media and downloads — required for hardlinks. Contains `media/` and `downloads/` as subfolders. |
 | appdata | Parity Array | /mnt/user/appdata | Docker/app config (NAS perspective) |
 | isos | Parity Array | /mnt/user/isos | Proxmox ISO images |
 | photos | ZFS Mirror | /mnt/user/photos | Immich library |
 | backups | ZFS Mirror | /mnt/user/backups | PBS backups, Docker appdata, Plex DB |
 
-- **NFS:** Enabled on all shares, exported Public
-- **Permissions:** UID/GID 2000:2000, chmod 775 on all shares
+### data share folder structure
+```
+data/
+├── media/
+│   ├── movies/
+│   │   ├── 1080p/
+│   │   └── 4k/
+│   ├── tv/
+│   ├── anime/
+│   └── books/
+│       ├── ebooks/
+│       └── audiobooks/
+└── downloads/
+    ├── movies/
+    ├── tv/
+    ├── anime/
+    └── books/
+        ├── ebooks/
+        │   ├── downloads/
+        │   └── ingest/
+        └── audiobooks/
+            └── downloads/
+```
+
+### NFS Exports
+
+- **Exported shares:** `data`, `appdata`, `isos`, `photos`, `backups`
+- **Security:** Private — rules for 192.168.30.0/24 and 10.0.0.0/30 with `no_root_squash`
+- **Protocol:** NFSv3 (Unraid Max Server Protocol set to NFSv3)
+- **Permissions:** `nobody:users`, chmod `a=,a+rX,u+w,g+w`
 - **SMB:** Disabled on all shares (NFS only)
+
+> **Note:** The `data` share is mounted on docker-prod-01 as a single NFSv3 mount at `/data`. This is required for hardlinks and atomic moves to work correctly across media and downloads. See `architecture/decisions-log.md` for rationale.
 
 ---
 
@@ -69,24 +98,23 @@
 |---|---|---|
 | plex | 192.168.30.2 | Plex Media Server — bound to eth1 (VLAN 30) |
 
-- iGPU passthrough: /dev/dri → Intel Raptor Lake-S UHD Graphics (QuickSync)
-- Hardware transcoding: enabled in Plex transcoder settings
-- Media path: /data → /mnt/user (full share access)
-- Appdata: /mnt/user/appdata/plex
+- **iGPU passthrough:** /dev/dri → Intel Raptor Lake-S UHD Graphics (QuickSync)
+- **Hardware transcoding:** enabled — HEVC encoding set to "HEVC sources only"
+- **Media path:** /data → /mnt/user/data (data share)
+- **Appdata:** /mnt/user/appdata/plex
 
 ---
 
 ## UPS & Graceful Shutdown
 
-* **UPS:** Tripp-Lite SMART1500LCDXL connected via USB-B cable to nas-prod-01
-* **NUT plugin:** dmacias/Network UPS Tools, NUT 2.8.4
-* **NUT mode:** Netserver — nas-prod-01 is the NUT server, Proxmox nodes connect as clients (Phase 3)
-* **Driver:** usbhid-ups (auto-detected), port: auto
-* **UPS confirmed:*** On Line, 100% battery, 34 min runtime at 15% load (225 VA), 1500VA nominal
-* **Shutdown timer:** 6 minutes on battery before initiating shutdown sequence
-* **Shutdown order:** Proxmox nodes receive NUT signal and shut down VMs/LXCs then hypervisor → NAS shuts down last
-* **NUT clients:** pve-prod-01, pve-prod-02 — to be configured in Phase 3
-
+- **UPS:** Tripp-Lite SMART1500LCDXL connected via USB-B cable to nas-prod-01
+- **NUT plugin:** dmacias/Network UPS Tools, NUT 2.8.4
+- **NUT mode:** Netserver — nas-prod-01 is the NUT server, Proxmox nodes connect as clients
+- **Driver:** usbhid-ups (auto-detected), port: auto
+- **UPS confirmed:** On Line, 100% battery, 34 min runtime at 15% load (225 VA), 1500VA nominal
+- **Shutdown timer:** 6 minutes on battery before initiating shutdown sequence
+- **Shutdown order:** Proxmox nodes receive NUT signal and shut down VMs/LXCs then hypervisor → NAS shuts down last
+- **NUT clients:** pve-prod-01, pve-prod-02 — configured in Phase 3
 
 ---
 
