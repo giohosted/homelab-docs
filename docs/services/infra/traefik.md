@@ -142,6 +142,33 @@ No Traefik restart needed — file provider watches for changes automatically.
 
 ---
 
+## Exposing a Service Externally via Cloudflare Tunnel
+
+For services that need external access, cloudflared routes traffic through Traefik. The pattern is always:
+
+1. Deploy the service with Traefik labels (Docker provider) or file provider static route as normal
+2. Add AdGuard DNS rewrite as normal
+3. In Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Published application routes → Add:
+   - Hostname: `service.giohosted.com`
+   - Service type: `HTTPS`
+   - URL: `192.168.30.11`
+   - Additional settings → TLS → **No TLS Verify: enabled**
+
+### Why HTTPS and not HTTP?
+Using `http://192.168.30.11` causes an infinite redirect loop — Traefik's HTTP→HTTPS redirect fires, cloudflared follows it, repeat forever. Always use `https://`.
+
+### Why No TLS Verify?
+Traefik's cert is a hostname wildcard (`*.giohosted.com`) — it doesn't cover bare IPs. When cloudflared connects to `192.168.30.11` by IP, TLS verification fails. No TLS Verify bypasses this check.
+
+This is safe because:
+- The cloudflared → Traefik hop is entirely on the private LAN (192.168.30.0/24)
+- The Cloudflare Tunnel is already encrypted end-to-end via QUIC
+- The user's browser connection to Cloudflare's edge is fully protected by Cloudflare's own valid TLS
+
+See `services/infra/cloudflared.md` for full cloudflared documentation.
+
+---
+
 ## Directory Structure
 ```
 /opt/stacks/traefik/

@@ -61,7 +61,7 @@ All copies verified with `du -sh` on nas-prod-01. Transfer rate ~115 MB/s (1GbE 
 
 ---
 
-## Wave 1 — Infrastructure Stack
+## Wave 1 — Infrastructure Stack ✅ Complete
 
 ### Traefik
 
@@ -81,14 +81,14 @@ All copies verified with `du -sh` on nas-prod-01. Transfer rate ~115 MB/s (1GbE 
 #### Cross-Host Routing
 Traefik routes to services on other VMs via the file provider. Static route configs live in `/opt/appdata/traefik/config/`. Current routes:
 
-| File | Routes to |
-|------|-----------|
-| `authentik.yml` | `http://192.168.30.13:9000` |
+| File | Hostname | Backend |
+|------|----------|---------|
+| `authentik.yml` | `auth.giohosted.com` | `http://192.168.30.13:9000` |
 
 #### Issues Encountered
 - Chrome Secure DNS (DoH) bypassed AdGuard rewrites — resolved by disabling Chrome's secure DNS setting
 - Old Cloudflare wildcard A record (`*` → `69.216.122.32`) caused Chrome DoH to resolve to Cloudflare IPs — deleted all v2 A records from Cloudflare DNS
-- Old Cloudflare Tunnel record for `auth` caused connection errors — deleted, will be recreated when cloudflared is deployed
+- Old Cloudflare Tunnel record for `auth` caused connection errors — deleted and recreated in cloudflared v3 setup
 
 ---
 
@@ -109,28 +109,63 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 - Authentik server exposed on port 9000 — Traefik routes `auth.giohosted.com` → `192.168.30.13:9000` via file provider static route
 - No Docker labels on Authentik containers — cross-host routing handled entirely by Traefik file provider
 
-#### Network Design
-Authentik runs on a dedicated VM (auth-prod-01) — not on docker-prod-01. Traefik on docker-prod-01 cannot discover Authentik containers via Docker socket (different host). Static route in Traefik file provider handles routing by IP instead.
-
 #### Issues Encountered
 - Authentik compose initially included Traefik Docker labels and proxy network — removed since Traefik cannot discover containers on a different host via Docker socket
 - Old Cloudflare Tunnel record for `auth.giohosted.com` caused browser to receive Cloudflare error 1033 — deleted from Cloudflare DNS
 
 ---
 
-## Wave 1 — Remaining (In Progress)
+### cloudflared
 
-| Service | Status | Notes |
-|---------|--------|-------|
-| cloudflared | ⬜ Pending | CF Tunnel for external access — ABS, Seerr, Shelfmark, Authentik |
-| adguardhome-sync | ⬜ Pending | Already deployed in Phase 3 — verify still running |
-| Dockman | ⬜ Pending | Docker compose management UI |
-| Homarr | ⬜ Pending | Operations dashboard |
-| Beszel | ⬜ Pending | Host/VM metrics — agents on all hosts |
+- **Host:** docker-prod-01 (192.168.30.11)
+- **Compose:** `/opt/stacks/cloudflared/compose.yaml`
+- **Tunnel name:** homelab-v3
+- **Version:** cloudflare/cloudflared:latest
+
+#### Exposed Services
+
+| Hostname | Routes to | Notes |
+|----------|-----------|-------|
+| `auth.giohosted.com` | `https://192.168.30.11` | Authentik via Traefik |
+| `audiobooks.giohosted.com` | `https://192.168.30.11` | Audiobookshelf via Traefik — Wave 4 |
+| `request.giohosted.com` | `https://192.168.30.11` | Seerr via Traefik — Wave 2 |
+| `shelf.giohosted.com` | `https://192.168.30.11` | Shelfmark via Traefik — Wave 4 |
+
+#### Configuration Notes
+- All routes use `https://192.168.30.11` with **No TLS Verify** enabled
+- No TLS Verify is required because Traefik's cert is a hostname cert (`*.giohosted.com`) — cloudflared connecting by IP fails cert validation. Safe because this hop is entirely on the private LAN inside the encrypted Cloudflare Tunnel.
+- All traffic routes through Traefik — cloudflared does not route directly to individual containers
+
+#### Issues Encountered
+- Initial setup used `http://192.168.30.11` — caused redirect loop (Traefik redirects HTTP → HTTPS, cloudflared follows, infinite loop)
+- Switched to `https://192.168.30.11` with No TLS Verify — resolved
 
 ---
 
-## Wave 2 — Media Stack (Pending)
+### adguardhome-sync
+
+- Deployed in Phase 3 — verified still running in Phase 4
+- Syncing dns-prod-01 → dns-prod-02 correctly
+
+---
+
+### Dockman
+
+- **Host:** docker-prod-01 (192.168.30.11)
+- **Compose:** `/opt/stacks/dockman/compose.yaml`
+- **Appdata:** `/opt/appdata/dockman/`
+- **URL:** `https://dockman.giohosted.com`
+- **Version:** ghcr.io/ra341/dockman:latest
+
+#### Configuration
+- `DOCKMAN_COMPOSE_ROOT` set to `/opt/stacks` — Dockman manages all stacks from this path
+- Basic auth enabled via env vars — credentials in `.env` (gitignored)
+- Restricted to internal VLANs via `local-only` Traefik middleware — not exposed externally
+- Not exposed via Cloudflare Tunnel — internal only
+
+---
+
+## Wave 2 — Media Stack (Pending — Next Chat)
 
 | Service | Status |
 |---------|--------|
@@ -180,8 +215,9 @@ Authentik runs on a dedicated VM (auth-prod-01) — not on docker-prod-01. Traef
 
 | Hostname | IP | Notes |
 |----------|----|-------|
-| traefik.giohosted.com | 192.168.30.11 | Traefik dashboard |
-| auth.giohosted.com | 192.168.30.11 | Authentik — routed via Traefik file provider |
+| `traefik.giohosted.com` | 192.168.30.11 | Traefik dashboard — internal only |
+| `auth.giohosted.com` | 192.168.30.11 | Authentik via Traefik |
+| `dockman.giohosted.com` | 192.168.30.11 | Dockman — internal only |
 
 ---
 
@@ -192,7 +228,7 @@ Authentik runs on a dedicated VM (auth-prod-01) — not on docker-prod-01. Traef
 | `*` A record → 69.216.122.32 | Deleted | v2 NPM wildcard — no longer needed |
 | `giohosted.com` A record → 69.216.122.32 | Deleted | v2 NPM — no longer needed |
 | `photos` A record → 69.216.122.32 | Deleted | v2 NPM — no longer needed |
-| `auth` Tunnel record → homelab-v2 | Deleted | Dead tunnel — will recreate when cloudflared v3 is deployed |
+| `auth` Tunnel record → homelab-v2 | Deleted | Dead v2 tunnel — recreated in homelab-v3 tunnel |
 
 ---
 
@@ -205,6 +241,10 @@ Authentik runs on a dedicated VM (auth-prod-01) — not on docker-prod-01. Traef
 | Traefik file provider for cross-host routing | Traefik Docker provider can only discover containers on the same host. File provider handles static routes to other VMs by IP. |
 | Authentik secrets carried forward from v2 | PG_PASS and AUTHENTIK_SECRET_KEY must match the existing database — changing them would break the restore. |
 | Chrome Secure DNS disabled on workstation | Required for AdGuard DNS rewrites to work — DoH bypasses local DNS entirely. |
+| cloudflared routes to Traefik, not containers directly | Single routing layer — all traffic goes through Traefik regardless of which VM the service lives on. Simpler, more consistent. |
+| No TLS Verify on cloudflared routes | Traefik cert is hostname-based — IP connections fail cert validation. Safe on private LAN inside encrypted Cloudflare Tunnel. |
+| Homarr removed from scope | No longer needed — Dockman covers compose management, individual service UIs cover operations. |
+| Beszel + Uptime Kuma moved to Phase 5 | Monitoring tools belong in the hardening/operations phase, not service migration. |
 
 ---
 
@@ -214,6 +254,5 @@ Authentik runs on a dedicated VM (auth-prod-01) — not on docker-prod-01. Traef
 - ⬜ External access working via CF Tunnel
 - ⬜ PBS backing up all VMs nightly
 - ⬜ Backup scripts running with Healthchecks heartbeats
-- ✅ Traefik deployed with wildcard cert
-- ✅ Authentik deployed and restored from v2
+- ✅ Wave 1 complete — Traefik, Authentik, cloudflared, adguardhome-sync, Dockman deployed
 - ✅ Media/photos/books data migrated to nas-prod-01
