@@ -2,7 +2,7 @@
 
 **Status:** Complete  
 **Started:** 2026-03-13  
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-15
 
 ---
 
@@ -17,6 +17,8 @@
 7. Create docker-prod-01 VM on VLAN 30 — 192.168.30.11
 8. Create pbs-prod-01 VM on pve-prod-02 — 192.168.30.12
 9. Install NUT clients on both Proxmox nodes
+10. Configure point-to-point DAC link between pve-prod-01 and nas-prod-01
+11. Add NAS NFS storage to Proxmox (nas-isos)
 
 ---
 
@@ -178,7 +180,7 @@ Flags:          Quorate Qdevice
 - **VM ID:** 101
 - **OS:** Ubuntu Server 24.04.2 LTS (no snaps, no minimized install)
 - **IP:** 192.168.30.11/24 (VLAN 30)
-- **Resources:** 4 cores (x86-64-v3), 6GB RAM, 64GB disk (local-zfs, write-back cache, discard)
+- **Resources:** 4 cores (x86-64-v3), 6GB RAM, 64GB disk (local-zfs, no cache, discard)
 - **System:** q35, OVMF UEFI, VirtIO SCSI Single, QEMU agent enabled
 - Docker 29.3.0 installed via official script
 - NFS client installed (nfs-common)
@@ -251,6 +253,44 @@ Verified with `exportfs -v` showing `no_root_squash,no_all_squash` on all six sh
 
 ---
 
+### Point-to-Point DAC Link — pve-prod-01 ↔ nas-prod-01
+
+Configured during Phase 4 pre-work (deferred from Phase 3).
+
+- **pve-prod-01 interface:** nic3 (SFP+ Port 1, i40e)
+- **nas-prod-01 interface:** eth2 (X710 Port 1, 10GbE)
+- **Subnet:** 10.0.0.0/30
+- **pve-prod-01 IP:** 10.0.0.1/30
+- **nas-prod-01 IP:** 10.0.0.2/30
+- Link confirmed UP and pingable sub-millisecond both directions
+- IOMMU enabled on pve-prod-01 for Phase 4 recovery work (`amd_iommu=on iommu=pt` added to `/etc/kernel/cmdline`, applied via `proxmox-boot-tool refresh`)
+
+#### NFS Export Update
+NFS exports on nas-prod-01 updated to allow both subnets:
+```
+192.168.30.0/24(async,no_subtree_check,rw,sec=sys,insecure,anongid=100,anonuid=99,no_root_squash)
+10.0.0.0/30(async,no_subtree_check,rw,sec=sys,insecure,anongid=100,anonuid=99,no_root_squash)
+```
+
+#### NAS Network Interface (eth2) — Unraid Configuration
+- Description: `storage-p2p`
+- IPv4 address assignment: Static
+- IP: `10.0.0.2`
+- Netmask: `255.255.255.252` (/30)
+- Gateway: none
+- Bonding/bridging: disabled
+
+#### Proxmox NFS Storage Added
+- **nas-isos:** NFS from `10.0.0.2`, export `/mnt/user/isos`, content: ISO image, Snippets
+- nas-backups added then removed — PBS handles all backups, vzdump-to-NFS is redundant
+
+#### Design Notes
+- DAC link is accessible to Proxmox hypervisor directly (nas-isos NFS mount)
+- VMs on pve-prod-01 (including docker-prod-01) cannot use this link — they only see vmbr0 (VLAN 30). docker-prod-01 NFS mount stays on `192.168.30.16`
+- Link is most valuable for future Proxmox-level storage access and Phase 6 k3s storage traffic
+
+---
+
 ## Firewall Changes
 
 Added rule in UDM-SE: **Allow Management to All**
@@ -275,12 +315,15 @@ Without this rule, pve-prod-01 (VLAN 10) could not reach VMs on VLAN 30. Physica
 | PBS retention managed by PBS prune schedule | More granular than Proxmox job-level retention — No Limit set on job |
 | pi-prod-01 stays on VLAN 10 | QDevice must be on management network alongside Proxmox nodes |
 | Root SSH disabled on pi-prod-01 | QDevice setup complete — no reason to leave root SSH open |
+| nas-backups NFS storage removed from Proxmox | PBS handles all VM/LXC backups — vzdump direct to NFS is redundant |
+| docker-prod-01 disk cache set to No cache | ZFS has its own caching (ARC) — QEMU cache layer is unnecessary and can cause integrity issues on ZFS storage |
+| DAC link not bridged into vmbr0 | Would add complexity for minimal gain — VMs use VLAN 30 NFS, Proxmox host uses DAC link directly |
 
 ---
 
 ## Deferred to Phase 4
 
-- TrueNAS VM on pve-prod-01 to migrate media/photos/books from old ZFS drives (drives currently unplugged on desk)
+- ~~TrueNAS VM on pve-prod-01 to migrate media/photos/books from old ZFS drives~~ — completed in Phase 4 pre-work using Ubuntu recovery VM
 - All service migration (ARR stack, Plex, books, Immich, etc.)
 - DNS rewrites in AdGuard pointing at Traefik (192.168.30.11)
 
@@ -302,4 +345,6 @@ Without this rule, pve-prod-01 (VLAN 10) could not reach VMs on VLAN 30. Physica
 - ✅ docker-prod-01 VM running with NFS mounts verified and directory structure created
 - ✅ pbs-prod-01 running with backup job configured
 - ✅ NUT clients connected on both Proxmox nodes
+- ✅ Point-to-point DAC link configured and verified (10.0.0.1 ↔ 10.0.0.2)
+- ✅ nas-isos NFS storage added to Proxmox over DAC link
 - ✅ Root SSH disabled on pi-prod-01
