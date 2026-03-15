@@ -681,7 +681,6 @@ _Application Layer_
 - Deploy adguardhome-sync
 - Create dns-prod-02 LXC on pve-prod-02 — verify adguardhome-sync propagating correctly
 - Deploy Dockman
-- Deploy Homarr (restore config from backup)
 - Deploy Beszel + agents on all hosts
 - Update AdGuard DNS rewrite: `*.giohosted.com` → Traefik IP (not NPM)
 - Validate: internal HTTPS access to all infra services via Traefik
