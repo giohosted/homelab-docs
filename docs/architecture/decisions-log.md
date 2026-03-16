@@ -1,6 +1,6 @@
 # Architecture Decisions Log
 
-**Last Updated:** 2026-03-15  
+**Last Updated:** 2026-03-16  
 
 ---
 
@@ -431,3 +431,61 @@
 - TrueNAS VM on pve-prod-01 → Unraid direct copy (~14-15 hours, single transfer) — chosen
 
 **Why:** ZFS RAIDZ1 cannot be natively read by Unraid. A temporary TrueNAS VM with HBA passthrough is the cleanest single-transfer path — import the existing pool, copy to Unraid over LAN, decommission the VM. Avoids double transfer time and keeps the LSI HBA in use without extra steps. v2 Proxmox host Gigabyte mobo was sold before this decision was finalized, making Option 1 (booting old SSD on new hardware) the only alternative, which was rejected due to hardware compatibility issues.
+
+---
+
+### Books Stack — Shelfmark Ebook Hardlink Volume Mount
+
+**Decision:** Mount the ebook qBittorrent download folder into Shelfmark at its exact client-side path (`/data/downloads/books/ebooks/downloads:/data/downloads/books/ebooks/downloads`), not a remapped path.
+
+**What was considered:**
+
+- Mounting at a simplified path (e.g. `/downloads/ebooks`) inside the container
+- Mounting at the exact client path (chosen)
+
+**Why:** Per Shelfmark documentation, the torrent client directory must be mounted at exactly the same path inside the container as it appears to qBittorrent. If paths differ, hardlink creation fails silently — Shelfmark falls back to copy, the original file in downloads gets deleted after import, and qBit's seeding torrent is broken. Matching the path exactly is the only reliable way to ensure hardlinks work.
+
+---
+
+### Books Stack — Ebook Hardlink to Ingest Despite CWA Warning
+
+**Decision:** Enable Shelfmark's "Hardlink Book Torrents" toggle for ebooks, with destination set to the CWA ingest folder.
+
+**What was considered:**
+
+- Copy mode (no hardlink) — destination is ingest folder, CWA deletes after import, original in downloads also gone, seeding broken
+- Hardlink mode with ingest as destination (chosen)
+
+**Why:** Shelfmark warns against hardlinking when the destination is a library ingest folder, because CWA deletes files from ingest after import. The warning assumes the ingest copy IS the only copy. In this setup it is not — the original lives in qBit's download folder, and Shelfmark hardlinks a second inode to ingest. CWA deletes the ingest hardlink; the original in downloads is untouched. Seeding continues. The warning does not apply to this pattern.
+
+---
+
+### Books Stack — qBitrr ManagedCategories vs ARR Section Management
+
+**Decision:** Add `audiobooks` and `ebooks` to qBitrr's `ManagedCategories`. Do not add the ARR categories (`sonarr-tv`, `sonarr-anime`, `radarr-1080`, `radarr-4k`) to `ManagedCategories`.
+
+**Why:** These are two different mechanisms in qBitrr. ARR instances are managed via their own `[Sonarr-*]` and `[Radarr-*]` config sections with `Managed = true` — this handles search, import, and torrent health for those categories. `ManagedCategories` is for qBit-level seeding rule management applied directly to torrent categories, independent of ARR. Only `audiobooks` and `ebooks` need this — they have MAM-specific 14-day seeding rules to be configured in Phase 5. The ARR categories are already fully managed through their own config sections.
+
+---
+
+### Books Stack — MAM Seeding Rules Deferred to Phase 5
+
+**Decision:** Configure MAM-specific seeding rules in qBitrr during Phase 5, not during books stack deployment.
+
+**Why:** The seeding rules are tracker-scoped — they apply only to torrents from MAM, not from AudiobookBay or other sources. No active book torrents exist at deployment time. Configuring tracker-specific logic before any torrents are being managed adds complexity with no immediate benefit. Phase 5 operational hardening is the correct time to set these up alongside the full seeding policy review.
+
+---
+
+### OIDC Admin Group — `admins` for Shelfmark and ABS
+
+**Decision:** Use the existing `admins` Authentik group for both Shelfmark and ABS admin authorization, rather than creating service-specific groups.
+
+**Why:** A `shelfmark-admins` or `abs-admins` group would need to be created and populated from scratch. The existing `admins` group already contains the correct users and is used consistently across other services. Creating per-service admin groups adds Authentik management overhead with no meaningful security benefit for a single-admin homelab.
+
+---
+
+### qBitrr OIDC — HTTP Redirect URI Required Alongside HTTPS
+
+**Decision:** Register both `https://qbitrr.giohosted.com/signin-oidc` and `http://qbitrr.giohosted.com/signin-oidc` as allowed redirect URIs in the Authentik provider.
+
+**Why:** qBitrr sends an HTTP redirect URI in its OIDC authorization request despite the app being served over HTTPS via Traefik. Authentik rejects the request if the redirect URI doesn't exactly match a registered value. Adding both HTTP and HTTPS variants satisfies Authentik's validation without modifying qBitrr's behavior. The HTTP redirect URI is only used during the OIDC handshake on the private LAN — it does not expose the app over plain HTTP externally.

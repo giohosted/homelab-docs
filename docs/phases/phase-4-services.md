@@ -2,7 +2,7 @@
 
 **Status:** In Progress  
 **Started:** 2026-03-15  
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 
 ---
 
@@ -127,9 +127,9 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 | Hostname | Routes to | Notes |
 |----------|-----------|-------|
 | `auth.giohosted.com` | `https://192.168.30.11` | Authentik via Traefik |
-| `audiobooks.giohosted.com` | `https://192.168.30.11` | Audiobookshelf via Traefik — Wave 4 |
-| `request.giohosted.com` | `https://192.168.30.11` | Seerr via Traefik — Wave 2 |
-| `shelf.giohosted.com` | `https://192.168.30.11` | Shelfmark via Traefik — Wave 4 |
+| `audiobooks.giohosted.com` | `https://192.168.30.11` | Audiobookshelf via Traefik |
+| `request.giohosted.com` | `https://192.168.30.11` | Seerr via Traefik |
+| `shelf.giohosted.com` | `https://192.168.30.11` | Shelfmark via Traefik |
 
 #### Configuration Notes
 - All routes use `https://192.168.30.11` with **No TLS Verify** enabled
@@ -278,6 +278,8 @@ See `architecture/decisions-log.md` for full rationale.
 | `sonarr-anime` | `/data/downloads/anime` |
 | `radarr-1080` | `/data/downloads/movies/1080p` |
 | `radarr-4k` | `/data/downloads/movies/4k` |
+| `ebooks` | `/data/downloads/books/ebooks/downloads` |
+| `audiobooks` | `/data/downloads/books/audiobooks/downloads` |
 
 #### Download Clients (ARR instances)
 
@@ -298,7 +300,9 @@ All ARR instances connect to qBittorrent via host `gluetun` port `8080` — not 
 - **WebUI:** `https://qbitrr.giohosted.com` — port 6969
 - **Config:** `/opt/appdata/qbitrr/config.toml`
 - **Managed instances:** Sonarr-TV, Sonarr-Anime, Radarr-1080, Radarr-4K
-- **Seeding rules:** Not configured at launch — to be set up in Phase 5 when MAM torrents are active
+- **ManagedCategories:** `audiobooks`, `ebooks` — qBitrr monitors these categories at the qBit level for Phase 5 MAM seeding rules
+- **OIDC:** Configured — Authentik provider `qbitrr`, callback path `/signin-oidc`. Local auth retained as break-glass.
+- **Seeding rules:** Not configured at launch — MAM-specific rules (14-day minimum, tracker-scoped) to be set up in Phase 5
 
 ### Issues Encountered
 
@@ -328,13 +332,98 @@ All ARR instances connect to qBittorrent via host `gluetun` port `8080` — not 
 
 ---
 
-## Wave 4 — Books Stack (Pending)
+## Wave 4 — Books Stack ✅ Complete
 
-| Service | Status |
-|---------|--------|
-| Audiobookshelf | ⬜ Pending |
-| Calibre-Web-Automated | ⬜ Pending |
-| Shelfmark | ⬜ Pending |
+### Stack Overview
+
+- **Host:** docker-prod-01 (192.168.30.11)
+- **Compose:** `/opt/stacks/books/compose.yaml`
+- **Containers:** Audiobookshelf, Calibre-Web-Automated, Shelfmark
+- **All containers:** PUID=2000, PGID=2000, TZ=America/Chicago
+- **Network:** proxy (external, shared with Traefik)
+
+### Audiobookshelf
+
+- **Image:** ghcr.io/advplyr/audiobookshelf:latest
+- **URL:** `https://audiobooks.giohosted.com`
+- **External access:** Yes — Cloudflare Tunnel + Cloudflare Access
+- **Appdata restored from:** `/mnt/user/backups/docker-v2/appdata/books-stack/audiobookshelf/`
+- **Volumes:**
+  - `/data/media/books/audiobooks` → `/audiobooks`
+  - `/opt/appdata/audiobookshelf/config` → `/config`
+  - `/opt/appdata/audiobookshelf/metadata` → `/metadata`
+- **OIDC:** Configured — Authentik provider carried forward from v2 backup. Authentik group: `admins`.
+- **Library path:** `/audiobooks` — had to repoint after restore (v2 was pointing to `/books/audiobooks`)
+
+### Calibre-Web-Automated
+
+- **Image:** crocodilestick/calibre-web-automated:latest
+- **URL:** `https://cwa.giohosted.com`
+- **External access:** No — internal only (`local-only@docker` middleware)
+- **Appdata restored from:** `/mnt/user/backups/docker-v2/appdata/books-stack/cwa/`
+- **Volumes:**
+  - `/opt/appdata/calibre-web-automated/config` → `/config`
+  - `/opt/appdata/calibre-web-automated/plugins` → `/config/.config/calibre/plugins`
+  - `/data/downloads/books/ebooks/ingest` → `/cwa-book-ingest`
+  - `/data/media/books/ebooks` → `/calibre-library`
+- **Key env vars:** `NETWORK_SHARE_MODE=true`, `CWA_PORT_OVERRIDE=8083`, `HARDCOVER_TOKEN` in `.env`
+- **OIDC:** Authentik OIDC carried forward from v2 backup — working on restore
+
+### Shelfmark
+
+- **Image:** ghcr.io/calibrain/shelfmark:latest
+- **URL:** `https://shelf.giohosted.com`
+- **External access:** Yes — Cloudflare Tunnel + Cloudflare Access
+- **Appdata restored from:** `/mnt/user/backups/docker-v2/appdata/books-stack/shelfmark/`
+- **Volumes:**
+  - `/opt/appdata/shelfmark/config` → `/config`
+  - `/data/downloads/books/ebooks/ingest` → `/books`
+  - `/data/media/books/audiobooks` → `/audiobooks`
+  - `/data/downloads/books/audiobooks/downloads` → `/books/audiobooks/downloads`
+  - `/data/downloads/books/ebooks/downloads` → `/data/downloads/books/ebooks/downloads`
+- **OIDC:** Authentik provider created fresh — Client ID `shelfmark`, callback `https://shelf.giohosted.com/api/auth/oidc/callback`. Authentik group: `admins`.
+- **qBit connection:** `http://gluetun:8080/` — updated from v2 value (`http://192.168.20.10:8080/`)
+- **Prowlarr connection:** `http://prowlarr:9696/` — updated from v2 value
+
+#### Ebook Hardlink Workflow
+
+Shelfmark sends ebook torrents to qBit with category `ebooks`. qBit saves to `/data/downloads/books/ebooks/downloads` and seeds permanently from there. When the download completes, Shelfmark hardlinks the file to `/books` (= `/data/downloads/books/ebooks/ingest`). CWA detects the file in ingest, imports it to `/data/media/books/ebooks`, and deletes the hardlink. The original in `/data/downloads/books/ebooks/downloads` is untouched — qBit continues seeding.
+
+> **Why the extra volume mount matters:** Shelfmark must have both the source (`/data/downloads/books/ebooks/downloads`) and destination (`/books`) mounted and visible at their exact client-side paths. Per Shelfmark docs, the client path must match exactly for hardlinks to work. The volume is mounted as `/data/downloads/books/ebooks/downloads:/data/downloads/books/ebooks/downloads`.
+
+> **Why hardlinks are safe here despite CWA's ingest warning:** Shelfmark's warning says "don't hardlink if destination is a library ingest folder." The concern is CWA deleting your only copy. Here the ingest folder is a staging area — CWA deletes the hardlink, not the original. The original in downloads is untouched. This is the correct and intended pattern.
+
+#### Audiobook Hardlink Workflow
+
+Shelfmark sends audiobook torrents to qBit with category `audiobooks`. qBit saves to `/data/downloads/books/audiobooks/downloads`. When complete, Shelfmark hardlinks directly to `/audiobooks` (= `/data/media/books/audiobooks`). ABS library watches `/audiobooks` — book appears automatically. Original in downloads continues seeding.
+
+### Issues Encountered
+
+| Issue | Resolution |
+|-------|------------|
+| Shelfmark settings page timing out on load | v2 config had stale qBit URL (`http://192.168.20.10:8080/`) and Prowlarr URL — UI timed out trying to reach them before page could render. Fixed by editing `/opt/appdata/shelfmark/config/plugins/prowlarr_clients.json` and `prowlarr_config.json` directly. |
+| ABS library visible but files not playable | Library path was still pointing to v2 path (`/books/audiobooks`). Repointed to `/audiobooks` in ABS Settings → Libraries. |
+| qBitrr OIDC settings not persisting via UI | Settings UI does not reliably write to config file. Fixed by editing `/opt/appdata/qbitrr/config.toml` directly and restarting container. |
+| qBitrr OIDC redirect URI mismatch | Authentik had `https://` but qBitrr was sending `http://` redirect URI. Fixed by adding `http://qbitrr.giohosted.com/signin-oidc` as a second allowed redirect URI in Authentik provider. |
+
+### DNS Rewrites Added
+
+| Hostname | IP |
+|----------|----|
+| `audiobooks.giohosted.com` | 192.168.30.11 |
+| `cwa.giohosted.com` | 192.168.30.11 |
+| `shelf.giohosted.com` | 192.168.30.11 |
+
+### Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| Shelfmark ebook destination = ingest folder, not library | CWA watches ingest and imports to library automatically. Shelfmark should not write directly to the library. |
+| Hardlink toggle ON for ebooks despite CWA warning | Warning applies when destination IS the library. Ingest is a staging folder — CWA deletes the hardlink, original seeds on. Safe and correct. |
+| Extra volume mount for ebook downloads path | Shelfmark requires both source and destination to be visible at exact client-side paths per docs. Without this mount, hardlinks fail silently. |
+| qBitrr ManagedCategories = audiobooks + ebooks only | ARR instances are managed via their own `[Sonarr-*]`/`[Radarr-*]` config sections. ManagedCategories is for qBit-level seeding rule management — only needed for books categories which have MAM-specific rules in Phase 5. |
+| MAM seeding rules deferred to Phase 5 | Rules are tracker-scoped (MAM only, not AudiobookBay). No active book torrents yet. Configuring tracker-specific logic now adds complexity with no immediate benefit. |
+| OIDC admin group = `admins` for both ABS and Shelfmark | `shelfmark-admins` group does not exist in Authentik. Reusing existing `admins` group avoids creating redundant groups. Consistent with other services. |
 
 ---
 
@@ -363,6 +452,11 @@ All ARR instances connect to qBittorrent via host `gluetun` port `8080` — not 
 | `maintainerr.giohosted.com` | 192.168.30.11 | Maintainerr |
 | `request.giohosted.com` | 192.168.30.11 | Seerr |
 | `tautulli.giohosted.com` | 192.168.30.11 | Tautulli |
+| `qbittorrent.giohosted.com` | 192.168.30.11 | qBittorrent |
+| `qbitrr.giohosted.com` | 192.168.30.11 | qBitrr |
+| `audiobooks.giohosted.com` | 192.168.30.11 | Audiobookshelf |
+| `cwa.giohosted.com` | 192.168.30.11 | Calibre-Web-Automated |
+| `shelf.giohosted.com` | 192.168.30.11 | Shelfmark |
 
 ---
 
@@ -405,4 +499,6 @@ All ARR instances connect to qBittorrent via host `gluetun` port `8080` — not 
 - ⬜ Backup scripts running with Healthchecks heartbeats
 - ✅ Wave 1 complete — Traefik, Authentik, cloudflared, adguardhome-sync, Dockman deployed
 - ✅ Wave 2 complete — Plex restored, full ARR stack deployed, NFS restructured for hardlinks
+- ✅ Wave 3 complete — Gluetun, qBittorrent, qBitrr deployed, VPN killswitch verified
+- ✅ Wave 4 complete — Audiobookshelf, CWA, Shelfmark deployed, hardlink workflows configured, OIDC configured for all three + qBitrr
 - ✅ Media/photos/books data migrated to nas-prod-01
