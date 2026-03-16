@@ -2,10 +2,11 @@
 
 **Role:** Reverse proxy, TLS termination, internal service routing  
 **Host:** docker-prod-01 (192.168.30.11)  
+**Image:** traefik:v3.6.10  
 **Version:** v3.6.10  
 **Compose:** `/opt/stacks/traefik/compose.yaml`  
 **Appdata:** `/opt/appdata/traefik/`  
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 
 ---
 
@@ -23,12 +24,12 @@ Traefik is **not** exposed to the internet. All traffic is internal. External ac
 
 ## How It Works
 
-When a request comes in for e.g. `https://sonarr.giohosted.com`:
+When a request comes in for e.g. `https://sonarr-tv.giohosted.com`:
 
-1. Your device asks AdGuard "what's the IP for sonarr.giohosted.com?"
+1. Your device asks AdGuard "what's the IP for sonarr-tv.giohosted.com?"
 2. AdGuard returns `192.168.30.11` (DNS rewrite)
 3. Your device connects to `192.168.30.11:443`
-4. Traefik receives the request, matches the hostname to the sonarr router, and forwards to the sonarr container
+4. Traefik receives the request, matches the hostname to the sonarr-tv router, and forwards to the sonarr-tv container
 5. Response comes back through Traefik to your device
 
 Cloudflare is only involved in **certificate issuance** — not in the traffic path for internal services.
@@ -49,16 +50,21 @@ Cloudflare is only involved in **certificate issuance** — not in the traffic p
 ## Providers
 
 ### Docker Provider
+
 Traefik watches the Docker socket on docker-prod-01 for containers. Containers opt in via labels:
 ```yaml
 labels:
   - "traefik.enable=true"
   - "traefik.http.routers.<name>.rule=Host(`service.giohosted.com`)"
   - "traefik.http.routers.<name>.entrypoints=websecure"
+  - "traefik.http.routers.<name>.tls=true"
+  - "traefik.http.services.<name>.loadbalancer.server.port=<container_port>"
 ```
+
 `exposedbydefault=false` — containers without `traefik.enable=true` are ignored entirely.
 
 ### File Provider
+
 Used for routing to services on other VMs (cross-host). Traefik cannot discover containers on other hosts via Docker socket, so static routes are defined in config files.
 
 - **Config directory:** `/opt/appdata/traefik/config/`
@@ -81,11 +87,25 @@ Used for routing to services on other VMs (cross-host). Traefik cannot discover 
 
 ---
 
+## Middleware
+
+### local-only@docker
+
+Restricts access to internal VLANs only. Applied to all admin and internal-only services.
+
+- **Defined in:** Traefik container labels in `compose.yaml` — NOT in the file provider
+- **Allowed ranges:** 192.168.10.0/24, 192.168.20.0/24, 192.168.30.0/24
+- **Reference in compose labels:** `local-only@docker`
+
+> **Critical:** Always reference this middleware as `local-only@docker`, never `local-only@file`. Using the wrong provider suffix causes Traefik to silently ignore the middleware and leave the service unprotected.
+
+---
+
 ## Dashboard
 
 - **URL:** `https://traefik.giohosted.com`
-- **Access:** Internal only — restricted to 192.168.10.0/24, 192.168.20.0/24, 192.168.30.0/24 via `local-only` middleware
-- **Auth:** None — access controlled by IP allowlist only (internal network assumed trusted)
+- **Access:** Internal only — restricted via `local-only@docker` middleware
+- **Auth:** None — access controlled by IP allowlist only
 
 ---
 
@@ -100,6 +120,8 @@ labels:
   - "traefik.enable=true"
   - "traefik.http.routers.<name>.rule=Host(`service.giohosted.com`)"
   - "traefik.http.routers.<name>.entrypoints=websecure"
+  - "traefik.http.routers.<name>.tls=true"
+  - "traefik.http.routers.<name>.middlewares=local-only@docker"
   - "traefik.http.services.<name>.loadbalancer.server.port=<container_port>"
 ```
 
@@ -172,13 +194,13 @@ See `services/infra/cloudflared.md` for full cloudflared documentation.
 ## Directory Structure
 ```
 /opt/stacks/traefik/
-  compose.yaml       ← in git
-  .env               ← gitignored (CF_DNS_API_TOKEN)
+  compose.yaml              ← in git
+  .env                      ← gitignored (CF_DNS_API_TOKEN)
 
 /opt/appdata/traefik/
-  acme.json          ← TLS cert storage (chmod 600, gitignored)
-  config/            ← file provider config directory
-    authentik.yml    ← static route to auth-prod-01
+  acme.json                 ← TLS cert storage (chmod 600, gitignored)
+  config/                   ← file provider config directory
+    authentik.yml           ← static route to auth-prod-01
 ```
 
 ---
@@ -186,5 +208,6 @@ See `services/infra/cloudflared.md` for full cloudflared documentation.
 ## Notes
 
 - Chrome Secure DNS (DoH) bypasses AdGuard and resolves via Cloudflare public DNS — disable it in Chrome settings if internal hostnames aren't resolving correctly
-- acme.json must be chmod 600 — Traefik will refuse to start if permissions are wrong
+- `acme.json` must be chmod 600 — Traefik will refuse to start if permissions are wrong
 - The `proxy` Docker network is created by the Traefik compose — all containers that need Traefik routing must join this network
+- Middleware must be referenced as `local-only@docker` — using `local-only@file` causes Traefik to silently ignore it

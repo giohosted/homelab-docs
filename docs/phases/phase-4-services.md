@@ -242,13 +242,89 @@ See `architecture/decisions-log.md` for full rationale.
 
 ---
 
-## Wave 3 — Torrent Stack (Pending)
+## Wave 3 — Torrent Stack ✅ Complete
 
-| Service | Status |
-|---------|--------|
-| Gluetun | ⬜ Pending |
-| qBittorrent | ⬜ Pending |
-| qBitrr | ⬜ Pending |
+### Stack Overview
+
+- **Host:** docker-prod-01 (192.168.30.11)
+- **Compose:** `/opt/stacks/torrent/compose.yaml`
+- **Containers:** Gluetun, qBittorrent, qBitrr
+
+### Gluetun
+
+- **Image:** qmcgaw/gluetun:latest
+- **Role:** VPN killswitch container — all qBittorrent traffic routes through ProtonVPN WireGuard tunnel
+- **VPN provider:** ProtonVPN — Chicago P2P servers (`SERVER_CITIES=Chicago`)
+- **Port forwarding:** Enabled (`VPN_PORT_FORWARDING=on`, `PORT_FORWARD_ONLY=on`) — Gluetun automatically obtains a forwarded port from ProtonVPN and runs a script to update qBittorrent's listen port
+- **Port script:** `/opt/appdata/gluetun/scripts/qbit-set-port.sh` — logs into qBittorrent WebUI via API and sets the listen port to match the VPN forwarded port
+- **Network:** On `proxy` network — Traefik routes `qbittorrent.giohosted.com` via Gluetun (Traefik labels live on Gluetun, not qBittorrent)
+
+### qBittorrent
+
+- **Image:** lscr.io/linuxserver/qbittorrent:latest
+- **Version:** 5.1.4
+- **Network:** `network_mode: service:gluetun` — shares Gluetun's network namespace entirely. All traffic goes through VPN tunnel.
+- **WebUI:** Port 8080 — accessible via `https://qbittorrent.giohosted.com` through Gluetun → Traefik
+- **PUID/PGID:** 2000:2000
+- **Config restored from:** `/mnt/user/backups/docker-v2/appdata/torrent-stack/qbittorrent/`
+- **Network interface:** `tun0` (VPN tunnel) — bound in Settings → Advanced
+- **Default save path:** `/data/downloads`
+
+#### Download Categories
+
+| Category | Save Path |
+|----------|-----------|
+| `sonarr-tv` | `/data/downloads/tv` |
+| `sonarr-anime` | `/data/downloads/anime` |
+| `radarr-1080` | `/data/downloads/movies/1080p` |
+| `radarr-4k` | `/data/downloads/movies/4k` |
+
+#### Download Clients (ARR instances)
+
+| ARR Instance | Category |
+|-------------|----------|
+| Sonarr TV | `sonarr-tv` |
+| Sonarr Anime | `sonarr-anime` |
+| Radarr 1080p | `radarr-1080` |
+| Radarr 4K | `radarr-4k` |
+
+All ARR instances connect to qBittorrent via host `gluetun` port `8080` — not `qbittorrent`, because qBittorrent shares Gluetun's network namespace and the port is exposed through Gluetun.
+
+### qBitrr
+
+- **Image:** feramance/qbitrr:latest
+- **Version:** 5.10.1
+- **Role:** Manages all 4 ARR instances — torrent health monitoring, automated search for missing media, MAM seeding compliance (Phase 5)
+- **WebUI:** `https://qbitrr.giohosted.com` — port 6969
+- **Config:** `/opt/appdata/qbitrr/config.toml`
+- **Managed instances:** Sonarr-TV, Sonarr-Anime, Radarr-1080, Radarr-4K
+- **Seeding rules:** Not configured at launch — to be set up in Phase 5 when MAM torrents are active
+
+### Issues Encountered
+
+| Issue | Resolution |
+|-------|------------|
+| qBittorrent listen port not matching Gluetun forwarded port | Port script ran before qBittorrent finished binding. Fixed by full stack restart (`docker compose down && up`) so qBittorrent starts fresh and Gluetun re-runs port script |
+| Default save path reverting to `/data/torrents` on restart | Restored backup had old path hardcoded. Required `sudo sed` to edit config file directly since files owned by service user (2000) — `gio` user has read-only access |
+| All torrents errored, 0 download speed | `/data/downloads` owned by `99:users` (Unraid NFS default) — service user (2000) not in `users` group. Fixed with `chown -R 2000:2000 /data/` on docker-prod-01 and `chown -R 2000:2000 /mnt/user/data/` on nas-prod-01 |
+| Compose files owned by root, Dockman autosave failing | Files created with `sudo nano` are root-owned. Fixed with `sudo chown gio:service` and `sudo chmod 664` on all compose files. See `runbooks/new-stack-checklist.md` |
+| AdGuard DNS rewrite for qbittorrent.giohosted.com disappeared | Browser DNS cache had stale NXDOMAIN — flushed with `ipconfig /flushdns` |
+
+### DNS Rewrites Added
+
+| Hostname | IP |
+|----------|----|
+| `qbittorrent.giohosted.com` | 192.168.30.11 |
+| `qbitrr.giohosted.com` | 192.168.30.11 |
+
+### Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| Traefik labels on Gluetun, not qBittorrent | qBittorrent shares Gluetun's network namespace — it has no independent network identity. Traefik can only route to Gluetun. |
+| ARR instances connect to qBit via `gluetun` hostname | Same reason — port 8080 is exposed through Gluetun's container, not qBittorrent's |
+| qBitrr seeding rules deferred to Phase 5 | Seeding rules (MAM compliance, ratio limits) only matter when book/audiobook torrents are active. Configuring them now with no data to apply them to adds unnecessary complexity. |
+| Port forward script on Gluetun side | Gluetun obtains a new forwarded port on every VPN connection. Script updates qBittorrent dynamically via API so listen port always matches forwarded port. |
 
 ---
 
