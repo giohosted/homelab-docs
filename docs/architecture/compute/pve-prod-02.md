@@ -1,8 +1,8 @@
 # pve-prod-02 — Secondary Proxmox Node
 
-**Role:** Secondary Proxmox node — runs PBS VM and secondary AdGuard LXC  
+**Role:** Secondary Proxmox node — runs PBS VM, secondary AdGuard LXC, and immich-prod-01  
 **Status:** Active  
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-16
 
 ---
 
@@ -66,7 +66,10 @@
 |---------|------|-------|
 | local | Directory | ISO images, CT templates |
 | local-lvm | LVM-thin | VM disks, LXC rootfs |
+| nas-isos-p2 | NFS | ISO images — `192.168.30.16:/mnt/user/isos`. Scoped to pve-prod-02 only. Added Phase 4 Wave 5. |
 | pbs-prod-01 | PBS | nas-backups datastore at 192.168.30.12 |
+
+> **nas-isos note:** The cluster-wide `nas-isos` storage entry uses `10.0.0.2` (DAC link) which is only reachable from pve-prod-01. A separate `nas-isos-p2` entry using `192.168.30.16` was added and scoped to pve-prod-02 only. The original `nas-isos` entry is scoped to pve-prod-01 only to prevent mount failures on pve-prod-02.
 
 > local-zfs ghost entry was present after install and removed via `pvesm remove local-zfs` — pve-prod-02 uses local-lvm for VM disks.  
 > local-lvm entry was also lost and re-added via: `pvesm add lvmthin local-lvm --vgname pve --thinpool data --content rootdir,images`
@@ -79,19 +82,22 @@
 |-----|------|------|------|----|--------|
 | 102 | dns-prod-02 | LXC (Debian 12) | 30 | 192.168.30.15 | Running |
 | 103 | pbs-prod-01 | VM (PBS 4.1.0) | 30 | 192.168.30.12 | Running |
+| 106 | immich-prod-01 | VM (Ubuntu 24.04) | 30 | 192.168.30.14 | Running — 2 vCPU, 6GB RAM, 32GB disk |
+
+> immich-prod-01 was moved here from pve-prod-01 due to RAM headroom — pve-prod-01 was already running docker-prod-01 (8GB) and auth-prod-01 (4GB). pve-prod-02 had ample capacity. See `architecture/decisions-log.md`.
 
 ---
 
 ## Design Decisions
 
 ### Single NVMe Boot — No Mirror
-Single NVMe boot is acceptable for pve-prod-02 given its secondary non-critical role. If this node goes down, services running on it (PBS, secondary AdGuard) are temporarily unavailable but the primary workload on pve-prod-01 is unaffected.
+Single NVMe boot is acceptable for pve-prod-02 given its secondary non-critical role. If this node goes down, services running on it (PBS, secondary AdGuard, Immich) are temporarily unavailable but the primary workload on pve-prod-01 is unaffected.
 
 ### HA Not Enabled
 HA (High Availability) is deliberately not enabled on this cluster. The Optiplex cannot absorb pve-prod-01's workload — enabling HA without matched hardware provides false security. Clustering is for unified management UI only.
 
 ### RAM Not Upgraded Yet
-RAM left at 16GB for now — current workload is light (PBS VM + one AdGuard LXC). Upgrade to 32GB later if needed.
+RAM left at 16GB for now — current workload (PBS VM + AdGuard LXC + Immich VM) fits comfortably. Upgrade to 32GB later if needed.
 
 ---
 
@@ -102,3 +108,4 @@ RAM left at 16GB for now — current workload is light (PBS VM + one AdGuard LXC
 - Windows was previously installed on the NVMe drive — AHCI mode change resolved installer detection issue
 - local-zfs ghost entry present after install — removed with `pvesm remove local-zfs`
 - local-lvm entry missing after local-zfs removal — re-added with `pvesm add lvmthin`
+- nas-isos NFS mount broken on pve-prod-02 — cluster-wide entry used DAC link IP (10.0.0.2) unreachable from this node. Fixed by adding separate `nas-isos-p2` storage entry scoped to pve-prod-02 using 192.168.30.16.

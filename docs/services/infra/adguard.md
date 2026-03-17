@@ -78,6 +78,10 @@ All `*.giohosted.com` services point to Traefik at `192.168.30.11`. Rewrites are
 | `tautulli.giohosted.com` | 192.168.30.11 |
 | `qbittorrent.giohosted.com` | 192.168.30.11 |
 | `qbitrr.giohosted.com` | 192.168.30.11 |
+| `audiobooks.giohosted.com` | 192.168.30.11 |
+| `cwa.giohosted.com` | 192.168.30.11 |
+| `shelf.giohosted.com` | 192.168.30.11 |
+| `photos.giohosted.com` | 192.168.30.11 |
 
 > Always add new DNS rewrites to dns-prod-01 (primary) only — adguardhome-sync propagates them to dns-prod-02 automatically within 30 minutes.
 

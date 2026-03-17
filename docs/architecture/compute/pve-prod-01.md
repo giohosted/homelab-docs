@@ -2,7 +2,7 @@
 
 **Role:** Primary Proxmox node — runs all primary VMs and LXCs  
 **Status:** Active  
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-16
 
 ---
 
@@ -75,6 +75,7 @@
 |---------|------|-------------|-------|
 | local | Directory | /var/lib/vz | ISO images, CT templates |
 | local-zfs | ZFS | rpool/data | VM disks, LXC rootfs |
+| nas-isos | NFS | 10.0.0.2:/mnt/user/isos | ISO images — via DAC link. Scoped to pve-prod-01 only. |
 | pbs-prod-01 | PBS | nas-backups datastore | Proxmox Backup Server at 192.168.30.12 |
 
 > local-lvm ghost entry was present after install and removed via `pvesm remove local-lvm` — pve-prod-01 uses local-zfs for VM disks.  
@@ -87,9 +88,10 @@
 | ID  | Name | Type | VLAN | IP | Status |
 |-----|------|------|------|----|--------|
 | 100 | dns-prod-01 | LXC (Debian 12) | 30 | 192.168.30.10 | Running |
-| 101 | docker-prod-01 | VM (Ubuntu 24.04) | 30 | 192.168.30.11 | Running |
-| —   | auth-prod-01 | VM (Debian) | 30 | 192.168.30.13 | Pending — Phase 4 |
-| —   | immich-prod-01 | VM (Ubuntu 24.04) | 30 | 192.168.30.14 | Pending — Phase 4 |
+| 101 | docker-prod-01 | VM (Ubuntu 24.04) | 30 | 192.168.30.11 | Running — 8GB RAM, 4 vCPU, 64GB disk |
+| 104 | auth-prod-01 | VM (Ubuntu 24.04) | 30 | 192.168.30.13 | Running — 2 vCPU, 4GB RAM, 32GB disk |
+
+> immich-prod-01 was originally planned for pve-prod-01 but moved to pve-prod-02 due to RAM headroom. See `architecture/decisions-log.md`.
 
 ---
 

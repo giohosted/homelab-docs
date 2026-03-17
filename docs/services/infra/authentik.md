@@ -6,7 +6,7 @@
 **Compose:** `/opt/stacks/authentik/compose.yaml`  
 **Appdata:** `/opt/appdata/authentik/`  
 **URL:** https://auth.giohosted.com  
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 
 ---
 
@@ -22,7 +22,7 @@ Authentik runs on a dedicated VM (`auth-prod-01`) rather than as containers on d
 
 | Component | Detail |
 |-----------|--------|
-| **VM ID** | 105 |
+| **VM ID** | 104 |
 | **Host** | pve-prod-01 |
 | **OS** | Ubuntu Server 24.04 LTS |
 | **CPU** | 2 cores (x86-64-v3) |
@@ -122,14 +122,17 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 
 | Service | Method | Notes |
 |---------|--------|-------|
-| Proxmox | OIDC | Both nodes |
-| Audiobookshelf | OIDC | Sub unlink fix documented |
-| Calibre-Web-Automated | OAuth2 | Manual link per user |
-| Beszel | OIDC | Requires email_verified: true custom scope |
-| Synology DSM | OIDC | Local admin retained as break-glass |
-| Homarr | OIDC | v3 new |
-| Immich | OIDC | v3 new |
+| Proxmox | OIDC | Both nodes — Phase 5 |
+| Audiobookshelf | OIDC | Carried forward from v2 backup |
+| Calibre-Web-Automated | OAuth2 | Carried forward from v2 backup |
+| Shelfmark | OIDC | New provider created in v3 — callback `https://shelf.giohosted.com/api/auth/oidc/callback` |
+| qBitrr | OIDC | New provider created in v3 — callback `/signin-oidc`. Both `http://` and `https://` redirect URIs registered. |
+| Immich | OIDC | Carried forward from v2 backup |
+| Beszel | OIDC | Phase 5 |
+| Synology DSM | OIDC | Phase 5 |
 | ARR stack, Uptime Kuma | None | LAN-only, low risk — no SSO overhead |
+
+> **OIDC admin group:** Shelfmark and ABS use the existing `admins` group for admin authorization. No service-specific admin groups were created — reusing `admins` keeps Authentik group management simple.
 
 ---
 
@@ -151,3 +154,4 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 - Authentik worker mounts the Docker socket (`/var/run/docker.sock`) — required for embedded outpost functionality
 - "No providers assigned to this outpost" warning in logs is normal — embedded outpost present but not configured for any providers
 - Bootstrap email/password only apply on very first boot with empty database — ignored on subsequent starts
+- RAM verified sufficient via `free -h` — 4GB allocation, ~1.6GB active usage, minimal swap. No bump needed at Phase 4 close.

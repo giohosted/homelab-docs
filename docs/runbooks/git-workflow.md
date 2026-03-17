@@ -2,7 +2,7 @@
 
 **Applies to:** docker-prod-01, auth-prod-01, immich-prod-01 (`/opt/stacks`)
 **Repo:** homelab-infra (private, GitHub)
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-16
 
 ---
 
@@ -14,11 +14,11 @@
 
 The repo is cloned on multiple hosts:
 
-| Host | Path | What lives there |
-|------|------|-----------------|
-| docker-prod-01 | /opt/stacks | traefik, arr, books, torrent, monitoring, etc. |
-| auth-prod-01 | /opt/stacks | authentik |
-| immich-prod-01 | /opt/stacks | immich (future) |
+| Host | Path | What lives there | Status |
+|------|------|-----------------|--------|
+| docker-prod-01 | /opt/stacks | traefik, arr, books, torrent, dockman, cloudflared, adguardhome-sync | Active |
+| auth-prod-01 | /opt/stacks | authentik | Active |
+| immich-prod-01 | /opt/stacks | immich | Active |
 
 **GitHub is the source of truth — not any individual host.**
 
@@ -85,8 +85,10 @@ git push
 - `add traefik compose`
 - `add authentik compose`
 - `add arr stack compose`
+- `add immich compose`
 - `update sonarr-tv restart policy`
 - `add gluetun killswitch to torrent stack`
+- `fix immich compose - use official /data mount path`
 
 ---
 
@@ -138,6 +140,19 @@ Because the repo lives on multiple hosts, this scenario can happen:
 
 ---
 
+## Per-Host Git Identity
+
+Each host requires git identity to be configured before committing. Run once per host:
+```bash
+git config --global user.email "delgadogiovanny@gmail.com"
+git config --global user.name "giohosted"
+git config --global credential.helper store
+```
+
+This was required on immich-prod-01 during Phase 4 Wave 5 — new VMs will not have git identity pre-configured.
+
+---
+
 ## What Is and Isn't in Git
 
 | Path | In Git | Notes |
@@ -162,3 +177,4 @@ Because the repo lives on multiple hosts, this scenario can happen:
 - Always commit before making major changes — gives you a rollback point
 - `.env` files go next to their `compose.yaml` but are never committed — use `.env.example` with placeholder values if you want to document required variables
 - `/opt/appdata` backup via rsync to NAS is set up in Phase 5
+- Any new VM added to the homelab that will host compose files needs git installed, the repo cloned, and git identity configured before first commit

@@ -1,6 +1,6 @@
 # Hardware Inventory
 
-**Last Updated:** 2026-03-12 
+**Last Updated:** 2026-03-16
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### pve-prod-01 — Primary Compute
 
-**Role:** Primary Proxmox node. Runs all primary VMs and LXCs (docker-prod-01, auth-prod-01, immich-prod-01, dns-prod-01).
+**Role:** Primary Proxmox node. Runs all primary VMs and LXCs (docker-prod-01, auth-prod-01, dns-prod-01).
 
 | Component                | Detail                                                                     |
 | ------------------------ | -------------------------------------------------------------------------- |
@@ -22,16 +22,57 @@
 | **Boot Config**          | ZFS RAID-1 mirror — configured in Proxmox installer                        |
 | **Networking (LAN)**     | 2x 2.5GbE RJ45 built-in — uplink to USW-Pro-Max-24 for VMs                 |
 | **Networking (Storage)** | 2x 10GbE SFP+ built-in — Port 1: DAC to NAS on own storage subnet          |
-| **OS**                   | Proxmox VE 9.1.5                                                           |
+| **OS**                   | Proxmox VE 9.1.6                                                           |
 | **IP**                   | 192.168.10.11 (VLAN 10 — Management)                                       |
 | **Purchased**            | 2026-02-21                                                                 |
 | **Source**               | Amazon                                                                     |
 | **Price Paid**           | $575                                                                       |
 
+**Guests running on pve-prod-01:**
+
+| ID | Name | Type | IP |
+|----|------|------|----|
+| 100 | dns-prod-01 | LXC (Debian 12) | 192.168.30.10 |
+| 101 | docker-prod-01 | VM (Ubuntu 24.04) | 192.168.30.11 |
+| 104 | auth-prod-01 | VM (Ubuntu 24.04) | 192.168.30.13 |
+
 **Notes:**
 
 - Radeon 680M iGPU not configured at launch — Plex transcoding runs on the NAS via i5-13400 QuickSync. Available later for ML inference or additional transcoding if needed.
 - ZFS RAID-1 mirror on boot drives fixes the main fragility from v2 (single NVMe boot). Single drive failure does not kill the hypervisor.
+- immich-prod-01 was originally planned for pve-prod-01 but moved to pve-prod-02 due to RAM headroom. See `architecture/decisions-log.md`.
+
+---
+
+### pve-prod-02 — Secondary Compute
+
+**Role:** Secondary Proxmox node. Runs PBS VM (pbs-prod-01), secondary AdGuard LXC (dns-prod-02), and Immich VM (immich-prod-01).
+
+| Component        | Detail                                          |
+| ---------------- | ----------------------------------------------- |
+| **Model**        | Dell Optiplex 3070 Micro                        |
+| **CPU**          | Intel Core i5-9500T (6C/6T, 9th gen)            |
+| **RAM**          | 16GB DDR4 SO-DIMM (2x 8GB Micron)               |
+| **Boot Storage** | 256GB NVMe                                      |
+| **Networking**   | 1x GbE RJ45 built-in — uplink to USW-Pro-Max-24 |
+| **OS**           | Proxmox VE 9.1.6                                |
+| **IP**           | 192.168.10.12 (VLAN 10 — Management)            |
+| **Source**       | Work surplus (free)                             |
+
+**Guests running on pve-prod-02:**
+
+| ID | Name | Type | IP |
+|----|------|------|----|
+| 102 | dns-prod-02 | LXC (Debian 12) | 192.168.30.15 |
+| 103 | pbs-prod-01 | VM (PBS 4.1.0) | 192.168.30.12 |
+| 106 | immich-prod-01 | VM (Ubuntu 24.04) | 192.168.30.14 |
+
+**Notes:**
+
+- RAM left at 16GB for now — workload fits comfortably. Upgrade to 32GB later if needed.
+- HA (High Availability) is NOT enabled in the Proxmox cluster — Optiplex cannot absorb MS-A2's workload. Clustering is for unified management UI only. See `architecture/decisions-log.md`.
+- Single NVMe boot is acceptable given this node's non-critical secondary role.
+- immich-prod-01 moved here from pve-prod-01 due to RAM headroom — pve-prod-01 was already running docker-prod-01 (8GB) and auth-prod-01 (4GB).
 
 ---
 
@@ -71,30 +112,6 @@
 - X710-DA2 chosen over X520 — newer chipset, better long-term driver support, dual port for future flexibility.
 - No NVMe cache pool at launch. See `architecture/decisions-log.md` for full rationale.
 
-
----
-
-### pve-prod-02 — Secondary Compute
-
-**Role:** Secondary Proxmox node. Runs PBS VM (pbs-prod-01) and secondary AdGuard LXC (dns-prod-02).
-
-| Component        | Detail                                          |
-| ---------------- | ----------------------------------------------- |
-| **Model**        | Dell Optiplex 3070 Micro                        |
-| **CPU**          | Intel Core i5-9500T (6C/6T, 9th gen)            |
-| **RAM**          | 16GB DDR4 SO-DIMM (2x 8GB Micron)               |
-| **Boot Storage** | 256Gb NVMe                                      |
-| **Networking**   | 1x GbE RJ45 built-in — uplink to USW-Pro-Max-24 |
-| **OS**           | Proxmox VE 9.1.5                                |
-| **IP**           | 192.168.10.12 (VLAN 10 — Management)            |
-| **Source**       | Work surplus (free)                             |
-
-**Notes:**
-
-- RAM left at 16GB for now — workload is light (PBS VM + one AdGuard LXC). Upgrade to 32GB later if needed.
-- HA (High Availability) is NOT enabled in the Proxmox cluster — Optiplex cannot absorb MS-A2's workload. Clustering is for unified management UI only. See `architecture/decisions-log.md`.
-- Single NVMe boot is acceptable given this node's non-critical secondary role.
-
 ---
 
 ### pi-prod-01 — Monitoring / QDevice
@@ -109,7 +126,7 @@
 | **Networking**   | 1x GbE RJ45 built-in                 |
 | **OS**           | Raspberry Pi OS                      |
 | **IP**           | 192.168.10.20 (VLAN 10 — Management) |
-| **Source**       | Microcenter ~ 2023`                  |
+| **Source**       | Microcenter ~ 2023                   |
 
 **Notes:**
 
@@ -125,12 +142,12 @@
 
 **Role:** Primary router, firewall, UniFi controller, DHCP server, WireGuard VPN endpoint.
 
-|Component|Detail|
-|---|---|
-|**Model**|UniFi Dream Machine Special Edition (UDM-SE)|
-|**IP**|192.168.10.1 (VLAN 10 — Management, gateway)|
-|**Rack Position**|U1|
-|**Source**|Existing — carried forward from v2|
+| Component | Detail |
+|-----------|--------|
+| **Model** | UniFi Dream Machine Special Edition (UDM-SE) |
+| **IP** | 192.168.10.1 (VLAN 10 — Management, gateway) |
+| **Rack Position** | U1 |
+| **Source** | Existing — carried forward from v2 |
 
 ---
 
@@ -155,31 +172,30 @@
 
 **Role:** Protects full stack from power loss. USB-connected to nas-prod-01 for NUT graceful shutdown.
 
-|Component|Detail|
-|---|---|
-|**Model**|Tripp-Lite SMART1500LCDXL|
-|**Capacity**|1500VA / 900W|
-|**Battery-Backed Outlets**|8|
-|**USB Interface**|Yes — NUT server runs on nas-prod-01|
-|**Rack Position**|U18 (bottom)|
-|**Price Paid**|~$145|
+| Component | Detail |
+|-----------|--------|
+| **Model** | Tripp-Lite SMART1500LCDXL |
+| **Capacity** | 1500VA / 900W |
+| **Battery-Backed Outlets** | 8 |
+| **USB Interface** | Yes — NUT server runs on nas-prod-01 |
+| **Rack Position** | U18 (bottom) |
+| **Price Paid** | ~$145 |
 
 **Notes:**
 
 - NUT server configured and running on nas-prod-01 (Netserver mode, usbhid-ups driver). UPS confirmed: On Line, 100% battery, 1500VA nominal, 15% load at current draw.
 - Shutdown timer: 6 minutes on battery before initiating shutdown sequence. Proxmox nodes (NUT clients) shut down VMs/LXCs then hypervisor → Unraid shuts down last.
-- NUT clients on pve-prod-01 and pve-prod-02 to be configured in Phase 3.
 - First hardware purchased — non-negotiable before spinning up any HDDs.
 
 ---
 
 ## Rack
 
-|Component|Detail|
-|---|---|
-|**Model**|StarTech 4POSTRACK18U|
-|**Size**|18U open-frame|
-|**Price Paid**|Bundled with USW-Pro-Max-24 ($560 total)|
+| Component | Detail |
+|-----------|--------|
+| **Model** | StarTech 4POSTRACK18U |
+| **Size** | 18U open-frame |
+| **Price Paid** | Bundled with USW-Pro-Max-24 ($560 total) |
 
 ---
 
@@ -200,24 +216,24 @@
 
 ### Patch Panel & Structured Cabling
 
-|Component|Detail|
-|---|---|
-|**Patch Panel**|UniFi UP-PATCH-24 (keystone style)|
-|**Rack Position**|U2|
-|**Keystone Couplers**|Iwillink Cat6 shielded (10-pack) — 7 used for wall runs|
-|**Blank Inserts**|Fill remaining 17 ports|
-|**Patch Cables**|Monoprice SlimRun Cat6 0.5ft (patch panel U2 → switch U3)|
+| Component | Detail |
+|-----------|--------|
+| **Patch Panel** | UniFi UP-PATCH-24 (keystone style) |
+| **Rack Position** | U2 |
+| **Keystone Couplers** | Iwillink Cat6 shielded (10-pack) — 7 used for wall runs |
+| **Blank Inserts** | Fill remaining 17 ports |
+| **Patch Cables** | Monoprice SlimRun Cat6 0.5ft (patch panel U2 → switch U3) |
 
 ---
 
 ## Drives
 
-_See `architecture/storage.md` for full pool layout, assignment, and rationale. Summary below._
+_See `architecture/storage/nas-prod-01.md` for full pool layout, assignment, and rationale. Summary below._
 
-|Drive|Count|Type|Role|
-|---|---|---|---|
-|WD Red Pro 12TB|5|CMR NAS|2x parity + 3x data (parity array)|
-|WD Red Plus 4TB|5|CMR NAS|2x ZFS mirror pool + 2x future array expansion + 1x cold spare|
-|Seagate IronWolf 6TB|2|CMR NAS|Hot spares / future array expansion|
-|Seagate SkyHawk 6TB|4|Surveillance CMR|Cold backup storage in Synology only — not in Unraid array|
-|Seagate Barracuda 4TB|1|Desktop|Retired — not suitable for always-on NAS duty|
+| Drive | Count | Type | Role |
+|-------|-------|------|------|
+| WD Red Pro 12TB | 5 | CMR NAS | 2x parity + 3x data (parity array) |
+| WD Red Plus 4TB | 5 | CMR NAS | 2x ZFS mirror pool + 2x future array expansion + 1x cold spare |
+| Seagate IronWolf 6TB | 2 | CMR NAS | Hot spares / future array expansion |
+| Seagate SkyHawk 6TB | 4 | Surveillance CMR | Cold backup storage in Synology only — not in Unraid array |
+| Seagate Barracuda 4TB | 1 | Desktop | Retired — not suitable for always-on NAS duty |

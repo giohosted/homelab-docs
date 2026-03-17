@@ -39,12 +39,13 @@ Traefik handles all internal routing regardless of whether the request came from
 
 ## Exposed Services
 
-| Hostname | Cloudflare Route | Notes |
-|----------|-----------------|-------|
-| `auth.giohosted.com` | `https://192.168.30.11` | Authentik |
-| `audiobooks.giohosted.com` | `https://192.168.30.11` | Audiobookshelf — Wave 4 |
-| `request.giohosted.com` | `https://192.168.30.11` | Seerr |
-| `shelf.giohosted.com` | `https://192.168.30.11` | Shelfmark — Wave 4 |
+| Hostname | Cloudflare Route | CF Access | Notes |
+|----------|-----------------|-----------|-------|
+| `auth.giohosted.com` | `https://192.168.30.11` | No | Authentik — has its own auth |
+| `audiobooks.giohosted.com` | `https://192.168.30.11` | Yes | Audiobookshelf — Wave 4 |
+| `request.giohosted.com` | `https://192.168.30.11` | No | Seerr — has its own auth |
+| `shelf.giohosted.com` | `https://192.168.30.11` | Yes | Shelfmark — Wave 4 |
+| `photos.giohosted.com` | `https://192.168.30.11` | Pending | Immich — CF Tunnel + CF Access deferred to Phase 5 |
 
 ---
 
@@ -81,6 +82,17 @@ Solution: always use `https://192.168.30.11` with No TLS Verify.
 
 ---
 
+## Cloudflare Access
+
+Cloudflare Access adds an authentication layer in front of externally exposed services. Users must authenticate via Cloudflare Access before reaching the service. Currently enabled for:
+
+- **Audiobookshelf** (`audiobooks.giohosted.com`) — login via Authentik OIDC through CF Access
+- **Shelfmark** (`shelf.giohosted.com`) — login via Authentik OIDC through CF Access
+
+> **Known issue — ABS mobile app:** Cloudflare Access blocks API calls from the ABS mobile app because the app cannot complete the browser-based auth challenge. Fix deferred to Phase 5 — will require adding a CF Access service token or bypass rule for the ABS API endpoints.
+
+---
+
 ## Adding a New Externally Exposed Service
 
 1. Deploy the service on docker-prod-01 with Traefik labels (or add a file provider static route for cross-host services)
@@ -104,19 +116,21 @@ Solution: always use `https://192.168.30.11` with No TLS Verify.
 | ARR stack | LAN only — no external access needed |
 | qBittorrent | LAN only — no external access needed |
 | qBitrr | LAN only — no external access needed |
+| CWA | LAN only — no external access needed |
 | PBS | Admin tool — internal only |
+| Immich | CF Tunnel deferred to Phase 5 |
 | Plex | Direct port forward on 32400 — Cloudflare ToS prohibits video streaming via tunnel |
 
 ---
 
 ## Cloudflare DNS Changes Made During v3 Build
 
-| Record | Action | Reason |
-|--------|--------|--------|
-| `*` A record → 69.216.122.32 | Deleted | v2 NPM wildcard — no longer needed |
-| `giohosted.com` A record → 69.216.122.32 | Deleted | v2 NPM — no longer needed |
-| `photos` A record → 69.216.122.32 | Deleted | v2 NPM — no longer needed |
-| `auth` Tunnel record → homelab-v2 | Deleted | Dead v2 tunnel — recreated in homelab-v3 tunnel |
+| Record                                   | Action  | Reason                                          |
+| ---------------------------------------- | ------- | ----------------------------------------------- |
+| `*` A record → 69.216.122.32             | Deleted | v2 NPM wildcard — no longer needed              |
+| `giohosted.com` A record → 69.216.122.32 | Deleted | v2 NPM — no longer needed                       |
+| `photos` A record → 69.216.122.32        | Deleted | v2 NPM — no longer needed                       |
+| `auth` Tunnel record → homelab-v2        | Deleted | Dead v2 tunnel — recreated in homelab-v3 tunnel |
 
 ---
 
@@ -126,3 +140,4 @@ Solution: always use `https://192.168.30.11` with No TLS Verify.
 - Tunnel token is stored in `/opt/stacks/cloudflared/.env` (gitignored) — if lost, generate a new one in Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Overview → Refresh token
 - cloudflared does not need to be on the `proxy` Docker network — it connects to Traefik by IP, not by container name
 - Plex is intentionally excluded from the tunnel — direct port forward on 32400 is used instead
+- Phase 5 TODO: Add CF Tunnel + CF Access for `photos.giohosted.com`, and fix ABS mobile app CF Access compatibility

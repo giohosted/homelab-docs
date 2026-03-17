@@ -1,6 +1,6 @@
 # Architecture Decisions Log
 
-**Last Updated:** 2026-03-16  
+**Last Updated:** 2026-03-16
 
 ---
 
@@ -90,7 +90,7 @@
 
 **Decision:** Leave Optiplex at 16GB DDR4 (2x 8GB Micron, from work). Do not upgrade yet.
 
-**Why:** Current workload (PBS VM + AdGuard LXC) does not justify the upgrade. Revisit if workload grows.
+**Why:** Current workload (PBS VM + AdGuard LXC + Immich VM) fits comfortably within 16GB. Revisit if workload grows.
 
 ---
 
@@ -298,6 +298,19 @@
 
 ---
 
+### immich-prod-01 — Placed on pve-prod-02, Not pve-prod-01
+
+**Decision:** Deploy immich-prod-01 on pve-prod-02 (Optiplex) instead of pve-prod-01 (MS-A2) as originally planned.
+
+**What was considered:**
+
+- pve-prod-01 (original plan — more powerful CPU)
+- pve-prod-02 (chosen — more RAM headroom)
+
+**Why:** At Phase 4 Wave 5 start, pve-prod-01 was already running docker-prod-01 (8GB RAM) and auth-prod-01 (4GB RAM), with docker-prod-01 confirmed to have been swapping (1GB swap usage before RAM bump). Adding a 6GB Immich VM would have pushed pve-prod-01 RAM utilization uncomfortably high. pve-prod-02 was only running PBS (2GB) and one AdGuard LXC (512MB) — ample headroom for the 6GB Immich VM. The CPU performance difference between the i5-9500T and Ryzen 9 7945HX is meaningful for ML workloads but acceptable for a homelab Immich instance where indexing runs in the background.
+
+---
+
 ### Single Docker Host VM
 
 **Decision:** One docker-prod-01 VM for all media and application containers.
@@ -489,3 +502,58 @@
 **Decision:** Register both `https://qbitrr.giohosted.com/signin-oidc` and `http://qbitrr.giohosted.com/signin-oidc` as allowed redirect URIs in the Authentik provider.
 
 **Why:** qBitrr sends an HTTP redirect URI in its OIDC authorization request despite the app being served over HTTPS via Traefik. Authentik rejects the request if the redirect URI doesn't exactly match a registered value. Adding both HTTP and HTTPS variants satisfies Authentik's validation without modifying qBitrr's behavior. The HTTP redirect URI is only used during the OIDC handshake on the private LAN — it does not expose the app over plain HTTP externally.
+
+---
+
+### Immich — nas-isos Dual Storage Entries (One Per Node)
+
+**Decision:** Add a separate `nas-isos-p2` NFS storage entry scoped to pve-prod-02 only, pointing to `192.168.30.16`. Scope the original `nas-isos` entry to pve-prod-01 only.
+
+**What was considered:**
+
+- Editing the cluster-wide `nas-isos` entry to use `192.168.30.16` for all nodes — rejected, would break pve-prod-01's DAC link NFS mount
+- Adding a duplicate storage entry scoped per-node (chosen)
+
+**Why:** The cluster-wide `nas-isos` storage was configured to use `10.0.0.2` (the point-to-point DAC link) which is only reachable from pve-prod-01. pve-prod-02 has no connection to the DAC link — it can only reach the NAS via `192.168.30.16` on VLAN 30. Changing the entry to `192.168.30.16` would break pve-prod-01's storage. Scoping separate entries per node gives each node the correct path without affecting the other.
+
+---
+
+### Immich — Postgres on Local VM Disk, Not NFS
+
+**Decision:** Immich Postgres data stored at `/opt/appdata/immich/postgres` on immich-prod-01's local-lvm disk, not on the NFS-mounted photos share.
+
+**Why:** Immich explicitly does not support NFS for the Postgres database. NFS latency and locking behavior cause Postgres stability issues. The photo files themselves (upload location) are correctly stored on NFS — only the database is kept local.
+
+---
+
+### Immich — DB Restore via psql CLI, Not Immich UI
+
+**Decision:** Restore Immich database backup directly via `psql` command rather than using the Immich maintenance mode UI restore.
+
+**What was considered:**
+
+- Immich maintenance mode UI restore (attempted first — failed silently mid-migration)
+- Direct psql restore via `gunzip | docker exec psql` (chosen)
+
+**Why:** The Immich UI restore was interrupted mid-migration, leaving the database in an inconsistent state with empty tables. The direct psql restore is reliable, provides clear output, and bypasses the UI entirely. For future restores, always use the CLI method.
+
+---
+
+### Immich — Official Compose Volume Mapping (`:/data`)
+
+**Decision:** Use the official Immich compose volume mapping (`${UPLOAD_LOCATION}:/data`) rather than any non-standard internal path.
+
+**What was considered:**
+
+- Non-standard internal path `/usr/src/app/upload` (used initially — caused DB path mismatch)
+- Official mapping `:/data` (chosen)
+
+**Why:** Immich stores asset paths in its database using the internal container path. Using a non-standard internal path creates a permanent divergence from Immich's own tooling and documentation — any future migration, restore, or upgrade that references the official compose will result in broken asset paths. Using the official mapping ensures the database paths match what Immich and its backup/restore tooling expect, making future migrations straightforward.
+
+---
+
+### docker-prod-01 RAM — Bumped from 6GB to 8GB
+
+**Decision:** Increase docker-prod-01 RAM allocation from 6GB to 8GB during Phase 4 Wave 5.
+
+**Why:** Verified via `free -h` that docker-prod-01 had 1GB of active swap usage — evidence of real memory pressure during ARR stack operation (search bursts, simultaneous container startup). 8GB provides comfortable headroom for the full stack (Traefik, ARR stack, books stack, torrent stack) with room to grow. auth-prod-01 was also checked and found to have only 268KB swap — no bump needed there.

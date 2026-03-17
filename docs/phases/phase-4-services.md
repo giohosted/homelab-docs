@@ -1,6 +1,6 @@
 # Phase 4 — Service Migration
 
-**Status:** In Progress  
+**Status:** Complete  
 **Started:** 2026-03-15  
 **Last Updated:** 2026-03-16
 
@@ -84,6 +84,7 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 | File | Hostname | Backend |
 |------|----------|---------|
 | `authentik.yml` | `auth.giohosted.com` | `http://192.168.30.13:9000` |
+| `immich.yml` | `photos.giohosted.com` | `http://192.168.30.14:2283` |
 
 #### Issues Encountered
 - Chrome Secure DNS (DoH) bypassed AdGuard rewrites — resolved by disabling Chrome's secure DNS setting
@@ -95,7 +96,7 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 ### Authentik
 
 - **Host:** auth-prod-01 (192.168.30.13)
-- **VM ID:** 105
+- **VM ID:** 104
 - **OS:** Ubuntu Server 24.04 LTS
 - **Resources:** 2 cores, 4GB RAM, 32GB disk (local-zfs, no cache)
 - **Compose:** `/opt/stacks/authentik/compose.yaml`
@@ -127,9 +128,10 @@ Traefik routes to services on other VMs via the file provider. Static route conf
 | Hostname | Routes to | Notes |
 |----------|-----------|-------|
 | `auth.giohosted.com` | `https://192.168.30.11` | Authentik via Traefik |
-| `audiobooks.giohosted.com` | `https://192.168.30.11` | Audiobookshelf via Traefik |
+| `audiobooks.giohosted.com` | `https://192.168.30.11` | Audiobookshelf via Traefik — CF Access enabled |
 | `request.giohosted.com` | `https://192.168.30.11` | Seerr via Traefik |
-| `shelf.giohosted.com` | `https://192.168.30.11` | Shelfmark via Traefik |
+| `shelf.giohosted.com` | `https://192.168.30.11` | Shelfmark via Traefik — CF Access enabled |
+| `photos.giohosted.com` | `https://192.168.30.11` | Immich via Traefik — CF Tunnel deferred to Phase 5 |
 
 #### Configuration Notes
 - All routes use `https://192.168.30.11` with **No TLS Verify** enabled
@@ -297,11 +299,11 @@ All ARR instances connect to qBittorrent via host `gluetun` port `8080` — not 
 - **Image:** feramance/qbitrr:latest
 - **Version:** 5.10.1
 - **Role:** Manages all 4 ARR instances — torrent health monitoring, automated search for missing media, MAM seeding compliance (Phase 5)
-- **WebUI:** `https://qbitrr.giohosted.com` — port 6969
+- **WebUI:** `https://qbitrr.giohosted.com/ui` — port 6969
 - **Config:** `/opt/appdata/qbitrr/config.toml`
 - **Managed instances:** Sonarr-TV, Sonarr-Anime, Radarr-1080, Radarr-4K
 - **ManagedCategories:** `audiobooks`, `ebooks` — qBitrr monitors these categories at the qBit level for Phase 5 MAM seeding rules
-- **OIDC:** Configured — Authentik provider `qbitrr`, callback path `/signin-oidc`. Local auth retained as break-glass.
+- **OIDC:** Configured — Authentik provider `qbitrr`, callback path `/signin-oidc`. Both `https://` and `http://` redirect URIs registered in Authentik. Local auth retained as break-glass.
 - **Seeding rules:** Not configured at launch — MAM-specific rules (14-day minimum, tracker-scoped) to be set up in Phase 5
 
 ### Issues Encountered
@@ -427,11 +429,79 @@ Shelfmark sends audiobook torrents to qBit with category `audiobooks`. qBit save
 
 ---
 
-## Wave 5 — Photos Stack (Pending)
+## Wave 5 — Photos Stack ✅ Complete
 
-| Service | Status | Notes |
-|---------|--------|-------|
-| Immich | ⬜ Pending | Requires immich-prod-01 VM creation |
+### Stack Overview
+
+- **Host:** immich-prod-01 (192.168.30.14) — dedicated VM on pve-prod-02
+- **Compose:** `/opt/stacks/immich/compose.yaml`
+- **Containers:** immich-server, immich-machine-learning, immich-postgres, immich-redis
+- **Version:** v2.5.6
+
+### immich-prod-01 VM
+
+| Component | Detail |
+|-----------|--------|
+| **VM ID** | 106 |
+| **Host** | pve-prod-02 |
+| **OS** | Ubuntu Server 24.04 LTS |
+| **CPU** | 2 cores (x86-64-v2-AES) |
+| **RAM** | 6GB |
+| **Disk** | 32GB (local-lvm) |
+| **IP** | 192.168.30.14/24 |
+| **VLAN** | 30 — Services |
+| **Docker** | Installed via official script |
+| **QEMU Agent** | Installed and running |
+
+> **Node placement:** immich-prod-01 runs on pve-prod-02, not pve-prod-01 as originally planned. pve-prod-01 was already running docker-prod-01 (8GB RAM) and auth-prod-01 (4GB RAM). pve-prod-02 had ample headroom (only PBS VM + AdGuard LXC). Moving Immich to pve-prod-02 also isolates the ML worker CPU spikes from the primary media stack.
+
+### Immich
+
+- **Image:** ghcr.io/immich-app/immich-server:release
+- **URL:** `https://photos.giohosted.com`
+- **External access:** Deferred to Phase 5 — Cloudflare Tunnel + CF Access to be configured
+- **NFS mount:** `192.168.30.16:/mnt/user/photos` → `/data/photos` on immich-prod-01
+- **Volumes:**
+  - `/data/photos` → `/data` (upload location — photos, thumbs, backups)
+  - `/opt/appdata/immich/postgres` → `/var/lib/postgresql/data` (local disk — NFS not supported for Postgres)
+- **OIDC:** OAuth via Authentik — carried forward from v2 backup
+- **Database:** Restored from Immich auto-backup (`immich-db-backup-20260310T020000-v2.5.6-pg14.19.sql.gz`) found at `/data/photos/backups/`
+- **Photos:** ~10,000 assets — thumbnails regenerated after restore, all photos loading correctly
+
+#### Traefik Routing
+
+Immich is on a dedicated VM — Traefik on docker-prod-01 routes via file provider:
+- **Config file:** `/opt/appdata/traefik/config/immich.yml`
+- **Route:** `photos.giohosted.com` → `http://192.168.30.14:2283`
+- Port 2283 exposed on host via ports mapping in compose (required for cross-host file provider routing)
+
+### Issues Encountered
+
+| Issue | Resolution |
+|-------|------------|
+| nas-isos NFS mount broken on pve-prod-02 | nas-isos was configured to use `10.0.0.2` (point-to-point DAC link) — only accessible from pve-prod-01. Fixed by adding a separate `nas-isos-p2` storage entry on pve-prod-02 pointing to `192.168.30.16`. Original `nas-isos` entry scoped to pve-prod-01 only. |
+| docker-prod-01 RAM at 100% (1GB in swap) | Bumped from 6GB to 8GB. Verified with `free -h` before and after — swap cleared after restart. |
+| Immich maintenance mode on first boot | Fresh database had no schema — Immich entered maintenance mode. Bypassed by navigating to `https://photos.giohosted.com/maintenance?token=<token>` from logs, then cancelling restore and creating admin user. |
+| Database restore via UI failed silently | Immich UI restore was interrupted mid-migration. Database left empty. Fixed by running restore manually: `gunzip -c /data/photos/backups/<backup>.sql.gz \| docker exec -i immich_postgres psql -U postgres -d immich` |
+| Photos visible but "error loading image" | Database paths stored as `/data/upload/...` (v2 path) didn't match new container mount at `/data/upload/...`. After SQL path migration and compose fix, paths now correctly use `/data/upload/...` matching the official Immich compose volume mapping. |
+| Immich compose volume path mismatch | Initially used non-standard `/usr/src/app/upload` internal path instead of official `/data`. Fixed compose to use official `${UPLOAD_LOCATION}:/data` mapping and ran SQL to revert asset paths back to `/data/upload/...` format. |
+
+### DNS Rewrites Added
+
+| Hostname | IP |
+|----------|----|
+| `photos.giohosted.com` | 192.168.30.11 |
+
+### Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| immich-prod-01 on pve-prod-02, not pve-prod-01 | pve-prod-01 RAM headroom was tight (docker-prod-01 was swapping). pve-prod-02 had ample headroom. ML worker CPU spikes also better isolated from primary media stack. |
+| nas-isos dual storage entries (one per node) | nas-isos was configured to use the DAC link (10.0.0.2) which only pve-prod-01 can reach. Added separate `nas-isos-p2` entry for pve-prod-02 using 192.168.30.16. Each node's storage scoped to that node only to avoid mount failures. |
+| Postgres data on local VM disk, not NFS | Immich explicitly does not support NFS for the database. Postgres data lives at `/opt/appdata/immich/postgres` on the VM's local-lvm disk. |
+| DB restore via psql CLI, not Immich UI | Immich UI restore was silently failing mid-migration. Direct psql restore is reliable and bypasses the UI entirely. |
+| Use official Immich compose volume mapping (`:/data`) | Non-standard internal paths cause DB asset path mismatches on future migrations. Using the official mapping ensures consistency with Immich's own tooling and makes future restores straightforward. |
+| CF Tunnel + CF Access for Immich deferred to Phase 5 | Immich is accessible internally at `photos.giohosted.com`. External access and access policy configuration deferred to Phase 5 alongside other hardening tasks. |
 
 ---
 
@@ -457,6 +527,7 @@ Shelfmark sends audiobook torrents to qBit with category `audiobooks`. qBit save
 | `audiobooks.giohosted.com` | 192.168.30.11 | Audiobookshelf |
 | `cwa.giohosted.com` | 192.168.30.11 | Calibre-Web-Automated |
 | `shelf.giohosted.com` | 192.168.30.11 | Shelfmark |
+| `photos.giohosted.com` | 192.168.30.11 | Immich |
 
 ---
 
@@ -493,12 +564,13 @@ Shelfmark sends audiobook torrents to qBit with category `audiobooks`. qBit save
 
 ## Exit Criteria
 
-- ⬜ All services running on v3 infrastructure
-- ⬜ External access working via CF Tunnel
+- ✅ All services running on v3 infrastructure
+- ⬜ External access working via CF Tunnel (Immich CF Tunnel pending Phase 5)
 - ⬜ PBS backing up all VMs nightly
 - ⬜ Backup scripts running with Healthchecks heartbeats
 - ✅ Wave 1 complete — Traefik, Authentik, cloudflared, adguardhome-sync, Dockman deployed
 - ✅ Wave 2 complete — Plex restored, full ARR stack deployed, NFS restructured for hardlinks
 - ✅ Wave 3 complete — Gluetun, qBittorrent, qBitrr deployed, VPN killswitch verified
 - ✅ Wave 4 complete — Audiobookshelf, CWA, Shelfmark deployed, hardlink workflows configured, OIDC configured for all three + qBitrr
+- ✅ Wave 5 complete — Immich deployed on immich-prod-01 (pve-prod-02), DB restored, photos loading, OAuth working
 - ✅ Media/photos/books data migrated to nas-prod-01

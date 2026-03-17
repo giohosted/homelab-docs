@@ -1,6 +1,6 @@
 # IP Address Plan
 
-**Last updated:** 2026-03-15
+**Last updated:** 2026-03-16
 
 ---
 
@@ -46,8 +46,8 @@ All v3 VMs, LXCs, and the NAS data interface. Containers inside VMs are accessed
 | dns-prod-01 (AdGuard LXC, pve-prod-01)      | 192.168.30.10 | Virtual (VLAN tag 30) | Primary DNS — AdGuard Home                                                   |
 | docker-prod-01 (media/apps VM, pve-prod-01) | 192.168.30.11 | Virtual (VLAN tag 30) | All media stack containers behind Traefik. Mounts `192.168.30.16:/mnt/user/data` as `/data` via NFSv3 — single mount covering all media and downloads. |
 | pbs-prod-01 (PBS VM, pve-prod-02)           | 192.168.30.12 | Virtual (VLAN tag 30) | Proxmox Backup Server                                                        |
-| auth-prod-01 (Authentik VM, pve-prod-01)    | 192.168.30.13 | Virtual (VLAN tag 30) | Authentik IdP — dedicated VM — deployed Phase 4                              |
-| immich-prod-01 (Immich VM, pve-prod-01)     | 192.168.30.14 | Virtual (VLAN tag 30) | Immich — isolated for resource tuning — Pending Phase 4                      |
+| auth-prod-01 (Authentik VM, pve-prod-01)    | 192.168.30.13 | Virtual (VLAN tag 30) | Authentik IdP — dedicated VM — deployed Phase 4 Wave 1                       |
+| immich-prod-01 (Immich VM, pve-prod-02)     | 192.168.30.14 | Virtual (VLAN tag 30) | Immich — on pve-prod-02 — deployed Phase 4 Wave 5. Mounts `192.168.30.16:/mnt/user/photos` as `/data/photos` via NFSv3. |
 | dns-prod-02 (AdGuard LXC, pve-prod-02)      | 192.168.30.15 | Virtual (VLAN tag 30) | Secondary DNS — synced from dns-prod-01 via adguardhome-sync                 |
 | nas-prod-01 — **data/NFS**                  | 192.168.30.16 | X710 Port 2 SFP+      | NFS exports, Plex container traffic. Services mount NFS from this IP only.   |
 | plex (Docker container on nas-prod-01)      | 192.168.30.2  | X710 Port 2 SFP+      | Plex Media Server — Docker container on nas-prod-01, bound to eth1 (VLAN 30) |
@@ -76,4 +76,4 @@ Internet access only. No inter-VLAN routing.
 |-------------|--------------------------------|--------------------------------|-------------|-------------|-------------|---------|
 | NAS ↔ MS-A2 | nas-prod-01 X710 Port 1 (eth2) | pve-prod-01 SFP+ Port 1 (nic3) | 10.0.0.2/30 | 10.0.0.1/30 | 10.0.0.0/30 | Dedicated 10GbE storage traffic. Not on LAN switch. Not routed. |
 
-> This link is isolated — only these two devices can see it. Proxmox on pve-prod-01 uses this link for NFS storage mounts (nas-isos). VMs running on pve-prod-01 (including docker-prod-01) cannot access this link — they use VLAN 30 (192.168.30.16) for NFS instead.
+> This link is isolated — only these two devices can see it. Proxmox on pve-prod-01 uses this link for NFS storage mounts (nas-isos). VMs running on pve-prod-01 (including docker-prod-01) cannot access this link — they use VLAN 30 (192.168.30.16) for NFS instead. pve-prod-02 cannot access this link at all — it uses `nas-isos-p2` which mounts from 192.168.30.16.

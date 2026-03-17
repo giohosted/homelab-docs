@@ -55,10 +55,10 @@ Traefik watches the Docker socket on docker-prod-01 for containers. Containers o
 ```yaml
 labels:
   - "traefik.enable=true"
-  - "traefik.http.routers.<name>.rule=Host(`service.giohosted.com`)"
-  - "traefik.http.routers.<name>.entrypoints=websecure"
-  - "traefik.http.routers.<name>.tls=true"
-  - "traefik.http.services.<name>.loadbalancer.server.port=<container_port>"
+  - "traefik.http.routers.<n>.rule=Host(`service.giohosted.com`)"
+  - "traefik.http.routers.<n>.entrypoints=websecure"
+  - "traefik.http.routers.<n>.tls=true"
+  - "traefik.http.services.<n>.loadbalancer.server.port=<container_port>"
 ```
 
 `exposedbydefault=false` — containers without `traefik.enable=true` are ignored entirely.
@@ -75,6 +75,7 @@ Used for routing to services on other VMs (cross-host). Traefik cannot discover 
 | File | Hostname | Backend |
 |------|----------|---------|
 | `authentik.yml` | `auth.giohosted.com` | `http://192.168.30.13:9000` |
+| `immich.yml` | `photos.giohosted.com` | `http://192.168.30.14:2283` |
 
 ---
 
@@ -118,11 +119,11 @@ networks:
 
 labels:
   - "traefik.enable=true"
-  - "traefik.http.routers.<name>.rule=Host(`service.giohosted.com`)"
-  - "traefik.http.routers.<name>.entrypoints=websecure"
-  - "traefik.http.routers.<name>.tls=true"
-  - "traefik.http.routers.<name>.middlewares=local-only@docker"
-  - "traefik.http.services.<name>.loadbalancer.server.port=<container_port>"
+  - "traefik.http.routers.<n>.rule=Host(`service.giohosted.com`)"
+  - "traefik.http.routers.<n>.entrypoints=websecure"
+  - "traefik.http.routers.<n>.tls=true"
+  - "traefik.http.routers.<n>.middlewares=local-only@docker"
+  - "traefik.http.services.<n>.loadbalancer.server.port=<container_port>"
 ```
 
 Then add a DNS rewrite in AdGuard: `service.giohosted.com` → `192.168.30.11`
@@ -162,6 +163,8 @@ http:
 
 No Traefik restart needed — file provider watches for changes automatically.
 
+> **Important:** Cross-host services must expose their port on the host via a `ports` mapping in their compose file. Traefik on docker-prod-01 connects to the VM by IP — it cannot reach container ports that aren't exposed to the host network.
+
 ---
 
 ## Exposing a Service Externally via Cloudflare Tunnel
@@ -173,7 +176,7 @@ For services that need external access, cloudflared routes traffic through Traef
 3. In Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Published application routes → Add:
    - Hostname: `service.giohosted.com`
    - Service type: `HTTPS`
-   - URL: `192.168.30.11`
+   - URL: `192.168.168.30.11`
    - Additional settings → TLS → **No TLS Verify: enabled**
 
 ### Why HTTPS and not HTTP?
@@ -201,6 +204,7 @@ See `services/infra/cloudflared.md` for full cloudflared documentation.
   acme.json                 ← TLS cert storage (chmod 600, gitignored)
   config/                   ← file provider config directory
     authentik.yml           ← static route to auth-prod-01
+    immich.yml              ← static route to immich-prod-01
 ```
 
 ---
@@ -211,3 +215,4 @@ See `services/infra/cloudflared.md` for full cloudflared documentation.
 - `acme.json` must be chmod 600 — Traefik will refuse to start if permissions are wrong
 - The `proxy` Docker network is created by the Traefik compose — all containers that need Traefik routing must join this network
 - Middleware must be referenced as `local-only@docker` — using `local-only@file` causes Traefik to silently ignore it
+- File provider routes require the target service to expose its port on the host — containers on remote VMs are not reachable via Docker networking
