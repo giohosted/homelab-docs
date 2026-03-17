@@ -21,16 +21,17 @@
 
 ## Firewall Rules Table
 
-| #  | Name                        | Source           | Destination              | Port / Protocol   | Action | Reason                                                                           |
-| -- | --------------------------- | ---------------- | ------------------------ | ----------------- | ------ | -------------------------------------------------------------------------------- |
-| 1  | Allow Management to All     | Management (10)  | Trusted + Services + IoT | Any               | ALLOW  | Management must reach everything it manages. Auto Allow Return Traffic enabled.  |
-| 2  | Allow Trusted to Services   | Trusted (20)     | Services (30)            | Any               | ALLOW  | Users reach all internal services                                                |
-| 3  | Allow Trusted to Mgmt       | Trusted (20)     | Management (10)          | TCP 443, 8006, 22 | ALLOW  | Admin access to Proxmox UI, Unraid UI, SSH                                       |
-| 4  | Block Trusted to Mgmt Other | Trusted (20)     | Management (10)          | Any other         | DENY   | Block everything else into management from trusted                               |
-| 5  | Block Services to Mgmt      | Services (30)    | Management (10)          | Any               | DENY   | Services cannot touch infrastructure management interfaces — including Unraid UI |
-| 6  | Block Services to Trusted   | Services (30)    | Trusted (20)             | Any               | DENY   | Services never initiate connections to user devices                              |
-| 7  | Block Services to IoT       | Services (30)    | IoT (40)                 | Any               | DENY   | Services have no business reaching IoT devices                                   |
-| 8  | Block IoT to All Internal   | IoT (40)         | Any internal             | Any               | DENY   | IoT fully isolated from all internal VLANs                                       |
+| #   | Name                        | Source          | Destination              | Port / Protocol   | Action | Reason                                                                                                                     |
+| --- | --------------------------- | --------------- | ------------------------ | ----------------- | ------ | -------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Allow Management to All     | Management (10) | Trusted + Services + IoT | Any               | ALLOW  | Management must reach everything it manages. Auto Allow Return Traffic enabled.                                            |
+| 2   | Allow Trusted to Services   | Trusted (20)    | Services (30)            | Any               | ALLOW  | Users reach all internal services                                                                                          |
+| 3   | Allow Trusted to Mgmt       | Trusted (20)    | Management (10)          | TCP 443, 8006, 22 | ALLOW  | Admin access to Proxmox UI, Unraid UI, SSH                                                                                 |
+| 4   | Block Trusted to Mgmt Other | Trusted (20)    | Management (10)          | Any other         | DENY   | Block everything else into management from trusted                                                                         |
+| 5   | Allow Services to Beszel    | Services (30)   | 192.168.10.20            | TCP 45876         | ALLOW  | Beszel agents on VLAN 30 reach hub on pi-prod-01 (VLAN 10). Targeted — does not open broad Services → Management access \| |
+| 6   | Block Services to Mgmt      | Services (30)   | Management (10)          | Any               | DENY   | Services cannot touch infrastructure management interfaces — including Unraid UI                                           |
+| 7   | Block Services to Trusted   | Services (30)   | Trusted (20)             | Any               | DENY   | Services never initiate connections to user devices                                                                        |
+| 8   | Block Services to IoT       | Services (30)   | IoT (40)                 | Any               | DENY   | Services have no business reaching IoT devices                                                                             |
+| 9   | Block IoT to All Internal   | IoT (40)        | Any internal             | Any               | DENY   | IoT fully isolated from all internal VLANs                                                                                 |
 
 > **Rule evaluation order:** Rules are evaluated top to bottom. The first match wins. Rule 1 (Allow Management to All) must be at the top — it explicitly permits outbound management traffic before any block rules can match. Rules 3 and 4 together implement limited access from Trusted to Management. Auto Allow Return Traffic must be enabled on Rule 1 or return packets to VLAN 10 hosts will be dropped.
 

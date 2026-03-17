@@ -2,7 +2,7 @@
 
 **Role:** Proxmox QDevice (cluster tiebreaker) + Uptime Kuma + Beszel server  
 **Status:** Active  
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-17
 
 ---
 
@@ -50,16 +50,11 @@ Acts as a lightweight quorum tiebreaker for the 2-node Proxmox cluster (pve-prod
 - **Votes contributed:** 1 (brings total cluster votes to 3, quorum at 2)
 - Must remain on VLAN 10 alongside Proxmox nodes — QDevice communication uses management network
 
-### 2. Uptime Kuma (Future — Phase 5)
+### 2. Uptime Kuma (Active — Phase 5)
 Service uptime monitoring. Initiates checks outbound — no inbound connections required from VLAN 30.
 
-### 3. Beszel Server (Future — Phase 5)
+### 3. Beszel Server (Active — Phase 5)
 Host and VM metrics server. Beszel agents on VLAN 30 hosts connect inbound to pi-prod-01.
-
-> ⚠️ **Pending firewall rule (add during Phase 5 Beszel setup):**  
-> VLAN 30 → 192.168.10.20 TCP 45876 ALLOW  
-> Required for Beszel agents on VLAN 30 to reach the Beszel server on VLAN 10.  
-> See `architecture/network/firewall-rules.md` for full details.
 
 ---
 
