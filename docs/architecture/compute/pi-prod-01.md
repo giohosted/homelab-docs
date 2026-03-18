@@ -20,14 +20,14 @@
 
 ## Network
 
-| Field | Value |
-|-------|-------|
-| **IP** | 192.168.10.20 |
-| **VLAN** | 10 — Management |
-| **Gateway** | 192.168.10.1 |
-| **DNS** | 9.9.9.9 (public — VLAN 10 does not use AdGuard) |
-| **Switch port profile** | Mgmt-Only (access port, VLAN 10) |
-| **Network manager** | NetworkManager (not dhcpcd) |
+| Field                   | Value                                               |
+| ----------------------- | --------------------------------------------------- |
+| **IP**                  | 192.168.10.20                                       |
+| **VLAN**                | 10 — Management                                     |
+| **Gateway**             | 192.168.10.1                                        |
+| **DNS**                 | 192.168.30.10 (AdGuard primary), 9.9.9.9 (fallback) |
+| **Switch port profile** | Mgmt-Only (access port, VLAN 10)                    |
+| **Network manager**     | NetworkManager (not dhcpcd)                         |
 
 ### Static IP Configuration
 Set via nmcli — dhcpcd.conf is present but not active on Raspberry Pi OS Bookworm.
