@@ -6,7 +6,7 @@
 **Compose:** `/opt/stacks/authentik/compose.yaml`  
 **Appdata:** `/opt/appdata/authentik/`  
 **URL:** https://auth.giohosted.com  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-18
 
 ---
 
@@ -120,19 +120,22 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 
 ## SSO-Enabled Services
 
-| Service | Method | Notes |
-|---------|--------|-------|
-| Proxmox | OIDC | Both nodes — Phase 5 |
-| Audiobookshelf | OIDC | Carried forward from v2 backup |
-| Calibre-Web-Automated | OAuth2 | Carried forward from v2 backup |
-| Shelfmark | OIDC | New provider created in v3 — callback `https://shelf.giohosted.com/api/auth/oidc/callback` |
-| qBitrr | OIDC | New provider created in v3 — callback `/signin-oidc`. Both `http://` and `https://` redirect URIs registered. |
-| Immich | OIDC | Carried forward from v2 backup |
-| Beszel | OIDC | Phase 5 |
-| Synology DSM | OIDC | Phase 5 |
-| ARR stack, Uptime Kuma | None | LAN-only, low risk — no SSO overhead |
+| Service | Method | Provider Slug | Notes |
+|---------|--------|---------------|-------|
+| Proxmox (pve-prod-01 + pve-prod-02) | OIDC | `proxmox` | Realm: `authentik`. Username claim: `username`. Redirect URIs: `192.168.10.11:8006`, `192.168.10.12:8006`. Shared provider with PBS. |
+| PBS (pbs-prod-01) | OIDC | `proxmox` | Shares provider/app with Proxmox. Redirect URI: `192.168.30.12:8007`. |
+| Beszel | OIDC | `beszel` | Redirect URI: `http://192.168.10.20:8090/api/oauth2-redirect`. |
+| Synology DSM | OIDC | `synology` | Well-known URL must use app-specific path: `https://auth.giohosted.com/application/o/synology/.well-known/openid-configuration` — NOT the generic path. |
+| Audiobookshelf | OIDC | — | Carried forward from v2 backup |
+| Calibre-Web-Automated | OAuth2 | — | Carried forward from v2 backup |
+| Shelfmark | OIDC | — | New provider created in v3 — callback `https://shelf.giohosted.com/api/auth/oidc/callback` |
+| qBitrr | OIDC | — | New provider created in v3 — callback `/signin-oidc`. Both `http://` and `https://` redirect URIs registered. |
+| Immich | OIDC | — | Carried forward from v2 backup |
+| ARR stack, Uptime Kuma | None | — | LAN-only, low risk — no SSO overhead |
 
 > **OIDC admin group:** Shelfmark and ABS use the existing `admins` group for admin authorization. No service-specific admin groups were created — reusing `admins` keeps Authentik group management simple.
+
+> **Proxmox/PBS shared provider:** Both Proxmox nodes and PBS use the same Authentik provider (`OIDC - Proxmox`) and application (`App - Proxmox`). All three redirect URIs are registered on the same provider. Permissions are configured separately on each service — `gio@authentik` with Administrator role on Proxmox, Admin role on PBS.
 
 ---
 
@@ -143,6 +146,7 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 | Dedicated VM, not shared with docker-prod-01 | LXC officially removed from Proxmox community scripts May 2025. VM is the only stable option. Isolates IdP from media stack resource contention. |
 | No disk cache | ZFS (local-zfs) has its own ARC caching. QEMU cache layer is unnecessary and can cause data integrity issues on ZFS storage. |
 | Secrets carried forward from v2 | PG_PASS and AUTHENTIK_SECRET_KEY must match the existing database — changing them breaks the restore. |
+| Proxmox and PBS share one provider | Permissions are identical and managing separate providers adds unnecessary complexity. |
 
 ---
 
@@ -150,8 +154,9 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 
 - Root SSH login: disabled (standard Ubuntu default)
 - QEMU guest agent installed — Proxmox can cleanly shut down this VM on UPS event
-- NUT client not yet configured — to be done in Phase 5
+- NUT client not yet configured — to be done in Phase 5 Wave 7
 - Authentik worker mounts the Docker socket (`/var/run/docker.sock`) — required for embedded outpost functionality
 - "No providers assigned to this outpost" warning in logs is normal — embedded outpost present but not configured for any providers
 - Bootstrap email/password only apply on very first boot with empty database — ignored on subsequent starts
-- RAM verified sufficient via `free -h` — 4GB allocation, ~1.6GB active usage, minimal swap. No bump needed at Phase 4 close.
+- RAM verified sufficient via `free -h` — 4GB allocation, ~1.6GB active usage, minimal swap. No bump needed at Phase 4 close
+- Synology SSO well-known URL must point at the app-specific path (`/application/o/synology/.well-known/openid-configuration`) — the generic path (`/application/o/.well-known/openid-configuration`) causes "Unable to get the URL for SSO authentication" error

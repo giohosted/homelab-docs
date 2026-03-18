@@ -135,16 +135,16 @@ PBS 4.1.4 on pbs-prod-01 (192.168.30.12). Datastore `nas-backups` mounted via NF
 
 Configure Authentik OIDC for remaining services that support it:
 
-| Service | Status | Notes |
-|---------|--------|-------|
-| Proxmox (both nodes) | ⬜ Pending | OIDC via Authentik — both pve-prod-01 and pve-prod-02 |
-| Immich | ✅ Done | Carried forward from v2 |
-| Beszel | ⬜ Pending | Requires `email_verified: true` custom scope in Authentik |
-| Synology DSM | ⬜ Pending | Local admin retained as break-glass |
-| Audiobookshelf | ✅ Done | Carried forward from v2 |
-| Calibre-Web-Automated | ✅ Done | Carried forward from v2 |
-| Shelfmark | ✅ Done | New provider created in v3 |
-| qBitrr | ✅ Done | New provider created in v3 |
+| Service                    | Status | Notes                                                     |
+| -------------------------- | ------ | --------------------------------------------------------- |
+| Proxmox (both nodes + PBS) | ✅ Done | OIDC via Authentik — both pve-prod-01 and pve-prod-02     |
+| Immich                     | ✅ Done | Carried forward from v2                                   |
+| Beszel                     | ✅ Done | Requires `email_verified: true` custom scope in Authentik |
+| Synology DSM               | ✅ Done | Local admin retained as break-glass                       |
+| Audiobookshelf             | ✅ Done | Carried forward from v2                                   |
+| Calibre-Web-Automated      | ✅ Done | Carried forward from v2                                   |
+| Shelfmark                  | ✅ Done | New provider created in v3                                |
+| qBitrr                     | ✅ Done | New provider created in v3                                |
 
 ---
 
@@ -285,7 +285,7 @@ Configure Synology DSM Active Backup for Business (ABB) to pull versioned backup
 - ✅ Uptime Kuma monitors configured for all services
 - ✅ Appdata rsync script running nightly with Healthchecks.io heartbeats
 - ✅ PBS backup settings reviewed and optimized
-- ⬜ OIDC configured for Proxmox, Beszel, Synology
+- ✅ OIDC configured for Proxmox, Beszel, Synology
 - ⬜ Immich CF Tunnel + CF Access configured
 - ⬜ ABS mobile app CF Access issue resolved
 - ⬜ MAM seeding rules configured in qBitrr
