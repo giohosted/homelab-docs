@@ -3,7 +3,7 @@
 **Host:** nas-prod-01  
 **OS:** Unraid 7.2.4  
 **Chassis:** Rosewill RSV-L4412U (4U, 12-bay)  
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-18
 
 ---
 
@@ -54,7 +54,7 @@
 | appdata | Parity Array | /mnt/user/appdata | Docker/app config (NAS perspective) |
 | isos | Parity Array | /mnt/user/isos | Proxmox ISO images |
 | photos | ZFS Mirror | /mnt/user/photos | Immich library |
-| backups | ZFS Mirror | /mnt/user/backups | PBS backups, Docker appdata, Plex DB |
+| backups | ZFS Mirror | /mnt/user/backups | PBS backups, Docker stacks, Docker appdata |
 
 ### data share folder structure
 ```
@@ -80,6 +80,22 @@ data/
             └── downloads/
 ```
 
+### backups share folder structure
+```
+/mnt/user/backups/
+├── pbs/                    ← PBS datastore (owned by uid 34 — do not touch)
+├── appdata/                ← rsync appdata backups (owned by root)
+│   ├── docker-prod-01/
+│   ├── auth-prod-01/
+│   └── immich-prod-01/
+└── stacks/                 ← rsync stacks backups (owned by root)
+    ├── docker-prod-01/
+    ├── auth-prod-01/
+    └── immich-prod-01/
+```
+
+> **Warning:** The `pbs/` subdirectory must remain owned by uid 34 (PBS `backup` user). Do not place root-owned files inside it. PBS GC scans the entire datastore path and will abort with a permission error if it encounters files it cannot read. This is why PBS is scoped to `/mnt/user/backups/pbs` rather than the share root.
+
 ### NFS Exports
 
 - **Exported shares:** `data`, `appdata`, `isos`, `photos`, `backups`
@@ -89,6 +105,29 @@ data/
 - **SMB:** Disabled on all shares (NFS only)
 
 > **Note:** The `data` share is mounted on docker-prod-01 as a single NFSv3 mount at `/data`. This is required for hardlinks and atomic moves to work correctly across media and downloads. See `architecture/decisions-log.md` for rationale.
+
+---
+
+## SSH Access
+
+SSH is enabled on nas-prod-01. All SSH sessions authenticate as `root`.
+
+> **Note:** Unraid's user management (Users tab in the UI) is SMB-only. SSH always authenticates as root regardless of what users exist in the Unraid UI.
+
+### Authorized Keys
+
+`/root/.ssh/authorized_keys` contains dedicated backup keys for each Docker host. These keys are used exclusively by the nightly rsync backup scripts — they are not interactive login keys.
+
+| Key | Host | Purpose |
+|-----|------|---------|
+| `backup@docker-prod-01` | docker-prod-01 | Nightly rsync backup script |
+| `backup@auth-prod-01` | auth-prod-01 | Nightly rsync backup script |
+| `backup@immich-prod-01` | immich-prod-01 | Nightly rsync backup script |
+
+Key location on each host: `/root/.ssh/backup_rsa`  
+Target IP used by rsync scripts: `192.168.30.16` (VLAN 30 data interface — not the management IP)
+
+> **Note:** SSH to nas-prod-01 must use `192.168.30.16` from VLAN 30 hosts. The management IP `192.168.10.10` is blocked by firewall Rule 6 (Services → Management DENY).
 
 ---
 

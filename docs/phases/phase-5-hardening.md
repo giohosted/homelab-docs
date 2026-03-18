@@ -1,8 +1,8 @@
 # Phase 5 — Hardening & Operational Readiness
 
-**Status:** Pending  
-**Started:** —  
-**Last Updated:** 2026-03-16
+**Status:** In Progress  
+**Started:** 2026-03-17  
+**Last Updated:** 2026-03-18
 
 ---
 
@@ -21,7 +21,7 @@ Harden the v3 infrastructure, establish operational tooling, configure monitorin
 
 ---
 
-## Wave 1 — Monitoring Stack
+## Wave 1 — Monitoring Stack ✅
 
 ### Beszel
 
@@ -66,41 +66,68 @@ Already running on pi-prod-01. Configure monitors for all v3 services:
 
 ---
 
-## Wave 2 — Backup Automation
+## Wave 2 — Backup Automation ✅
 
 ### Appdata rsync Script
 
-Write a hardened rsync script to back up `/opt/appdata` and `/opt/stacks` from docker-prod-01, auth-prod-01, and immich-prod-01 to the NAS backups share nightly.
+Nightly rsync script backing up `/opt/appdata` and `/opt/stacks` from docker-prod-01, auth-prod-01, and immich-prod-01 to the NAS backups share.
 
-**Script requirements:**
-- rsync `/opt/appdata` → `/mnt/user/backups/appdata/<hostname>/`
-- rsync `/opt/stacks` → `/mnt/user/backups/stacks/<hostname>/`
-- Exclude `.env` files from stacks backup (already in git, secrets stay off NAS)
-- Healthchecks.io heartbeat ping on success — silent failure detection
-- Run nightly via cron at 03:00 (after PBS backup job at 02:00)
-- Log output to `/var/log/backup-appdata.log`
+**Implementation details:**
+- Script location: `/usr/local/bin/backup-appdata.sh` on each host
+- Log location: `/var/log/backup-appdata.log` on each host
+- SSH key location: `/root/.ssh/backup_rsa` on each host (dedicated backup key, not interactive key)
+- Schedule: cron at 03:00 nightly — edit via `sudo crontab -e` (root's crontab)
+- To edit script: `sudo nano /usr/local/bin/backup-appdata.sh`
+- To run manually: `sudo /usr/local/bin/backup-appdata.sh`
+- Transport: SSH rsync to nas-prod-01 at `192.168.30.16` (VLAN 30 data interface)
+- Authorized keys on NAS: `/root/.ssh/authorized_keys` — one entry per host
 
-**Hosts:**
-- docker-prod-01 → NFS mount backups share temporarily or use SSH rsync to NAS
-- auth-prod-01 → same
-- immich-prod-01 → same
+**What is backed up:**
+- `/opt/stacks` → `nas-prod-01:/mnt/user/backups/stacks/<hostname>/` (includes `.env` files)
+- `/opt/appdata` → `nas-prod-01:/mnt/user/backups/appdata/<hostname>/`
+- Behavior: rolling mirror with `--delete` — destination stays in sync with source, no versioning
+
+**Hosts and Healthchecks.io URLs:**
+| Host | Healthchecks.io Check |
+|------|-----------------------|
+| docker-prod-01 | `https://hc-ping.com/132bdc56-2f0e-45b8-85a8-c07dc1c049ab` |
+| auth-prod-01 | `https://hc-ping.com/7c625181-5347-4ce5-ab5a-385b72201d91` |
+| immich-prod-01 | `https://hc-ping.com/1329d9f0-9416-4d81-935c-23ce2969c1a6` |
+
+---
 
 ### PBS Backup Review
 
-Revisit PBS settings:
-- Retention policy — review keep last/daily/weekly/monthly values
-- Schedule timing — currently 02:00 daily, verify no conflicts
-- Prune schedule — confirm auto-prune is running
-- Garbage collection — configure GC schedule
-- Verify jobs — enable backup verification if supported on PBS 4.1.0
-- Namespace organization — consider per-node namespaces for cleaner UI
+PBS 4.1.4 on pbs-prod-01 (192.168.30.12). Datastore `nas-backups` mounted via NFS at `/mnt/backups/pbs` (NAS path: `/mnt/user/backups/pbs`).
 
-### Healthchecks.io
+**Backup job:** Daily at 02:00, all VMs and CTs, both nodes.
 
-Set up Healthchecks.io monitors for:
-- Appdata rsync script (per host)
-- PBS backup job completion
-- Any other cron jobs added in Phase 5
+**Retention (prune job):**
+- Keep Last: 3
+- Keep Daily: 7
+- Keep Weekly: 4
+- Keep Monthly: 3
+
+**Schedules:**
+- Prune: daily
+- GC: every Saturday at 04:00
+- Verify: every Saturday at 05:00
+
+**NAS share structure:**
+```
+/mnt/user/backups/
+├── pbs/          ← PBS datastore (owned by uid 34)
+├── appdata/      ← rsync appdata backups (owned by root)
+│   ├── docker-prod-01/
+│   ├── auth-prod-01/
+│   └── immich-prod-01/
+└── stacks/       ← rsync stacks backups (owned by root)
+    ├── docker-prod-01/
+    ├── auth-prod-01/
+    └── immich-prod-01/
+```
+
+> **Important:** PBS datastore must be scoped to `/mnt/backups/pbs` — not the share root `/mnt/backups`. PBS GC will fail with permission errors if it sees the `appdata` and `stacks` folders owned by root.
 
 ---
 
@@ -235,12 +262,29 @@ Decommission v2 infrastructure:
 
 ---
 
+## Wave 8 — Synology Active Backup for Business
+
+Configure Synology DSM Active Backup for Business (ABB) to pull versioned backups from nas-prod-01.
+
+**Goal:** Provide versioned, point-in-time recovery on top of the rolling rsync mirror. The rsync scripts are a same-day mirror — ABB adds historical versions.
+
+**Scope:**
+- Source: nas-prod-01 `backups` share (`/mnt/user/backups`)
+- Destination: Synology NAS dedicated backup volume
+- Schedule: TBD — nightly after rsync completes (after 03:00)
+- Retention: TBD
+
+**Additional items:**
+- Plex database backup — Plex runs directly on Unraid, not on docker-prod-01. Needs its own backup solution separate from the rsync scripts.
+
+---
+
 ## Exit Criteria
 
-- ⬜ Beszel agents deployed on all hosts — metrics visible
-- ⬜ Uptime Kuma monitors configured for all services
-- ⬜ Appdata rsync script running nightly with Healthchecks.io heartbeats
-- ⬜ PBS backup settings reviewed and optimized
+- ✅ Beszel agents deployed on all hosts — metrics visible
+- ✅ Uptime Kuma monitors configured for all services
+- ✅ Appdata rsync script running nightly with Healthchecks.io heartbeats
+- ✅ PBS backup settings reviewed and optimized
 - ⬜ OIDC configured for Proxmox, Beszel, Synology
 - ⬜ Immich CF Tunnel + CF Access configured
 - ⬜ ABS mobile app CF Access issue resolved
@@ -250,3 +294,4 @@ Decommission v2 infrastructure:
 - ⬜ NUT clients on auth-prod-01 and immich-prod-01
 - ⬜ v2 infrastructure decommissioned
 - ⬜ Firewall rules reviewed and cleaned up
+- ⬜ Synology ABB configured for versioned backups
