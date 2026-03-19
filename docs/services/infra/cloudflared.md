@@ -5,7 +5,7 @@
 **Tunnel name:** homelab-v3  
 **Compose:** `/opt/stacks/cloudflared/compose.yaml`  
 **Appdata:** None — stateless  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-18
 
 ---
 
@@ -42,10 +42,10 @@ Traefik handles all internal routing regardless of whether the request came from
 | Hostname | Cloudflare Route | CF Access | Notes |
 |----------|-----------------|-----------|-------|
 | `auth.giohosted.com` | `https://192.168.30.11` | No | Authentik — has its own auth |
-| `audiobooks.giohosted.com` | `https://192.168.30.11` | Yes | Audiobookshelf — Wave 4 |
+| `audiobooks.giohosted.com` | `https://192.168.30.11` | Yes | Audiobookshelf — service token bypass for mobile app |
 | `request.giohosted.com` | `https://192.168.30.11` | No | Seerr — has its own auth |
-| `shelf.giohosted.com` | `https://192.168.30.11` | Yes | Shelfmark — Wave 4 |
-| `photos.giohosted.com` | `https://192.168.30.11` | Pending | Immich — CF Tunnel + CF Access deferred to Phase 5 |
+| `shelf.giohosted.com` | `https://192.168.30.11` | Yes | Shelfmark |
+| `photos.giohosted.com` | Not active | N/A | Immich — tunnel route added day before wedding (October), removed after |
 
 ---
 
@@ -84,12 +84,44 @@ Solution: always use `https://192.168.30.11` with No TLS Verify.
 
 ## Cloudflare Access
 
-Cloudflare Access adds an authentication layer in front of externally exposed services. Users must authenticate via Cloudflare Access before reaching the service. Currently enabled for:
+Cloudflare Access adds an authentication layer in front of externally exposed services. Users must authenticate before reaching the service. Currently enabled for:
 
-- **Audiobookshelf** (`audiobooks.giohosted.com`) — login via Authentik OIDC through CF Access
+- **Audiobookshelf** (`audiobooks.giohosted.com`) — browser users authenticate via Authentik OIDC; mobile app bypasses via service token (see below)
 - **Shelfmark** (`shelf.giohosted.com`) — login via Authentik OIDC through CF Access
 
-> **Known issue — ABS mobile app:** Cloudflare Access blocks API calls from the ABS mobile app because the app cannot complete the browser-based auth challenge. Fix deferred to Phase 5 — will require adding a CF Access service token or bypass rule for the ABS API endpoints.
+### ABS Mobile App — Service Token Bypass
+
+The ABS mobile app cannot complete CF Access's browser-based auth challenge. A CF Access service token (`abs-mobile`) is configured as a Service Auth policy on the Audiobookshelf CF Access application. The mobile app sends the token headers with every request, bypassing the browser challenge.
+
+- **Service token name:** `abs-mobile`
+- **CF Access application:** `Audiobookshelf`
+- **Policy name:** `abs-mobile-token` — action: SERVICE AUTH, order: 1 (evaluated before all other policies)
+- **Token storage:** Password manager (Client ID + Client Secret)
+- **Mobile app config:** Custom Headers → `CF-Access-Client-Id` and `CF-Access-Client-Secret`
+
+See `audiobookshelf.md` for full policy order and mobile app setup details.
+
+---
+
+## Immich — Temporary Tunnel for Wedding (October)
+
+Immich is LAN-only by default. The tunnel route for `photos.giohosted.com` is added temporarily for the wedding event and removed afterwards.
+
+**Traefik file provider route:** `/opt/appdata/traefik/config/immich.yml` — already configured, points to `http://192.168.30.14:2283`
+
+**Checklist (day before wedding):**
+1. Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Add public hostname:
+   - Subdomain: `photos` / Domain: `giohosted.com`
+   - Type: `HTTPS` / URL: `192.168.30.11`
+   - Additional settings → TLS → No TLS Verify: enabled
+2. Test QR code link from phone on LTE
+3. No CF Access policy — guests access the shared album directly, protected by Immich's built-in album password
+
+**After the wedding (a few days later):**
+1. Remove the `photos.giohosted.com` route from the tunnel
+2. Immich returns to LAN-only
+
+> **Immich server external domain** is set to `https://photos.giohosted.com` in Administration → Server Settings — shared album QR codes will use this as the base URL.
 
 ---
 
@@ -118,19 +150,19 @@ Cloudflare Access adds an authentication layer in front of externally exposed se
 | qBitrr | LAN only — no external access needed |
 | CWA | LAN only — no external access needed |
 | PBS | Admin tool — internal only |
-| Immich | CF Tunnel deferred to Phase 5 |
+| Immich | LAN-only by default — temporary tunnel for wedding event only |
 | Plex | Direct port forward on 32400 — Cloudflare ToS prohibits video streaming via tunnel |
 
 ---
 
 ## Cloudflare DNS Changes Made During v3 Build
 
-| Record                                   | Action  | Reason                                          |
-| ---------------------------------------- | ------- | ----------------------------------------------- |
-| `*` A record → 69.216.122.32             | Deleted | v2 NPM wildcard — no longer needed              |
-| `giohosted.com` A record → 69.216.122.32 | Deleted | v2 NPM — no longer needed                       |
-| `photos` A record → 69.216.122.32        | Deleted | v2 NPM — no longer needed                       |
-| `auth` Tunnel record → homelab-v2        | Deleted | Dead v2 tunnel — recreated in homelab-v3 tunnel |
+| Record | Action | Reason |
+|--------|--------|--------|
+| `*` A record → 69.216.122.32 | Deleted | v2 NPM wildcard — no longer needed |
+| `giohosted.com` A record → 69.216.122.32 | Deleted | v2 NPM — no longer needed |
+| `photos` A record → 69.216.122.32 | Deleted | v2 NPM — no longer needed |
+| `auth` Tunnel record → homelab-v2 | Deleted | Dead v2 tunnel — recreated in homelab-v3 tunnel |
 
 ---
 
@@ -140,4 +172,3 @@ Cloudflare Access adds an authentication layer in front of externally exposed se
 - Tunnel token is stored in `/opt/stacks/cloudflared/.env` (gitignored) — if lost, generate a new one in Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Overview → Refresh token
 - cloudflared does not need to be on the `proxy` Docker network — it connects to Traefik by IP, not by container name
 - Plex is intentionally excluded from the tunnel — direct port forward on 32400 is used instead
-- Phase 5 TODO: Add CF Tunnel + CF Access for `photos.giohosted.com`, and fix ABS mobile app CF Access compatibility

@@ -88,6 +88,7 @@ Nightly rsync script backing up `/opt/appdata` and `/opt/stacks` from docker-pro
 - Behavior: rolling mirror with `--delete` — destination stays in sync with source, no versioning
 
 **Hosts and Healthchecks.io URLs:**
+
 | Host | Healthchecks.io Check |
 |------|-----------------------|
 | docker-prod-01 | `https://hc-ping.com/132bdc56-2f0e-45b8-85a8-c07dc1c049ab` |
@@ -131,42 +132,60 @@ PBS 4.1.4 on pbs-prod-01 (192.168.30.12). Datastore `nas-backups` mounted via NF
 
 ---
 
-## Wave 3 — OIDC Rollout
+## Wave 3 — OIDC Rollout ✅
 
 Configure Authentik OIDC for remaining services that support it:
 
-| Service                    | Status | Notes                                                     |
-| -------------------------- | ------ | --------------------------------------------------------- |
-| Proxmox (both nodes + PBS) | ✅ Done | OIDC via Authentik — both pve-prod-01 and pve-prod-02     |
-| Immich                     | ✅ Done | Carried forward from v2                                   |
-| Beszel                     | ✅ Done | Requires `email_verified: true` custom scope in Authentik |
-| Synology DSM               | ✅ Done | Local admin retained as break-glass                       |
-| Audiobookshelf             | ✅ Done | Carried forward from v2                                   |
-| Calibre-Web-Automated      | ✅ Done | Carried forward from v2                                   |
-| Shelfmark                  | ✅ Done | New provider created in v3                                |
-| qBitrr                     | ✅ Done | New provider created in v3                                |
+| Service | Status | Notes |
+|---------|--------|-------|
+| Proxmox (both nodes + PBS) | ✅ Done | OIDC via Authentik — both pve-prod-01 and pve-prod-02 |
+| Immich | ✅ Done | Carried forward from v2 |
+| Beszel | ✅ Done | Requires `email_verified: true` custom scope in Authentik |
+| Synology DSM | ✅ Done | Local admin retained as break-glass |
+| Audiobookshelf | ✅ Done | Carried forward from v2 |
+| Calibre-Web-Automated | ✅ Done | Carried forward from v2 |
+| Shelfmark | ✅ Done | New provider created in v3 |
+| qBitrr | ✅ Done | New provider created in v3 |
 
 ---
 
-## Wave 4 — External Access & CF Access
+## Wave 4 — External Access & CF Access ✅
 
-### Immich — Cloudflare Tunnel + CF Access
+### Immich — Temporary Tunnel for Wedding (October)
 
-Add `photos.giohosted.com` to the homelab-v3 CF Tunnel and configure Cloudflare Access policy.
+Immich is LAN-only by default. Permanently exposing it externally is not needed — the tunnel route for `photos.giohosted.com` will be added temporarily the day before the wedding and removed a few days after.
 
-Steps:
-1. Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Add route: `photos.giohosted.com` → `https://192.168.30.11`, No TLS Verify
-2. Cloudflare Zero Trust → Access → Applications → Add: `photos.giohosted.com`
-3. Configure Access policy — Authentik OIDC login required
+**No CF Access policy** — guests access the shared album directly via QR code. Immich's built-in shared album password is the only gate.
 
-### ABS Mobile App — CF Access Fix
+**Traefik file provider route** is already configured at `/opt/appdata/traefik/config/immich.yml` and verified working on LAN. No changes needed until October.
 
-Cloudflare Access blocks API calls from the ABS mobile app because the app cannot complete the browser-based auth challenge.
+**October checklist (day before wedding):**
+1. Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Add public hostname:
+   - Subdomain: `photos` / Domain: `giohosted.com`
+   - Type: `HTTPS` / URL: `192.168.30.11`
+   - Additional settings → TLS → No TLS Verify: enabled
+2. Test QR code link from phone on LTE
+3. Share QR code with guests
 
-**Fix options to evaluate:**
-- Add a CF Access service token for the ABS API endpoints
-- Configure bypass rules for specific ABS API paths (`/api/*`)
-- Use Cloudflare Access → Service Auth → create a service token and configure in ABS mobile app settings
+**After the wedding (a few days later):**
+1. Remove the `photos.giohosted.com` route from the tunnel
+2. Immich returns to LAN-only
+
+> Immich server external domain is confirmed set to `https://photos.giohosted.com` in Administration → Server Settings.
+
+---
+
+### ABS Mobile App — CF Access Fix ✅
+
+The ABS mobile app cannot complete CF Access's browser-based auth challenge. Fixed using a CF Access service token + registering `audiobooth://oauth` in both Authentik and ABS.
+
+**What was done:**
+1. Created CF Access service token `abs-mobile` (Access controls → Service credentials)
+2. Added `abs-mobile-token` policy (action: SERVICE AUTH) to the Audiobookshelf CF Access application — order 1, evaluated before all other policies
+3. Added `audiobooth://oauth` to ABS server settings → Authentication → OpenID Connect → Mobile Redirect URIs
+4. Configured ABS mobile app with two custom headers: `CF-Access-Client-Id` and `CF-Access-Client-Secret`
+
+See `audiobookshelf.md` for full details on policy order and mobile app configuration.
 
 ---
 
@@ -286,8 +305,8 @@ Configure Synology DSM Active Backup for Business (ABB) to pull versioned backup
 - ✅ Appdata rsync script running nightly with Healthchecks.io heartbeats
 - ✅ PBS backup settings reviewed and optimized
 - ✅ OIDC configured for Proxmox, Beszel, Synology
-- ⬜ Immich CF Tunnel + CF Access configured
-- ⬜ ABS mobile app CF Access issue resolved
+- ✅ Immich external access planned — temporary tunnel for wedding (October), no permanent exposure
+- ✅ ABS mobile app CF Access issue resolved — service token + `audiobooth://oauth` redirect URI
 - ⬜ MAM seeding rules configured in qBitrr
 - ⬜ Service settings review complete for all priority services
 - ⬜ SSH key-based auth on all hosts

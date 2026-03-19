@@ -2,7 +2,7 @@
 
 **Host:** docker-prod-01 (192.168.30.11)  
 **Status:** Active  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-18
 
 ---
 
@@ -44,7 +44,7 @@ Audiobookshelf is the audiobook server. Users request audiobooks via Shelfmark, 
 | **Traefik router** | `audiobookshelf` |
 | **Middleware** | None — externally exposed |
 | **External access** | Yes — Cloudflare Tunnel at `audiobooks.giohosted.com` |
-| **Cloudflare Access** | Yes — login required before reaching the app |
+| **Cloudflare Access** | Yes — browser users require Authentik login; mobile app uses service token bypass (see below) |
 
 ---
 
@@ -56,6 +56,47 @@ Audiobookshelf is the audiobook server. Users request audiobooks via Shelfmark, 
 - **Admin group:** `admins`
 - **Auto-provision users:** Enabled
 - **Local admin:** Retained as break-glass — do not delete
+
+### Authentik Redirect URIs
+
+The following redirect URIs are registered on the Authentik provider:
+
+- `https://audiobooks.giohosted.com/audiobookshelf/auth/openid/callback` (strict)
+- `https://audiobooks.giohosted.com/audiobookshelf/auth/openid/mobile-redirect` (strict)
+- `audiobooth://oauth` (strict) — required for iOS/Android mobile app OIDC login
+
+### ABS Server Redirect URIs
+
+`audiobooth://oauth` must also be added in ABS itself under **Settings → Authentication → OpenID Connect → Mobile Redirect URIs**. Both Authentik and ABS must have this URI or mobile SSO login will fail with a redirect error.
+
+---
+
+## Mobile App External Access (CF Access Service Token)
+
+The ABS mobile app cannot complete Cloudflare Access's browser-based auth challenge, so a CF Access service token is used to bypass the challenge for mobile app requests.
+
+**CF Access application:** `Audiobookshelf` (`audiobooks.giohosted.com`)  
+**Service token name:** `abs-mobile`  
+**Token location:** Password manager (Client ID + Client Secret — secret shown once at creation)
+
+### CF Access Policy Order
+
+| Order | Policy | Action |
+|-------|--------|--------|
+| 1 | `abs-mobile-token` | SERVICE AUTH — service token match |
+| 2 | `allow-users-authentik` | ALLOW — Authentik login |
+| 3 | `block-all-others` | BLOCK |
+
+Service Auth policies are always evaluated first by CF Access regardless of order in the UI.
+
+### Mobile App Configuration
+
+In the ABS iOS/Android app → server connection → **Custom Headers**, add:
+
+| Header Name | Value |
+|-------------|-------|
+| `CF-Access-Client-Id` | `<client-id from abs-mobile token>` |
+| `CF-Access-Client-Secret` | `<client-secret from abs-mobile token>` |
 
 ---
 
