@@ -189,7 +189,7 @@ See `audiobookshelf.md` for full details on policy order and mobile app configur
 
 ---
 
-## Wave 5 — MAM Seeding Rules
+## Wave 5 — MAM Seeding Rules ✅
 
 Configure qBitrr MAM-specific seeding rules for ebooks and audiobooks.
 
@@ -307,7 +307,7 @@ Configure Synology DSM Active Backup for Business (ABB) to pull versioned backup
 - ✅ OIDC configured for Proxmox, Beszel, Synology
 - ✅ Immich external access planned — temporary tunnel for wedding (October), no permanent exposure
 - ✅ ABS mobile app CF Access issue resolved — service token + `audiobooth://oauth` redirect URI
-- ⬜ MAM seeding rules configured in qBitrr
+- ✅ MAM seeding rules configured in qBitrr
 - ⬜ Service settings review complete for all priority services
 - ⬜ SSH key-based auth on all hosts
 - ⬜ NUT clients on auth-prod-01 and immich-prod-01

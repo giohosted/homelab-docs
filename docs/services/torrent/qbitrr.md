@@ -7,7 +7,7 @@
 **Compose:** `/opt/stacks/torrent/compose.yaml`  
 **Appdata:** `/opt/appdata/qbitrr/`  
 **URL:** `https://qbitrr.giohosted.com/ui`  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-19
 
 ---
 
@@ -15,13 +15,12 @@
 
 qBitrr is the glue between qBittorrent and the ARR stack. It runs as a separate container on the `proxy` network (not inside Gluetun's namespace) and connects to qBittorrent via the `gluetun` hostname.
 
-At launch, qBitrr is configured to:
+qBitrr is configured to:
 - Monitor torrent health across all 4 ARR instances
 - Trigger automated searches for missing media
 - Re-search failed or stalled torrents
 - Tag torrents for seeding tracking
-
-Seeding control rules (MAM compliance, ratio/time limits) are deferred to Phase 5 when book and audiobook torrents are active.
+- Enforce MAM-specific seeding rules for ebooks and audiobooks (14-day minimum, 1.0 ratio)
 
 ---
 
@@ -67,8 +66,6 @@ qBitrr generates a default `config.toml` on first run. The file is edited direct
 
 ### Per-Instance Search Settings
 
-All 4 instances share these search settings at launch:
-
 | Setting | Value | Notes |
 |---------|-------|-------|
 | `SearchMissing` | `true` | Actively searches for missing media |
@@ -76,7 +73,7 @@ All 4 instances share these search settings at launch:
 | `SearchByYear` | `true` | Searches newest to oldest by release year |
 | `SearchBySeries` | `smart` | Sonarr only — uses series or episode search intelligently |
 | `PrioritizeTodaysReleases` | `true` | Sonarr only — today's episodes searched first |
-| `DoUpgradeSearch` | `false` | No quality upgrade searches at launch |
+| `DoUpgradeSearch` | `false` | ARR apps handle upgrades natively — no double-dipping |
 | `RssSyncTimer` | `1` | RSS sync every 1 minute |
 | `RefreshDownloadsTimer` | `1` | Queue refresh every 1 minute |
 | `ReSearch` | `true` | Re-search failed torrents |
@@ -86,20 +83,45 @@ All 4 instances share these search settings at launch:
 | Setting | Value | Notes |
 |---------|-------|-------|
 | `StalledDelay` | `15` | Minutes before a stalled torrent is acted on |
-| `DoNotRemoveSlow` | `true` | Slow torrents are not removed |
+| `ReSearchStalled` | `true` | Stalled torrents are automatically re-searched for an alternative source |
+| `DoNotRemoveSlow` | `true` | Slow torrents are not removed — only stalled ones |
 | `MaximumDeletablePercentage` | `0.99` | Never delete torrents above 99% complete |
 | `IgnoreTorrentsYoungerThan` | `180` | Seconds — new torrents are left alone |
-| `RemoveTorrent` | `-1` | Never remove torrents — seeding rules deferred to Phase 5 |
+| `RemoveTorrent` | `-1` | Never remove ARR torrents — seeding is indefinite |
 
 ---
 
-## Seeding Rules (Phase 5)
+## Seeding Rules
 
-Seeding rules are not configured at launch. They will be set up in Phase 5 when MAM (MyAnonamouse) book and audiobook torrents are active.
+### Books categories — global defaults
 
-MAM requires a minimum seed time of 14 days for ebooks and audiobooks. qBitrr handles this via per-tracker seeding rules in `config.toml`.
+The `[qBit.CategorySeeding]` block applies to the `audiobooks` and `ebooks` categories. Global defaults allow indefinite seeding with no ratio or time cap — the MAM tracker override below handles enforcement.
 
-See Phase 5 documentation when implemented.
+| Setting | Value |
+|---------|-------|
+| `MaxUploadRatio` | `-1` (unlimited) |
+| `MaxSeedingTime` | `-1` (unlimited) |
+| `MinSeedRatio` | `1.0` |
+| `MinSeedingTimeDays` | `0` |
+| `RemoveTorrent` | `-1` (never — MAM override handles removal) |
+
+### MAM tracker override
+
+MAM (MyAnonamouse) torrents in the `audiobooks` and `ebooks` categories are subject to tracker-scoped seeding rules. Once both conditions are met (14 days AND 1.0 ratio), qBitrr removes the torrent from qBittorrent automatically.
+```toml
+[qBit.CategorySeeding.Trackers.myanonamouse]
+URL = "myanonamouse.net"
+MinSeedingTimeDays = 14
+MinSeedRatio = 1.0
+MaxUploadRatio = -1
+MaxSeedingTime = -1
+RemoveTorrent = true
+HitAndRunMode = "disabled"
+```
+
+**Why `HitAndRunMode = "disabled"`:** MAM audiobooks and ebooks are often slow seeds — HitAndRun detection could incorrectly flag legitimate slow-seeding torrents. The 14-day + 1.0 ratio requirements already satisfy MAM's seeding policy without it.
+
+Torrents from AudiobookBay or any other tracker are unaffected by this rule — they fall back to the global defaults and seed indefinitely.
 
 ---
 
@@ -115,7 +137,7 @@ The WebUI provides:
 
 ### Authentication
 
-qBitrr WebUI has its own auth system separate from Traefik. On first access you are prompted to create credentials. A bearer token is also auto-generated in `config.toml` under `[WebUI].Token` for API access.
+qBitrr WebUI uses its own auth system with OIDC via Authentik. A bearer token is also auto-generated in `config.toml` under `[WebUI].Token` for API access.
 
 ---
 
@@ -132,10 +154,14 @@ docker logs -f qbitrr
 ```
 
 ### Confirm all instances are connecting
-Look for lines like:
+On a healthy startup, 12 workers start:
 ```
-INFO : qBitrr.Sonarr-TV : Search loop starting for Sonarr-TV
-INFO : qBitrr.Radarr-1080 : Searching for: <movie title>
+search(sonarr-tv), torrent(sonarr-tv)
+search(sonarr-anime), torrent(sonarr-anime)
+search(radarr-1080), torrent(radarr-1080)
+search(radarr-4k), torrent(radarr-4k)
+torrent(recheck), torrent(failed)
+torrent(ebooks), torrent(audiobooks)
 ```
 
 If you see `CRITICAL: Failed to connect to Arr instance` — check the URI and API key in `config.toml` for that instance.
@@ -175,8 +201,8 @@ qBitrr connects to qBittorrent via `gluetun:8080`. Verify Gluetun is running and
 docker ps | grep gluetun
 ```
 
-### Sonarr-Anime or Radarr-4K showing "No series/movies returned"
-Expected if those instances have empty libraries. Not an error — qBitrr has nothing to search for.
+### Sonarr-Anime showing "No series returned"
+Expected if Sonarr-Anime has an empty library. Not an error — qBitrr has nothing to search for.
 
 ### Search loop crashing repeatedly
 Check the URI for that instance in `config.toml` — must include `http://` scheme. Missing scheme causes an immediate crash with `MissingSchema` error.
@@ -192,7 +218,7 @@ docker restart qbitrr
 ## Notes
 
 - qBitrr is on the `proxy` network — unlike qBittorrent it is NOT inside Gluetun's namespace
-- qBitrr connects to ARR instances by container name (e.g. `sonarr-tv`) — this works because all containers share the `proxy` Docker network
+- qBitrr connects to ARR instances by container name (e.g. `sonarr-tv`) — works because all containers share the `proxy` Docker network
 - qBitrr connects to qBittorrent via `gluetun` hostname — not `qbittorrent`, because qBittorrent has no independent network presence
 - The `tty: true` setting in the compose is required — qBitrr uses terminal control codes in its output and will behave oddly without it
 - Auto-updates are disabled (`AutoUpdateEnabled = false`) — updates are handled manually by pulling the latest image via Dockman
