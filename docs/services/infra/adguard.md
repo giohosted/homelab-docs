@@ -4,7 +4,7 @@
 **Host:** dns-prod-02 (192.168.30.15) — secondary  
 **Container type:** LXC (Debian 12)  
 **Status:** Running  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-19
 
 ---
 
@@ -24,10 +24,10 @@
 ## Overview
 
 AdGuard Home is the DNS server for all VLANs. It provides:
-- Ad and tracker blocking across all network clients
+- Ad, tracker, and malware/phishing domain blocking across all network clients
 - Split-horizon DNS — `*.giohosted.com` resolves internally to Traefik (192.168.30.11)
 - DNS rewrites for all internal services
-- Upstream DNS resolution via encrypted DoT/DoH resolvers
+- Upstream DNS resolution via encrypted DoT resolvers
 
 The secondary instance (dns-prod-02) is a read-only replica synced from the primary via adguardhome-sync. It provides DNS redundancy — if pve-prod-01 goes down, dns-prod-02 continues serving DNS from pve-prod-02.
 
@@ -54,6 +54,26 @@ Upstream resolvers use DNS-over-TLS (DoT) for encrypted resolution:
 | Quad9 | `tls://9.9.9.9` |
 
 > VLAN 10 (Management) does not use AdGuard — Proxmox nodes and pi-prod-01 use `9.9.9.9` directly as their DNS server. AdGuard runs on VLAN 30 and management hosts are configured before AdGuard exists.
+
+---
+
+## Blocklists
+
+| List | URL | Purpose |
+|------|-----|---------|
+| Hagezi Normal | `https://adguardteam.github.io/HostlistsRegistry/assets/filter_34.txt` | Ad and tracker blocking |
+| Hagezi Threat Intelligence Feeds | `https://adguardteam.github.io/HostlistsRegistry/assets/filter_44.txt` | Malware and phishing domain blocking |
+
+Both lists are maintained by Hagezi and updated regularly. Normal handles privacy (ads/trackers); Threat Intelligence Feeds handles security (malware/phishing). These complement each other — Normal is not a superset of Threat Intelligence Feeds.
+
+---
+
+## Query Log & Statistics
+
+| Setting | Value |
+|---------|-------|
+| Query log retention | 7 days |
+| Statistics retention | 7 days |
 
 ---
 
@@ -89,7 +109,7 @@ All `*.giohosted.com` services point to Traefik at `192.168.30.11`. Rewrites are
 
 ## IoT DNS Interception
 
-IoT devices on VLAN 40 are not permitted to reach VLAN 30 directly. The UDM-SE intercepts DNS queries from VLAN 40 on port 53 and forwards them to AdGuard at 192.168.30.10. IoT devices get ad-blocking without needing a direct path to the Services VLAN.
+IoT devices on VLAN 40 are not permitted to reach VLAN 30 directly. The UDM-SE intercepts DNS queries from VLAN 40 on port 53 and forwards them to AdGuard at 192.168.30.10. IoT devices get ad and malware blocking without needing a direct path to the Services VLAN.
 
 ---
 
@@ -122,3 +142,4 @@ IoT devices on VLAN 40 are not permitted to reach VLAN 30 directly. The UDM-SE i
 - Rewrites added directly to dns-prod-02 will be overwritten by the next adguardhome-sync run — always add to primary only
 - adguardhome-sync runs every 30 minutes — see `services/infra/adguardhome-sync.md`
 - Chrome Secure DNS (DoH) bypasses AdGuard entirely — disable it on any client where internal hostnames need to resolve correctly
+- Client-specific rules not configured — global blocking applies to all clients on all VLANs

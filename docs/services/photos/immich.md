@@ -6,7 +6,7 @@
 **Compose:** `/opt/stacks/immich/compose.yaml`  
 **Appdata:** `/opt/appdata/immich/`  
 **URL:** `https://photos.giohosted.com`  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-03-19
 
 ---
 
@@ -77,9 +77,9 @@ Browser → AdGuard (192.168.30.10) → 192.168.30.11 (Traefik) → 192.168.30.1
 
 ## External Access
 
-- **CF Tunnel:** Deferred to Phase 5
-- **CF Access:** Deferred to Phase 5
-- Currently accessible on LAN only at `https://photos.giohosted.com`
+Immich is LAN-only by default. A temporary CF Tunnel route is added for the wedding event in October and removed afterwards. No CF Access policy — guests access the shared album directly via QR code, protected by Immich's built-in album password.
+
+See `cloudflare-tunnel.md` for the October checklist.
 
 ---
 
@@ -140,7 +140,64 @@ Immich manages its own folder structure inside `/data/photos` (= `/mnt/user/phot
 - **Authentik application:** `Immich`
 - **Authentik provider:** Carried forward from v2 — all users and sessions intact on restore
 - **Local admin:** Retained as break-glass — do not delete
-- **OIDC for Phase 5:** Full OIDC configuration review deferred to Phase 5
+
+---
+
+## Machine Learning Settings
+
+Configured in Administration → Settings → Machine Learning.
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| Smart Search (CLIP) | Enabled | Model: `ViT-B-32__openai` |
+| Facial Recognition | Enabled | Model: `buffalo_s` |
+| OCR | Enabled | Model: `PP-OCRv5_mobile` |
+
+**Why `buffalo_s` over `buffalo_l`:** immich-prod-01 has 2 vCPUs and 6GB RAM — ML inference runs on CPU only, no GPU passthrough. The small model is meaningfully faster with minimal accuracy difference for a personal library of ~10k assets.
+
+---
+
+## Job Concurrency Settings
+
+Configured in Administration → Settings → Jobs.
+
+| Job | Concurrency | Notes |
+|-----|-------------|-------|
+| Thumbnail Generation | 5 | Fine for 2 vCPUs — only active during imports |
+| Metadata Extraction | 5 | Same |
+| Smart Search | 2 | ML inference — 2 workers is appropriate |
+| Face Detection | 2 | ML inference — 2 workers is appropriate |
+| Storage Template Migration | 1 | Fine as-is |
+
+> Concurrency values are intentionally left at defaults. Jobs only run during imports — idle CPU usage is 7-8% normally. Adding more vCPUs is the right lever if throughput becomes a problem, not throttling concurrency.
+
+---
+
+## Storage Template
+
+Enabled in Administration → Settings → Storage Template.
+
+**Template string:**
+```
+{{y}}/{{MMMM}}/{{filename}}
+```
+
+**Output example:** `2024/January/IMG_1234.jpg`
+
+This organizes photos by year and month using the original filename — readable if browsing the NAS directly outside of Immich.
+
+> Enabling storage template triggers a migration job that moves all existing files to the new path structure. This is safe but generates significant disk I/O on first run.
+
+---
+
+## Other Settings
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| Trash retention | 30 days | Fine as-is |
+| Video preview thumbnails | Never | Storage and CPU intensive — not worth it |
+| Chapter image thumbnails | As scheduled task + on add | Fine |
+| Library scan schedule | N/A | Only applies to external libraries — not used |
 
 ---
 
@@ -264,7 +321,9 @@ http:
 | Postgres on local VM disk | Immich explicitly does not support NFS for Postgres. Local disk avoids NFS latency and locking issues. |
 | DB restore via psql CLI | UI restore failed silently mid-migration. CLI restore is reliable and provides clear output. |
 | Official compose volume mapping `:/data` | Non-standard paths cause DB asset path mismatches on future migrations. Official mapping ensures consistency with Immich tooling. |
-| CF Tunnel deferred to Phase 5 | Internal access working. External access and CF Access policy configuration deferred alongside other Phase 5 hardening tasks. |
+| LAN-only by default | No need for permanent external exposure. Temporary tunnel added for wedding event only — see cloudflare-tunnel.md. |
+| buffalo_s over buffalo_l | Faster on CPU-only VM with negligible accuracy difference for a personal library. |
+| 2 vCPUs retained | ML jobs only run during imports. Idle CPU is 7-8%. Adding cores would sit unused 99% of the time. |
 
 ---
 
@@ -272,9 +331,6 @@ http:
 
 - Root SSH login: disabled (standard Ubuntu default)
 - QEMU guest agent installed — Proxmox can cleanly shut down this VM on UPS event
-- NUT client not yet configured — to be done in Phase 5
+- NUT client not yet configured — to be done in Phase 5 Wave 7
 - `gio` user added to `service` group (GID 2000) on immich-prod-01 for file permission consistency
 - git identity configured: `delgadogiovanny@gmail.com` / `giohosted`
-- Phase 5 TODO: CF Tunnel + CF Access for `photos.giohosted.com`
-- Phase 5 TODO: NUT client configuration
-- Phase 5 TODO: Full OIDC review and Authentik provider audit
