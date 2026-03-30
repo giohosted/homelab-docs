@@ -1,0 +1,3119 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/phases/phase-5-hardening/">
+      
+      
+        <link rel="prev" href="../phase-4-services/">
+      
+      
+        <link rel="next" href="../phase-6-kubernetes/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Phase 5 — Hardening - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#phase-5-hardening-operational-readiness" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Phase 5 — Hardening
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      Objectives
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#entry-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      Entry Criteria
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-1-monitoring-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 1 — Monitoring Stack ✅
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 1 — Monitoring Stack ✅">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#beszel" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beszel
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uptime-kuma" class="md-nav__link">
+    <span class="md-ellipsis">
+      Uptime Kuma
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-2-backup-automation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 2 — Backup Automation ✅
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 2 — Backup Automation ✅">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#appdata-rsync-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      Appdata rsync Script
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-backup-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Backup Review
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-3-oidc-rollout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 3 — OIDC Rollout ✅
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-4-external-access-cf-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 4 — External Access &amp; CF Access ✅
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 4 — External Access & CF Access ✅">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#immich-temporary-tunnel-for-wedding-october" class="md-nav__link">
+    <span class="md-ellipsis">
+      Immich — Temporary Tunnel for Wedding (October)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs-mobile-app-cf-access-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      ABS Mobile App — CF Access Fix ✅
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-5-mam-seeding-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 5 — MAM Seeding Rules ✅
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-6-service-settings-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 6 — Service Settings Review
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 6 — Service Settings Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#priority-services-to-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Priority services to review:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-7-security-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 7 — Security Hardening
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 7 — Security Hardening">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ssh-key-based-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSH Key-Based Authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nut-client-on-auth-prod-01-and-immich-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      NUT Client on auth-prod-01 and immich-prod-01
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firewall-rule-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Rule Review
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v2-decommission" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2 Decommission
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-8-synology-active-backup-for-business" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 8 — Synology Active Backup for Business
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      Exit Criteria
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      Objectives
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#entry-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      Entry Criteria
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-1-monitoring-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 1 — Monitoring Stack ✅
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 1 — Monitoring Stack ✅">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#beszel" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beszel
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uptime-kuma" class="md-nav__link">
+    <span class="md-ellipsis">
+      Uptime Kuma
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-2-backup-automation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 2 — Backup Automation ✅
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 2 — Backup Automation ✅">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#appdata-rsync-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      Appdata rsync Script
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-backup-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Backup Review
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-3-oidc-rollout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 3 — OIDC Rollout ✅
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-4-external-access-cf-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 4 — External Access &amp; CF Access ✅
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 4 — External Access & CF Access ✅">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#immich-temporary-tunnel-for-wedding-october" class="md-nav__link">
+    <span class="md-ellipsis">
+      Immich — Temporary Tunnel for Wedding (October)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs-mobile-app-cf-access-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      ABS Mobile App — CF Access Fix ✅
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-5-mam-seeding-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 5 — MAM Seeding Rules ✅
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-6-service-settings-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 6 — Service Settings Review
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 6 — Service Settings Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#priority-services-to-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Priority services to review:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-7-security-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 7 — Security Hardening
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wave 7 — Security Hardening">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ssh-key-based-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSH Key-Based Authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nut-client-on-auth-prod-01-and-immich-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      NUT Client on auth-prod-01 and immich-prod-01
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firewall-rule-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Rule Review
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v2-decommission" class="md-nav__link">
+    <span class="md-ellipsis">
+      v2 Decommission
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wave-8-synology-active-backup-for-business" class="md-nav__link">
+    <span class="md-ellipsis">
+      Wave 8 — Synology Active Backup for Business
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      Exit Criteria
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="phase-5-hardening-operational-readiness">Phase 5 — Hardening &amp; Operational Readiness<a class="headerlink" href="#phase-5-hardening-operational-readiness" title="Permanent link">&para;</a></h1>
+<p><strong>Status:</strong> In Progress<br />
+<strong>Started:</strong> 2026-03-17<br />
+<strong>Last Updated:</strong> 2026-03-18</p>
+<hr />
+<h2 id="objectives">Objectives<a class="headerlink" href="#objectives" title="Permanent link">&para;</a></h2>
+<p>Harden the v3 infrastructure, establish operational tooling, configure monitoring, set up automated backups, and tune all services for optimal operation. This phase runs after all services are migrated and validated in Phase 4.</p>
+<hr />
+<h2 id="entry-criteria">Entry Criteria<a class="headerlink" href="#entry-criteria" title="Permanent link">&para;</a></h2>
+<ul>
+<li>✅ Phase 4 complete — all services running on v3 infrastructure</li>
+<li>✅ Immich deployed and photos loading correctly</li>
+<li>✅ Books stack deployed with hardlink workflows validated</li>
+<li>✅ All DNS rewrites pointing at v3</li>
+</ul>
+<hr />
+<h2 id="wave-1-monitoring-stack">Wave 1 — Monitoring Stack ✅<a class="headerlink" href="#wave-1-monitoring-stack" title="Permanent link">&para;</a></h2>
+<h3 id="beszel">Beszel<a class="headerlink" href="#beszel" title="Permanent link">&para;</a></h3>
+<p>Deploy Beszel agent on all hosts — metrics server already running on pi-prod-01.</p>
+<p><strong>Hosts to deploy agents on:</strong>
+- pve-prod-01
+- pve-prod-02
+- docker-prod-01
+- auth-prod-01
+- immich-prod-01
+- nas-prod-01
+- pi-prod-01 (local agent)</p>
+<p><strong>Prerequisite firewall rule (add before deploying):</strong>
+- Source: VLAN 30 (192.168.30.0/24)
+- Destination: 192.168.10.20 TCP port 45876
+- Action: Allow
+- Reason: Beszel agents on VLAN 30 hosts must reach the Beszel server on VLAN 10</p>
+<p><strong>OIDC:</strong> Configure Authentik OIDC for Beszel — requires <code>email_verified: true</code> custom scope.</p>
+<hr />
+<h3 id="uptime-kuma">Uptime Kuma<a class="headerlink" href="#uptime-kuma" title="Permanent link">&para;</a></h3>
+<p>Already running on pi-prod-01. Configure monitors for all v3 services:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Monitor Type</th>
+<th>URL/Host</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Traefik</td>
+<td>HTTP</td>
+<td><code>https://traefik.giohosted.com</code></td>
+</tr>
+<tr>
+<td>Authentik</td>
+<td>HTTP</td>
+<td><code>https://auth.giohosted.com</code></td>
+</tr>
+<tr>
+<td>AdGuard primary</td>
+<td>DNS</td>
+<td>192.168.30.10</td>
+</tr>
+<tr>
+<td>AdGuard secondary</td>
+<td>DNS</td>
+<td>192.168.30.15</td>
+</tr>
+<tr>
+<td>docker-prod-01</td>
+<td>Ping</td>
+<td>192.168.30.11</td>
+</tr>
+<tr>
+<td>auth-prod-01</td>
+<td>Ping</td>
+<td>192.168.30.13</td>
+</tr>
+<tr>
+<td>immich-prod-01</td>
+<td>Ping</td>
+<td>192.168.30.14</td>
+</tr>
+<tr>
+<td>pbs-prod-01</td>
+<td>Ping</td>
+<td>192.168.30.12</td>
+</tr>
+<tr>
+<td>Plex</td>
+<td>HTTP</td>
+<td><code>http://192.168.30.2:32400/web</code></td>
+</tr>
+<tr>
+<td>Immich</td>
+<td>HTTP</td>
+<td><code>https://photos.giohosted.com</code></td>
+</tr>
+<tr>
+<td>Audiobookshelf</td>
+<td>HTTP</td>
+<td><code>https://audiobooks.giohosted.com</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="wave-2-backup-automation">Wave 2 — Backup Automation ✅<a class="headerlink" href="#wave-2-backup-automation" title="Permanent link">&para;</a></h2>
+<h3 id="appdata-rsync-script">Appdata rsync Script<a class="headerlink" href="#appdata-rsync-script" title="Permanent link">&para;</a></h3>
+<p>Nightly rsync script backing up <code>/opt/appdata</code> and <code>/opt/stacks</code> from docker-prod-01, auth-prod-01, and immich-prod-01 to the NAS backups share.</p>
+<p><strong>Implementation details:</strong>
+- Script location: <code>/usr/local/bin/backup-appdata.sh</code> on each host
+- Log location: <code>/var/log/backup-appdata.log</code> on each host
+- SSH key location: <code>/root/.ssh/backup_rsa</code> on each host (dedicated backup key, not interactive key)
+- Schedule: cron at 03:00 nightly — edit via <code>sudo crontab -e</code> (root's crontab)
+- To edit script: <code>sudo nano /usr/local/bin/backup-appdata.sh</code>
+- To run manually: <code>sudo /usr/local/bin/backup-appdata.sh</code>
+- Transport: SSH rsync to nas-prod-01 at <code>192.168.30.16</code> (VLAN 30 data interface)
+- Authorized keys on NAS: <code>/root/.ssh/authorized_keys</code> — one entry per host</p>
+<p><strong>What is backed up:</strong>
+- <code>/opt/stacks</code> → <code>nas-prod-01:/mnt/user/backups/stacks/&lt;hostname&gt;/</code> (includes <code>.env</code> files)
+- <code>/opt/appdata</code> → <code>nas-prod-01:/mnt/user/backups/appdata/&lt;hostname&gt;/</code>
+- Behavior: rolling mirror with <code>--delete</code> — destination stays in sync with source, no versioning</p>
+<p><strong>Hosts and Healthchecks.io URLs:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Healthchecks.io Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>docker-prod-01</td>
+<td><code>https://hc-ping.com/132bdc56-2f0e-45b8-85a8-c07dc1c049ab</code></td>
+</tr>
+<tr>
+<td>auth-prod-01</td>
+<td><code>https://hc-ping.com/7c625181-5347-4ce5-ab5a-385b72201d91</code></td>
+</tr>
+<tr>
+<td>immich-prod-01</td>
+<td><code>https://hc-ping.com/1329d9f0-9416-4d81-935c-23ce2969c1a6</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="pbs-backup-review">PBS Backup Review<a class="headerlink" href="#pbs-backup-review" title="Permanent link">&para;</a></h3>
+<p>PBS 4.1.4 on pbs-prod-01 (192.168.30.12). Datastore <code>nas-backups</code> mounted via NFS at <code>/mnt/backups/pbs</code> (NAS path: <code>/mnt/user/backups/pbs</code>).</p>
+<p><strong>Backup job:</strong> Daily at 02:00, all VMs and CTs, both nodes.</p>
+<p><strong>Retention (prune job):</strong>
+- Keep Last: 3
+- Keep Daily: 7
+- Keep Weekly: 4
+- Keep Monthly: 3</p>
+<p><strong>Schedules:</strong>
+- Prune: daily
+- GC: every Saturday at 04:00
+- Verify: every Saturday at 05:00</p>
+<p><strong>NAS share structure:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/mnt/user/backups/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── pbs/          ← PBS datastore (owned by uid 34)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── appdata/      ← rsync appdata backups (owned by root)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   ├── docker-prod-01/
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   ├── auth-prod-01/
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   └── immich-prod-01/
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>└── stacks/       ← rsync stacks backups (owned by root)
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    ├── docker-prod-01/
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ├── auth-prod-01/
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    └── immich-prod-01/
+</code></pre></div></p>
+<blockquote>
+<p><strong>Important:</strong> PBS datastore must be scoped to <code>/mnt/backups/pbs</code> — not the share root <code>/mnt/backups</code>. PBS GC will fail with permission errors if it sees the <code>appdata</code> and <code>stacks</code> folders owned by root.</p>
+</blockquote>
+<hr />
+<h2 id="wave-3-oidc-rollout">Wave 3 — OIDC Rollout ✅<a class="headerlink" href="#wave-3-oidc-rollout" title="Permanent link">&para;</a></h2>
+<p>Configure Authentik OIDC for remaining services that support it:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox (both nodes + PBS)</td>
+<td>✅ Done</td>
+<td>OIDC via Authentik — both pve-prod-01 and pve-prod-02</td>
+</tr>
+<tr>
+<td>Immich</td>
+<td>✅ Done</td>
+<td>Carried forward from v2</td>
+</tr>
+<tr>
+<td>Beszel</td>
+<td>✅ Done</td>
+<td>Requires <code>email_verified: true</code> custom scope in Authentik</td>
+</tr>
+<tr>
+<td>Synology DSM</td>
+<td>✅ Done</td>
+<td>Local admin retained as break-glass</td>
+</tr>
+<tr>
+<td>Audiobookshelf</td>
+<td>✅ Done</td>
+<td>Carried forward from v2</td>
+</tr>
+<tr>
+<td>Calibre-Web-Automated</td>
+<td>✅ Done</td>
+<td>Carried forward from v2</td>
+</tr>
+<tr>
+<td>Shelfmark</td>
+<td>✅ Done</td>
+<td>New provider created in v3</td>
+</tr>
+<tr>
+<td>qBitrr</td>
+<td>✅ Done</td>
+<td>New provider created in v3</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="wave-4-external-access-cf-access">Wave 4 — External Access &amp; CF Access ✅<a class="headerlink" href="#wave-4-external-access-cf-access" title="Permanent link">&para;</a></h2>
+<h3 id="immich-temporary-tunnel-for-wedding-october">Immich — Temporary Tunnel for Wedding (October)<a class="headerlink" href="#immich-temporary-tunnel-for-wedding-october" title="Permanent link">&para;</a></h3>
+<p>Immich is LAN-only by default. Permanently exposing it externally is not needed — the tunnel route for <code>photos.giohosted.com</code> will be added temporarily the day before the wedding and removed a few days after.</p>
+<p><strong>No CF Access policy</strong> — guests access the shared album directly via QR code. Immich's built-in shared album password is the only gate.</p>
+<p><strong>Traefik file provider route</strong> is already configured at <code>/opt/appdata/traefik/config/immich.yml</code> and verified working on LAN. No changes needed until October.</p>
+<p><strong>October checklist (day before wedding):</strong>
+1. Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Add public hostname:
+   - Subdomain: <code>photos</code> / Domain: <code>giohosted.com</code>
+   - Type: <code>HTTPS</code> / URL: <code>192.168.30.11</code>
+   - Additional settings → TLS → No TLS Verify: enabled
+2. Test QR code link from phone on LTE
+3. Share QR code with guests</p>
+<p><strong>After the wedding (a few days later):</strong>
+1. Remove the <code>photos.giohosted.com</code> route from the tunnel
+2. Immich returns to LAN-only</p>
+<blockquote>
+<p>Immich server external domain is confirmed set to <code>https://photos.giohosted.com</code> in Administration → Server Settings.</p>
+</blockquote>
+<hr />
+<h3 id="abs-mobile-app-cf-access-fix">ABS Mobile App — CF Access Fix ✅<a class="headerlink" href="#abs-mobile-app-cf-access-fix" title="Permanent link">&para;</a></h3>
+<p>The ABS mobile app cannot complete CF Access's browser-based auth challenge. Fixed using a CF Access service token + registering <code>audiobooth://oauth</code> in both Authentik and ABS.</p>
+<p><strong>What was done:</strong>
+1. Created CF Access service token <code>abs-mobile</code> (Access controls → Service credentials)
+2. Added <code>abs-mobile-token</code> policy (action: SERVICE AUTH) to the Audiobookshelf CF Access application — order 1, evaluated before all other policies
+3. Added <code>audiobooth://oauth</code> to ABS server settings → Authentication → OpenID Connect → Mobile Redirect URIs
+4. Configured ABS mobile app with two custom headers: <code>CF-Access-Client-Id</code> and <code>CF-Access-Client-Secret</code></p>
+<p>See <code>audiobookshelf.md</code> for full details on policy order and mobile app configuration.</p>
+<hr />
+<h2 id="wave-5-mam-seeding-rules">Wave 5 — MAM Seeding Rules ✅<a class="headerlink" href="#wave-5-mam-seeding-rules" title="Permanent link">&para;</a></h2>
+<p>Configure qBitrr MAM-specific seeding rules for ebooks and audiobooks.</p>
+<p><strong>Requirements:</strong>
+- 14-day minimum seed time for MAM torrents only
+- Rule must be tracker-scoped — applies to MAM only, NOT AudiobookBay or other sources
+- ebooks category: <code>ebooks</code>
+- audiobooks category: <code>audiobooks</code></p>
+<p><strong>Configuration location:</strong> <code>/opt/appdata/qbitrr/config.toml</code> — <code>[qBit.CategorySeeding]</code> section with tracker-specific overrides.</p>
+<hr />
+<h2 id="wave-6-service-settings-review">Wave 6 — Service Settings Review<a class="headerlink" href="#wave-6-service-settings-review" title="Permanent link">&para;</a></h2>
+<p>Review and tune settings for all deployed services. Goal is to move from default/restored configs to intentionally configured optimal settings.</p>
+<h3 id="priority-services-to-review">Priority services to review:<a class="headerlink" href="#priority-services-to-review" title="Permanent link">&para;</a></h3>
+<p><strong>qBitrr</strong> — currently mostly default settings. Review:
+- Search concurrency limits
+- Stalled torrent handling thresholds
+- Re-search behavior
+- Loop timing
+- Upgrade search settings</p>
+<p><strong>PBS</strong> — review retention, schedule, GC, verify jobs (covered in Wave 2 but settings review is separate)</p>
+<p><strong>Immich</strong> — review:
+- ML concurrency settings (face detection, CLIP indexing workers)
+- Thumbnail quality settings
+- Storage template
+- Library scan schedule
+- Trash retention period</p>
+<p><strong>AdGuard</strong> — review:
+- Blocklist sources
+- Query log retention
+- Client-specific rules if needed</p>
+<p><strong>Traefik</strong> — review:
+- Access log configuration
+- Rate limiting if needed
+- Any missing middleware</p>
+<p><strong>ARR stack</strong> — review quality profiles, indexer priorities, download client settings post-migration</p>
+<p><strong>Plex</strong> — review:
+- Scheduled scan timing
+- Thumbnail generation settings
+- Transcoding quality settings</p>
+<hr />
+<h2 id="wave-7-security-hardening">Wave 7 — Security Hardening<a class="headerlink" href="#wave-7-security-hardening" title="Permanent link">&para;</a></h2>
+<h3 id="ssh-key-based-authentication">SSH Key-Based Authentication<a class="headerlink" href="#ssh-key-based-authentication" title="Permanent link">&para;</a></h3>
+<p>Set up SSH key-based auth on all hosts and disable password auth:</p>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>docker-prod-01</td>
+<td>⬜ Pending</td>
+</tr>
+<tr>
+<td>auth-prod-01</td>
+<td>⬜ Pending</td>
+</tr>
+<tr>
+<td>immich-prod-01</td>
+<td>⬜ Pending</td>
+</tr>
+<tr>
+<td>pve-prod-01</td>
+<td>⬜ Pending</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>⬜ Pending</td>
+</tr>
+<tr>
+<td>pi-prod-01</td>
+<td>⬜ Pending</td>
+</tr>
+<tr>
+<td>nas-prod-01</td>
+<td>⬜ Pending</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nut-client-on-auth-prod-01-and-immich-prod-01">NUT Client on auth-prod-01 and immich-prod-01<a class="headerlink" href="#nut-client-on-auth-prod-01-and-immich-prod-01" title="Permanent link">&para;</a></h3>
+<p>NUT clients not configured on auth-prod-01 or immich-prod-01 during Phase 4. Add during Phase 5:
+- Install <code>nut-client</code> on both VMs
+- Configure <code>/etc/nut/nut.conf</code> and <code>/etc/nut/upsmon.conf</code>
+- Monitor <code>ups@192.168.10.10</code></p>
+<h3 id="firewall-rule-review">Firewall Rule Review<a class="headerlink" href="#firewall-rule-review" title="Permanent link">&para;</a></h3>
+<p>Review all UDM-SE firewall rules — confirm no overly permissive rules remain from migration period. Add Beszel rule (VLAN 30 → 192.168.10.20 TCP 45876).</p>
+<h3 id="v2-decommission">v2 Decommission<a class="headerlink" href="#v2-decommission" title="Permanent link">&para;</a></h3>
+<p>Decommission v2 infrastructure:
+- Confirm all DNS rewrites pointing at v3
+- Shut down v2 Docker host (192.168.20.10)
+- Shut down v2 Proxmox host (192.168.20.2)
+- Reclaim VLAN 20 IPs</p>
+<hr />
+<h2 id="wave-8-synology-active-backup-for-business">Wave 8 — Synology Active Backup for Business<a class="headerlink" href="#wave-8-synology-active-backup-for-business" title="Permanent link">&para;</a></h2>
+<p>Configure Synology DSM Active Backup for Business (ABB) to pull versioned backups from nas-prod-01.</p>
+<p><strong>Goal:</strong> Provide versioned, point-in-time recovery on top of the rolling rsync mirror. The rsync scripts are a same-day mirror — ABB adds historical versions.</p>
+<p><strong>Scope:</strong>
+- Source: nas-prod-01 <code>backups</code> share (<code>/mnt/user/backups</code>)
+- Destination: Synology NAS dedicated backup volume
+- Schedule: TBD — nightly after rsync completes (after 03:00)
+- Retention: TBD</p>
+<p><strong>Additional items:</strong>
+- Plex database backup — Plex runs directly on Unraid, not on docker-prod-01. Needs its own backup solution separate from the rsync scripts.</p>
+<hr />
+<h2 id="exit-criteria">Exit Criteria<a class="headerlink" href="#exit-criteria" title="Permanent link">&para;</a></h2>
+<ul>
+<li>✅ Beszel agents deployed on all hosts — metrics visible</li>
+<li>✅ Uptime Kuma monitors configured for all services</li>
+<li>✅ Appdata rsync script running nightly with Healthchecks.io heartbeats</li>
+<li>✅ PBS backup settings reviewed and optimized</li>
+<li>✅ OIDC configured for Proxmox, Beszel, Synology</li>
+<li>✅ Immich external access planned — temporary tunnel for wedding (October), no permanent exposure</li>
+<li>✅ ABS mobile app CF Access issue resolved — service token + <code>audiobooth://oauth</code> redirect URI</li>
+<li>✅ MAM seeding rules configured in qBitrr</li>
+<li>⬜ Service settings review complete for all priority services</li>
+<li>⬜ SSH key-based auth on all hosts</li>
+<li>⬜ NUT clients on auth-prod-01 and immich-prod-01</li>
+<li>⬜ v2 infrastructure decommissioned</li>
+<li>⬜ Firewall rules reviewed and cleaned up</li>
+<li>⬜ Synology ABB configured for versioned backups</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>
