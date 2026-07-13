@@ -276,8 +276,7 @@ docker start immich_server
   .env                      ← gitignored (DB_PASSWORD and other secrets)
 
 /opt/appdata/immich/
-  postgres/                 ← Postgres data — local disk, never backed up via rsync
-                               (Immich auto-backups to NAS are the DB backup source)
+  postgres/                 ← Postgres data — local disk, never backed up via rsync (Immich auto-backups to NAS are the DB backup source)
 
 /data/photos/               ← NFS mount from nas-prod-01:/mnt/user/photos
   backups/                  ← Immich auto-generated DB backups
