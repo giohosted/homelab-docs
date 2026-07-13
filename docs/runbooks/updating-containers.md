@@ -41,7 +41,7 @@ docker ps | grep <container-name>
 docker logs <container-name> --tail 50
 ```
 
-### Example — updating Authentik on auth-prod-01
+### Example — updating Authentik on auth-prod-01 (DO NOT DO FOLLOW RUNBOOKS/AUTHENTIK-UPDATE.MD)
 ```bash
 ssh gio@192.168.30.13
 cd /opt/stacks/authentik

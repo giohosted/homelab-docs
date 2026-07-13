@@ -2,11 +2,11 @@
 
 **Role:** Photo and video library — backup, organization, ML-powered search and face detection  
 **Host:** immich-prod-01 (192.168.30.14)  
-**Version:** v2.5.6  
+**Version:** v3.0.2  
 **Compose:** `/opt/stacks/immich/compose.yaml`  
 **Appdata:** `/opt/appdata/immich/`  
 **URL:** `https://photos.giohosted.com`  
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-07-13
 
 ---
 
