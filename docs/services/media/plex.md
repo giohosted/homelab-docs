@@ -3,19 +3,19 @@
 **Host:** nas-prod-01  
 **Container name:** plex  
 **Status:** Running  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-07-13
 
 ---
 
 ## Deployment
 
-- **Image:** lscr.io/linuxserver/plex (linuxserver.io)
+- **Image:** `lscr.io/linuxserver/plex` (linuxserver.io)
 - **Managed via:** Unraid Docker UI — not part of any compose stack
 - **Network:** custom `eth1` (X710 Port 2, VLAN 30 data interface)
 - **Container IP:** 192.168.30.2
 - **Web UI:** `http://192.168.30.2:32400/web`
 
-> Plex runs directly on Unraid, not on docker-prod-01. This keeps media access local — no NFS hop for transcoding. QuickSync iGPU is on the same host as the media files.
+Plex runs directly on Unraid, not on docker-prod-01. This keeps media access local — no NFS hop for transcoding. QuickSync iGPU is on the same host as the media files.
 
 ---
 
@@ -23,16 +23,16 @@
 
 | Variable | Value |
 |----------|-------|
-| PUID | 2000 |
-| PGID | 2000 |
-| VERSION | docker |
+| `PUID` | 2000 |
+| `PGID` | 2000 |
+| `VERSION` | docker |
 
 ---
 
 ## Paths
 
 | Container Path | Host Path | Purpose |
-|----------------|-----------|---------|
+|---------------|-----------|---------|
 | `/data` | `/mnt/user/data` | Full data share access — media and downloads |
 | `/config` | `/mnt/user/appdata/plex` | Plex database and config |
 
@@ -62,6 +62,47 @@ Libraries were configured in Phase 4 after media migration from TrueNAS complete
 
 ---
 
+## Scheduled Tasks
+
+Configured in Settings → Scheduled Tasks.
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| Tasks start time | 4:00 AM | After rsync (03:00) and PBS (02:00) windows |
+| Tasks stop time | 6:00 AM | |
+| Backup database every three days | ✅ Enabled | Critical — contains watch history, ratings, metadata |
+| Optimize database every week | ✅ Enabled | |
+| Remove old bundles every week | ✅ Enabled | |
+| Remove old cache files every week | ✅ Enabled | |
+| Upgrade media analysis during maintenance | ✅ Enabled | |
+| Perform extensive media analysis during maintenance | ✅ Enabled | |
+| Update all libraries during maintenance | ❌ Disabled | ARR stack triggers Plex scans via API — redundant |
+| Refresh local metadata every three days | ❌ Disabled | Unnecessary churn |
+| Refresh library metadata periodically | ❌ Disabled | Unnecessary churn |
+
+> Plex DB backups are stored in the default backup directory inside `/mnt/user/appdata/plex`. These are in addition to the dedicated backup script (see below).
+
+---
+
+## Transcoder Settings
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| Transcoder quality | Automatic | |
+| Transcoder temp directory | Default | RAM transcoding not configured — direct play is the norm, transcoding is rare |
+| Hardware-accelerated transcoding | Enabled | QuickSync via `/dev/dri` |
+
+---
+
+## Thumbnail Settings
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| Generate video preview thumbnails | Never | Storage and CPU intensive — not worth it for a personal library |
+| Generate chapter image thumbnails | As scheduled task + when media added | Small and useful for movies |
+
+---
+
 ## External Access
 
 - Port 32400 forwarded on UDM-SE → `192.168.30.2:32400`
@@ -73,9 +114,12 @@ Libraries were configured in Phase 4 after media migration from TrueNAS complete
 
 ## Backup
 
-Plex DB is backed up via a dedicated script (Phase 5):
+Plex DB is backed up via a dedicated script (Phase 5 Wave 8):
+
 - Script stops Plex, backs up `/mnt/user/appdata/plex` to `/mnt/user/backups/plex/db/`, restarts Plex
 - Uses EXIT trap to ensure Plex restarts even if backup fails
+
+Plex also performs its own built-in database backup every three days (enabled in Scheduled Tasks) to the default backup directory inside `/mnt/user/appdata/plex`.
 
 ---
 
