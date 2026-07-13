@@ -2,11 +2,11 @@
 
 **Role:** Identity Provider (IdP) — SSO and OIDC for all internal services  
 **Host:** auth-prod-01 (192.168.30.13)  
-**Version:** 2025.12.3  
+**Version:** 2026.5.4  
 **Compose:** `/opt/stacks/authentik/compose.yaml`  
 **Appdata:** `/opt/appdata/authentik/`  
 **URL:** https://auth.giohosted.com  
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-07-13
 
 ---
 
@@ -80,15 +80,15 @@ Browser → AdGuard (192.168.30.10) → 192.168.30.11 (Traefik) → 192.168.30.1
 
 ### Environment Variables (.env)
 
-| Variable | Notes |
-|----------|-------|
-| `PG_PASS` | Postgres password — carried forward from v2, must match database |
-| `PG_USER` | `authentik` |
-| `PG_DB` | `authentik` |
-| `AUTHENTIK_SECRET_KEY` | Carried forward from v2 — changing this invalidates all sessions |
-| `AUTHENTIK_TAG` | `2025.12.3` |
-| `AUTHENTIK_BOOTSTRAP_EMAIL` | Used on first boot only |
-| `AUTHENTIK_BOOTSTRAP_PASSWORD` | Used on first boot only |
+| Variable                       | Notes                                                            |
+| ------------------------------ | ---------------------------------------------------------------- |
+| `PG_PASS`                      | Postgres password — carried forward from v2, must match database |
+| `PG_USER`                      | `authentik`                                                      |
+| `PG_DB`                        | `authentik`                                                      |
+| `AUTHENTIK_SECRET_KEY`         | Carried forward from v2 — changing this invalidates all sessions |
+| `AUTHENTIK_TAG`                | `2026.5.4`                                                       |
+| `AUTHENTIK_BOOTSTRAP_EMAIL`    | Used on first boot only                                          |
+| `AUTHENTIK_BOOTSTRAP_PASSWORD` | Used on first boot only                                          |
 
 > **Critical:** `PG_PASS` and `AUTHENTIK_SECRET_KEY` must match the values used when the database was originally created. Changing either will break the existing database.
 
@@ -120,18 +120,18 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 
 ## SSO-Enabled Services
 
-| Service | Method | Provider Slug | Notes |
-|---------|--------|---------------|-------|
-| Proxmox (pve-prod-01 + pve-prod-02) | OIDC | `proxmox` | Realm: `authentik`. Username claim: `username`. Redirect URIs: `192.168.10.11:8006`, `192.168.10.12:8006`. Shared provider with PBS. |
-| PBS (pbs-prod-01) | OIDC | `proxmox` | Shares provider/app with Proxmox. Redirect URI: `192.168.30.12:8007`. |
-| Beszel | OIDC | `beszel` | Redirect URI: `http://192.168.10.20:8090/api/oauth2-redirect`. |
-| Synology DSM | OIDC | `synology` | Well-known URL must use app-specific path: `https://auth.giohosted.com/application/o/synology/.well-known/openid-configuration` — NOT the generic path. |
-| Audiobookshelf | OIDC | — | Carried forward from v2 backup |
-| Calibre-Web-Automated | OAuth2 | — | Carried forward from v2 backup |
-| Shelfmark | OIDC | — | New provider created in v3 — callback `https://shelf.giohosted.com/api/auth/oidc/callback` |
-| qBitrr | OIDC | — | New provider created in v3 — callback `/signin-oidc`. Both `http://` and `https://` redirect URIs registered. |
-| Immich | OIDC | — | Carried forward from v2 backup |
-| ARR stack, Uptime Kuma | None | — | LAN-only, low risk — no SSO overhead |
+| Service                             | Method | Provider Slug | Notes                                                                                                                                                   |
+| ----------------------------------- | ------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Proxmox (pve-prod-01 + pve-prod-02) | OIDC   | `proxmox`     | Realm: `authentik`. Username claim: `username`. Redirect URIs: `192.168.10.11:8006`, `192.168.10.12:8006`. Shared provider with PBS.                    |
+| PBS (pbs-prod-01)                   | OIDC   | `proxmox`     | Shares provider/app with Proxmox. Redirect URI: `192.168.30.12:8007`.                                                                                   |
+| Beszel                              | OIDC   | `beszel`      | Redirect URI: `http://192.168.10.20:8090/api/oauth2-redirect`.                                                                                          |
+| Synology DSM                        | OIDC   | `synology`    | Well-known URL must use app-specific path: `https://auth.giohosted.com/application/o/synology/.well-known/openid-configuration` — NOT the generic path. |
+| Audiobookshelf                      | OIDC   | —             | Carried forward from v2 backup                                                                                                                          |
+| Calibre-Web-Automated               | OAuth2 | —             | Carried forward from v2 backup                                                                                                                          |
+| Shelfmark                           | OIDC   | —             | New provider created in v3 — callback `https://shelf.giohosted.com/api/auth/oidc/callback`                                                              |
+| qBitrr                              | OIDC   | —             | New provider created in v3 — callback `/signin-oidc`. Both `http://` and `https://` redirect URIs registered.                                           |
+| Immich                              | OIDC   | —             | Carried forward from v2 backup                                                                                                                          |
+| ARR stack, Uptime Kuma              | None   | —             | LAN-only, low risk — no SSO overhead                                                                                                                    |
 
 > **OIDC admin group:** Shelfmark and ABS use the existing `admins` group for admin authorization. No service-specific admin groups were created — reusing `admins` keeps Authentik group management simple.
 
