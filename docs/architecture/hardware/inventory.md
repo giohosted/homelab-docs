@@ -1,6 +1,6 @@
 # Hardware Inventory
 
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-07-14
 
 ---
 
@@ -206,8 +206,8 @@
 | Length | Route                                                                   | Model         | Price |
 | ------ | ----------------------------------------------------------------------- | ------------- | ----- |
 | 0.5M   | UDM-SE SFP+ → Switch SFP+ Port 1 (WAN uplink)                           | 10Gtek        | ~$10  |
-| 1M     | nas-prod-01 X710 Port 1 → pve-prod-01 SFP+ Port 1 (storage, off-switch) | Cable Matters | ~$15  |
-| 2M     | nas-prod-01 X710 Port 2 → Switch SFP+ Port 2 (VLAN 30 data/NFS)         | Cable Matters | ~$17  |
+| 1M     | nas-prod-01 X710 Port 2 → Switch SFP+ Port 2 (VLAN 30 data/NFS)         | Cable Matters | ~$15  |
+| 2M     | nas-prod-01 X710 Port 1 → pve-prod-01 SFP+ Port 1 (storage, off-switch) | Cable Matters | ~$17  |
 
 **Notes:**
 

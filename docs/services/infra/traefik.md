@@ -176,7 +176,7 @@ For services that need external access, cloudflared routes traffic through Traef
 3. In Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Published application routes → Add:
    - Hostname: `service.giohosted.com`
    - Service type: `HTTPS`
-   - URL: `192.168.168.30.11`
+   - URL: `192.168.30.11`
    - Additional settings → TLS → **No TLS Verify: enabled**
 
 ### Why HTTPS and not HTTP?

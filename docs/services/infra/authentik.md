@@ -50,12 +50,12 @@ ssh gio@192.168.30.13
 
 ## Containers
 
-| Container | Image | Role |
-|-----------|-------|------|
-| authentik-server | ghcr.io/goauthentik/server:2025.12.3 | Main application server |
-| authentik-worker | ghcr.io/goauthentik/server:2025.12.3 | Background task worker |
-| authentik-postgres | postgres:16-alpine | Database |
-| authentik-redis | redis:alpine | Cache / session store |
+| Container          | Image                               | Role                    |
+| ------------------ | ----------------------------------- | ----------------------- |
+| authentik-server   | ghcr.io/goauthentik/server:2026.5.4 | Main application server |
+| authentik-worker   | ghcr.io/goauthentik/server:2026.5.4 | Background task worker  |
+| authentik-postgres | postgres:16-alpine                  | Database                |
+| authentik-redis    | redis:alpine                        | Cache / session store   |
 
 All containers are on an internal Docker network (`authentik-internal`) — not exposed to the proxy network. Only the server exposes port 9000 to the host.
 
