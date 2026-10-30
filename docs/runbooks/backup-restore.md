@@ -1,7 +1,7 @@
 # Backup & Restore Runbook
 
-**Last Updated:** 2026-10-29  
-**Status:** Active PBS backup incident — recovery-point availability requires verification
+**Last Updated:** 2026-10-30  
+**Status:** PBS execution restored; integrity, safe restoration, and recurrence prevention remain open
 
 Procedures for restoring Homelab v3 infrastructure following host failure, data loss, corruption, or application-level problems.
 
@@ -55,7 +55,7 @@ Before performing any restoration:
 
 |Type|Tool|What It Covers|Location|Status|
 |---|---|---|---|---|
-|VM & CT backups|PBS|Selected Proxmox VM/LXC disks and configurations|nas-prod-01 `/mnt/user/backups/pbs`|Scheduled jobs failing|
+|VM & CT backups|PBS|Selected Proxmox VM/LXC disks and configurations|nas-prod-01 `/mnt/user/backups/pbs`|October 30 scheduled jobs succeeded on both nodes; broader recovery validation pending|
 |Stacks & appdata|rsync|Docker Compose files, `.env` files, and persistent appdata on participating Docker hosts|nas-prod-01 `/mnt/user/backups/stacks` and `/mnt/user/backups/appdata`|Documented operational; latest runs not reverified|
 |Plex built-in DB backup|Plex Scheduled Tasks|Plex library and blobs databases only|nas-prod-01 `/mnt/user/appdata/plex`|Last verified 2026-10-26|
 |Plex full-appdata backup|Custom script planned|Complete Plex persistent appdata|NAS `backups` share — destination TBD|Pending|
@@ -80,49 +80,37 @@ The dedicated Plex full-appdata backup and Synology ABB remain pending Phase 5 W
 
 ---
 
-## Current PBS Backup Incident
+## PBS Backup Incident — Operational Recovery, October 2026
 
-**Status:** Open — unresolved  
-**Identified:** October 29–30, 2026  
-**Affected:** pve-prod-01 and pve-prod-02
+**Status:** Immediate failure mechanism identified and cleared; underlying trigger and permanent prevention unresolved  
+**Identified:** October 29, 2026  
+**Affected:** Both PVE nodes and PBS datastore on Unraid NFS
 
-Live Proxmox investigation confirmed that scheduled backups were failing on both nodes.
+The October 29 scheduled jobs failed for all seven selected guests on the two PVE nodes with `connection reset` and `HTTP/2.0 connection failed`. Repeated task errors were visible through at least September 30–October 29 on pve-prod-01; the exact first failure date is not established.
 
-Representative errors:
+PBS proxy logs recorded the server-side error:
 
-```
-HTTP/2.0 connection failed
-Error: connection reset
-backup register image failed: command error: connection reset
-Backup job finished with errors
+```text
+TASK ERROR: unable to get shared lock - ESTALE: Stale file handle
 ```
 
-The October 29 backup attempt failed for all guests included in that night's tasks.
+A manual CT 100 backup reproduced this exact error at **00:31:10 CDT on October 30**. PBS proxy PID `594` (running since August 11) retained an open `/mnt/backups/pbs/.lock` descriptor that returned `ESTALE` when accessed via `/proc/594/fd/21`. The current `.lock` pathname remained accessible, and a newly opened POSIX shared lock succeeded. This confirms a stale, long-lived proxy file handle as the immediate failure mechanism; the upstream event that invalidated it is **not confirmed**.
 
-Repeated failures were also visible in recent backup-task history.
+The datastore is on Unraid's healthy `zfs-mirror` pool at `/mnt/zfs-mirror/backups/pbs`, but PBS connects to it through an NFSv3 export of `/mnt/user/backups` (`fuse.shfs`). FUSE/NFS file-handle behavior is a leading hypothesis for the original invalidation. No FUSE/NFS setting or ZFS export was changed.
 
-### Recovery Impact
+### Corrective action and verification
 
-The scheduled PBS job remains enabled and correctly configured to select its intended guests.
+- On October 30 at **00:55:42 CDT**, the operator restarted `proxmox-backup-proxy` after checking that no PBS tasks were running. The service came back `active/running` under PID `1372698`.
+- Manual CT 100 backup `ct/100/2026-10-30T05:57:23Z` completed with `TASK OK` and was visible in PBS with its manifest, configuration, catalog, and filesystem index.
+- That CT 100 snapshot passed targeted PBS integrity verification at **01:02 CDT**, reporting **zero errors**.
+- The October 30 **02:00 CDT** scheduled backup jobs completed with `TASK OK` on both nodes: pve-prod-01 (100, 101, 104, 106, 107) and pve-prod-02 (102, 105). These results were independently confirmed through the live integration.
+- Existing historical snapshots were found in PBS, including older snapshots with previous `Verify OK` status. Earlier empty results from the read-only Proxmox archive API were not a reliable inventory of the datastore.
 
-However, successful backup execution and available recovery points have not been established.
+### Recovery impact and outstanding checks
 
-The live Proxmox integration returned no visible archives for selected guests, including:
+Successful backup execution and one verified CT 100 snapshot demonstrate **operational recovery**, but **do not prove full disaster recovery readiness**. The other newly created archives have not all been independently integrity-verified, and **no isolated restore test** has been performed. The PBS VM itself (VM 103) remains excluded from the scheduled job.
 
-- VM 101 — docker-prod-01
-    
-- VM 105 — immich-prod-01
-    
-- VM 107 — observer-prod-01
-    
-
-This does not conclusively establish that historical archives are absent. Direct inspection of the PBS datastore is still required.
-
-**Do not assume that a VM or LXC can be restored merely because it is included in the scheduled backup job.**
-
-The underlying connection-reset issue will be investigated separately.
-
-See `runbooks/backup-schedule.md` for the verified task results and investigation requirements.
+The operator elected to monitor Discord backup alerts and leave NFS/Unraid configuration unchanged. **Permit exclusive shares = No** remains in place; proposed FUSE-bypass changes were not implemented. Confirm notification delivery separately rather than assuming a task log saying `notified` proves receipt. See `runbooks/backup-schedule.md` for complete incident evidence and chronology.
 
 ---
 
@@ -130,7 +118,7 @@ See `runbooks/backup-schedule.md` for the verified task results and investigatio
 
 Use this procedure when a VM or LXC has been lost, corrupted, or must be restored to an earlier recovery point.
 
-**Status:** General restore workflow documented; current backup availability and end-to-end restoration have not been verified.
+**Status:** Current backups have completed on both nodes and CT 100 has passed integrity verification. No complete end-to-end restoration test has been performed.
 
 ### Backup Infrastructure
 
@@ -336,7 +324,7 @@ No independently verified PBS VM recovery procedure has been established during 
 
 AI Observer has additional recovery considerations because it hosts the Proxmox MCP integration and OpenAI Secure MCP Tunnel client.
 
-**Current status:** VM 107 is included in the configured PBS backup selection, but its latest backup failed and no successful archive was visible through the live integration.
+**Current status:** VM 107 completed its scheduled October 30, 2026 backup (`TASK OK`) on pve-prod-01. Its new snapshot has not yet received separate integrity verification or a safe restoration test.
 
 ### Special Precautions
 
@@ -836,9 +824,7 @@ Verify:
 6. A safe restoration test has been completed where appropriate.
     
 
-**Current documented status:** Scheduled PBS backups were failing on both Proxmox nodes as of the October 29–30, 2026 investigation.
-
-Do not report the PBS backup system as healthy until the failure is resolved and the recovery evidence is verified.
+**Current documented status:** Both October 30 scheduled jobs completed successfully; the October 30 manual CT 100 archive also passed targeted integrity verification. Continue checking subsequent runs and verify other snapshots and restoration before declaring comprehensive recovery readiness.
 
 ### Check AI Observer Recovery Readiness
 
@@ -890,44 +876,70 @@ After implementation, add procedures for backup verification, logging, integrity
 
 ## Troubleshooting
 
-### PBS Backups Failing with Connection Reset
+### PBS Backups Failing with Connection Reset or `ESTALE`
 
-**Known issue — unresolved.**
+**Known failure, operationally recovered on October 30; permanent recurrence prevention not implemented.**
 
-The October 29 backup tasks on both Proxmox nodes reported connection resets while communicating with PBS.
+**Known symptom:** PVE tasks show `HTTP/2.0 connection failed` / `connection reset`; PBS proxy journal records `unable to get shared lock - ESTALE: Stale file handle`. The October incident was traced to a long-lived stale `.lock` descriptor in the PBS proxy, not to a confirmed loss of historical backup data.
 
-Representative errors:
+#### Read-only first response if the issue recurs
 
+1. Check failures on **both** Proxmox nodes and record task IDs, timestamps, affected guests, and error strings.
+2. Inspect PBS proxy logs around the failure time (use UTC consistently):
+
+   ```bash
+   TZ=UTC journalctl --utc -u proxmox-backup-proxy -u proxmox-backup \
+     --since "YYYY-MM-DD HH:MM:SS" --until "YYYY-MM-DD HH:MM:SS" \
+     --no-pager -o short-iso
+   ```
+
+3. Inspect the current NFS mount and datastore directory:
+
+   ```bash
+   findmnt --kernel -T /mnt/backups/pbs -o TARGET,SOURCE,FSTYPE,OPTIONS
+   ls -la /mnt/backups/pbs
+   ```
+
+4. Inspect the **current** proxy PID and its open lock descriptor. Do not assume PID `594` will recur:
+
+   ```bash
+   pid=$(systemctl show -P MainPID proxmox-backup-proxy)
+   echo "PBS proxy PID: $pid"
+   ls -l "/proc/$pid/fd" 2>&1 | grep -E 'backups|\.lock|deleted' || true
+   ```
+
+   If a relevant descriptor is found, inspect only that descriptor (use its real FD number):
+
+   ```bash
+   readlink "/proc/$pid/fd/FD_NUMBER"
+   stat -L "/proc/$pid/fd/FD_NUMBER"
+   ```
+
+   An `ESTALE` result on the *open descriptor* while the current pathname works is strong evidence of a stale in-process handle. The label `(deleted)` is not by itself proof that PBS files were deleted.
+
+5. From Unraid, use read-only checks such as `zpool status -v`, `exportfs -v`, and `findmnt --kernel -T /mnt/user/backups`. Confirm whether the failing path is still NFSv3 through `fuse.shfs`. Do not attribute a new failure to FUSE without evidence.
+
+#### Recovery only after impact review and approval
+
+Check that PBS has no running tasks:
+
+```bash
+proxmox-backup-manager task list
 ```
-HTTP/2.0 connection failed
-Error: connection reset
-backup register image failed
+
+In October 2026, the operator chose and successfully performed a targeted restart:
+
+```bash
+systemctl restart proxmox-backup-proxy
 ```
 
-The failures affected multiple guests across both nodes.
+**This is a service-changing recovery operation, not an automatic first step.** It briefly interrupts the PBS web/API endpoint and would disrupt active backup connections. Require explicit operator authorization, check ongoing tasks, and consider related services before using it again. It cleared the stale process descriptor in this incident but did not prove a permanent NFS fix.
 
-This suggests a shared dependency may be involved, but the root cause has not been confirmed.
+After any authorized recovery, confirm the proxy is active with a new PID, run a controlled single backup if appropriate, verify its PBS snapshot and integrity, then confirm the next scheduled jobs on both nodes. If no archive exists, do not attempt a restore from a failed or empty directory.
 
-Areas for investigation include:
+**Do not** blindly run `exportfs -ra`, change global exclusive shares, remount NFS, delete `.lock` or incomplete snapshot directories, run GC/prune as a repair, or migrate the datastore without an approved plan. The operator deferred storage-path changes due to potential impact on `photos` and `system` shares. Direct ZFS export remains a proposal, not an implemented configuration.
 
-- PBS service availability.
-    
-- Datastore and NAS mount health.
-    
-- Network connectivity between Proxmox nodes and PBS.
-    
-- PBS resource utilization and logs.
-    
-- TLS or protocol-level failures.
-    
-
-The investigation should begin with read-only checks.
-
-Do not restart PBS, modify storage, delete archives, or adjust firewall rules without establishing the cause and reviewing the impact.
-
-**Status:** Reserved for separate troubleshooting work.
-
-See `runbooks/backup-schedule.md` for verified findings.
+---
 
 ### rsync Script Not Running
 
@@ -1093,10 +1105,10 @@ A documented recovery procedure is not automatically a tested recovery procedure
 
 |Area|Status|Required Follow-Up|
 |---|---|---|
-|Proxmox PBS backups|Failing|Investigate and restore successful backup execution|
-|Historical PBS recovery points|Not fully verified|Inspect PBS datastore directly|
+|Proxmox PBS backups|Execution restored October 30|Monitor for recurrence; investigate NFS/FUSE trigger if it returns|
+|Historical PBS recovery points|Older snapshots found; completeness varies|Verify required snapshots and preserve historical recovery options|
 |pbs-prod-01 VM 103|Excluded from job|Establish separate PBS VM recovery strategy|
-|AI Observer VM 107|No successful archive visible|Verify backup and perform safe restoration test|
+|AI Observer VM 107|October 30 backup task succeeded|Confirm snapshot integrity and perform safe isolated restoration test|
 |Docker-host rsync recovery|Documented; latest executions not reverified|Check current jobs and test appropriate file restoration|
 |Plex built-in DB backups|Files last verified 2026-10-26|Establish and test database restore procedure|
 |Plex full-appdata backup|Pending|Implement Phase 5 Wave 8|
@@ -1131,19 +1143,22 @@ These items should remain open until the corresponding work has been completed a
 
 |Item|Result|
 |---|---|
-|Nightly PBS backup job configured|Verified|
-|Nightly PBS backup job enabled|Verified|
-|October 29 PBS backups — pve-prod-01|Failed|
-|October 29 PBS backups — pve-prod-02|Failed|
-|PBS VM 103 excluded|Verified|
-|AI Observer VM 107 included in backup selection|Verified|
-|AI Observer successful archive|Not visible through live integration|
-|AI Observer restoration test|Not performed|
+|Nightly PBS backup job configured and enabled|Verified|
+|October 29 PBS backups — both nodes|Failed|
+|Immediate failure mechanism|Stale PBS proxy datastore `.lock` file descriptor (`ESTALE`)|
+|Original NFS handle invalidation trigger|Unconfirmed; FUSE/NFS behavior suspected|
+|Proxy restart, October 30 00:55 CDT|Completed; service active under new PID|
+|Manual CT 100 backup, October 30 00:57 CDT|`TASK OK`; visible in PBS|
+|CT 100 integrity verification, October 30 01:02 CDT|Passed with 0 errors|
+|October 30 02:00 scheduled backups — pve-prod-01|`TASK OK` (100, 101, 104, 106, 107)|
+|October 30 02:00 scheduled backups — pve-prod-02|`TASK OK` (102, 105)|
+|Integrity verification of other new snapshots|Not independently completed|
+|Safe restore test, including AI Observer|Not performed|
+|PBS VM 103|Excluded; separate recovery strategy outstanding|
+|Discord alerts|Configured per operator; delivery not independently verified|
+|NFS/FUSE mount/export changes|Not performed; operator elected monitoring|
 |Docker rsync latest successful execution|Not reverified|
 |Plex built-in database backup files|Last verified 2026-10-26|
-|Dedicated Plex full-appdata backup|Not implemented|
-|Synology ABB|Not implemented|
+|Dedicated Plex full-appdata backup / Synology ABB|Not implemented|
 
-**Backup and recovery readiness must be determined from verified recovery evidence, not backup-job configuration alone.**
-
-The outstanding PBS incident and associated recovery testing remain separate operational work.
+**Backup execution is operationally recovered. Long-term NFS handle reliability and end-to-end restore readiness are still open.**

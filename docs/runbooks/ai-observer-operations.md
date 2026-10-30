@@ -5,9 +5,9 @@
 **Proxmox VMID:** 107  
 **Proxmox Node:** pve-prod-01  
 **Environment:** Homelab v3  
-**Last Updated:** 2026-10-29  
+**Last Updated:** 2026-10-30  
 **Service Status:** Proxmox MCP integration implemented and verified  
-**Backup Status:** Unresolved — scheduled PBS backup failures
+**Backup Status:** October 30 scheduled backup successful; integrity and restore testing pending
 
 ---
 
@@ -876,7 +876,7 @@ This is a mutable image tag. A newer image may be downloaded without any Compose
 6. Confirm the update does not introduce new permissions or externally exposed listeners.
     
 
-**Known limitation:** The scheduled Proxmox backup system was failing during the October 29–30, 2026 investigation.
+**Known limitation:** The scheduled Proxmox backup system failed on October 29, 2026 but completed successfully on both nodes on October 30 after an approved PBS proxy restart. Full recovery validation remains outstanding.
 
 Do not assume that observer-prod-01 has a usable backup until PBS coverage has been verified.
 
@@ -1331,19 +1331,13 @@ Update service documentation only after confirming the implemented state.
 
 ### Current Status
 
-**AI Observer backup recovery is not verified.**
+**AI Observer VM 107 completed its October 30, 2026 scheduled PBS backup successfully**, confirmed through the pve-prod-01 task log. Its earlier October 29 backup failed with `connection reset` during the PBS stale-NFS-lock incident.
 
-The scheduled Proxmox backup job includes VM 107, but the most recent investigation found that scheduled PBS backups were failing on both Proxmox nodes.
+The immediate failure was traced to a stale `/mnt/backups/pbs/.lock` handle retained by the long-running `proxmox-backup-proxy` process; a targeted operator-approved proxy restart at 00:55 CDT on October 30 was followed by successful manual and scheduled backups on both Proxmox nodes. The originating NFS/FUSE invalidation event remains unknown, and the operator elected to monitor Discord alerts without changing Unraid or NFS.
 
-The October 29 backup of VM 107 failed with:
+**Still unverified:** Independent integrity verification of the October 30 VM 107 snapshot, validation of recoverable host-level configuration and credentials, and a safe isolated restore. The successful backup task is not sufficient evidence of end-to-end observer recoverability. See `runbooks/backup-schedule.md` for detailed incident evidence.
 
-```
-backup register image failed: command error: connection reset
-```
-
-No successful VM 107 backup archive was visible through the read-only Proxmox integration during the investigation.
-
-The backup root cause remains unresolved.
+---
 
 ### Important Distinction
 
@@ -1368,7 +1362,7 @@ Do not mark the observer as recoverable until these have been verified.
 
 |Asset|Recovery Source|
 |---|---|
-|Observer virtual machine|Verified PBS backup, once available|
+|Observer virtual machine|October 30 PBS backup task succeeded; snapshot integrity/restore test pending|
 |MCP Compose configuration|`homelab-infra` repository|
 |MCP `.env`|Protected backup and separately retained credentials|
 |Tunnel configuration|Verified VM backup or protected configuration backup|
@@ -1381,11 +1375,11 @@ Do not mark the observer as recoverable until these have been verified.
 
 Before declaring observer recovery ready:
 
-- PBS backup failures resolved.
+- **Completed:** Immediate PBS proxy stale-handle failure cleared; continue monitoring for recurrence.
     
-- VM 107 backup task completes successfully.
+- **Completed:** October 30 VM 107 scheduled backup task succeeded.
     
-- VM 107 archive visible in PBS.
+- **Pending:** Independently confirm the new VM 107 snapshot in PBS.
     
 - Backup verification succeeds.
     
@@ -1400,7 +1394,7 @@ Before declaring observer recovery ready:
 - End-to-end read-only Proxmox connectivity is verified.
     
 
-The boxes above represent requirements, not completed implementation work.
+Only items explicitly marked **Completed** are verified; all remaining checklist items are outstanding requirements.
 
 ### Independent Configuration Backup
 
@@ -1611,23 +1605,23 @@ Because this procedure has not been tested, the complete time and effort require
 
 ### PBS Backup Failures
 
-**Status:** Open.
+**Status:** Operational backup execution restored October 30; originating NFS/FUSE trigger and permanent prevention remain unresolved.
 
-Scheduled Proxmox backups were found failing on both nodes during the October 29–30, 2026 investigation.
+The October 29 backup attempt of VM 107 and other guests failed with connection resets. PBS logs identified a stale datastore `.lock` file descriptor in the proxy process (`ESTALE`); a targeted restart at 00:55 CDT on October 30 cleared the immediate failure. Both PVE nodes then completed their scheduled backup jobs, including VM 107 (`TASK OK`).
 
-The task logs showed connection resets while communicating with PBS.
+**Operational decision:** Keep Unraid's `Permit exclusive shares` setting at `No` and retain the existing FUSE-backed NFS configuration for now. The operator will monitor Discord alerts. No direct-ZFS export, NFS remount, storage migration, or other persistent modification was implemented.
 
-**Next action:** Troubleshoot the PBS failure separately and verify backup integrity and recoverability.
+**Next action:** Verify the VM 107 snapshot itself, plan a safe isolated restore, and respond to any recurrence using the read-only diagnostic workflow in `runbooks/backup-restore.md`. Do not equate job completion with proven recoverability.
 
-Do not mark the issue resolved until verified.
+---
 
 ### Observer Disaster Recovery
 
 **Status:** Incomplete.
 
-VM backup selection is configured, but successful observer backup and restoration are not verified.
+VM 107's October 30 backup task succeeded, but independent snapshot-integrity verification and restoration are not yet complete.
 
-**Next action:** Complete and test recovery after PBS is healthy.
+**Next action:** Now that backup execution has resumed, verify the observer snapshot and complete an isolated restore test.
 
 ### Additional MCP Integrations
 
@@ -1691,7 +1685,7 @@ A disaster recovery exercise is complete only when:
 - Results and remaining risks were documented.
     
 
-**Backup recovery readiness remains unresolved until the PBS incident and a safe restoration test have been completed.**
+**Backup execution has recovered, but observer recovery readiness remains incomplete until archive integrity, credentials, and a safe restoration test are verified.**
 
 ---
 
@@ -1714,7 +1708,7 @@ A disaster recovery exercise is complete only when:
 
 ### Operational Runbooks
 
-- `runbooks/backup-schedule.md` — Backup jobs, verified coverage, and current PBS failures.
+- `runbooks/backup-schedule.md` — Backup jobs, October 2026 PBS stale-lock incident, and current recovery-validation status.
     
 - `runbooks/backup-restore.md` — General Proxmox and Docker restoration procedures.
     

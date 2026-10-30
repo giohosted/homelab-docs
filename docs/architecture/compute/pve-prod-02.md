@@ -2,7 +2,7 @@
 
 **Role:** Secondary Proxmox node — runs PBS VM, secondary AdGuard LXC, and immich-prod-01  
 **Status:** Active  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-10-30
 
 ---
 
@@ -74,6 +74,16 @@
 > local-zfs ghost entry was present after install and removed via `pvesm remove local-zfs` — pve-prod-02 uses local-lvm for VM disks.  
 > local-lvm entry was also lost and re-added via: `pvesm add lvmthin local-lvm --vgname pve --thinpool data --content rootdir,images`
 
+### PBS Backup and VM 103 Operations — October 30, 2026
+
+PBS runs as VM 103 at `192.168.30.12`. It is deliberately excluded from the daily 02:00 backup job `backup-54015f90-26e5` and needs a separate recovery strategy. Its datastore `nas-backups` is NFS-mounted from Unraid (`192.168.30.16:/mnt/user/backups`) under PBS `/mnt/backups/pbs`.
+
+A stale NFS datastore `.lock` file descriptor in the running PBS proxy caused connection-reset failures on both Proxmox nodes during October 2026. The operator restarted only `proxmox-backup-proxy` at **00:55 CDT on October 30**, clearing the immediate failure without rebooting VM 103 or changing NAS mounts. The scheduled pve-prod-02 job ran **02:00–02:05 CDT** and completed `TASK OK` for CT 102 and VM 105. The pve-prod-01 job also succeeded.
+
+**Outstanding:** Ongoing monitoring for handle recurrence; independent integrity verification of new backups beyond manual CT 100; isolated restore test; separate recovery plan for VM 103. NFS/FUSE design remains unchanged. The historical VM 103 inventory recorded PBS 4.1.0 while `backup-schedule.md` recorded 4.1.4; the current PBS package version was not independently rechecked during this update.
+
+See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architecture/storage/nas-prod-01.md`.
+
 ---
 
 ## Guests
@@ -81,7 +91,7 @@
 | ID  | Name           | Type              | VLAN | IP            | Status                               |
 | --- | -------------- | ----------------- | ---- | ------------- | ------------------------------------ |
 | 102 | dns-prod-02    | LXC (Debian 12)   | 30   | 192.168.30.15 | Running                              |
-| 103 | pbs-prod-01    | VM (PBS 4.1.0)    | 30   | 192.168.30.12 | Running                              |
+| 103 | pbs-prod-01    | VM (PBS; version recheck needed) | 30   | 192.168.30.12 | Running                              |
 | 105 | immich-prod-01 | VM (Ubuntu 24.04) | 30   | 192.168.30.14 | Running — 2 vCPU, 6GB RAM, 32GB disk |
 
 > immich-prod-01 was moved here from pve-prod-01 due to RAM headroom — pve-prod-01 was already running docker-prod-01 (8GB) and auth-prod-01 (4GB). pve-prod-02 had ample capacity. See `architecture/decisions-log.md`.

@@ -3,7 +3,7 @@
 **Host:** nas-prod-01  
 **OS:** Unraid 7.2.4  
 **Chassis:** Rosewill RSV-L4412U (4U, 12-bay)  
-**Last Updated:** 2026-03-18
+**Last Updated:** 2026-10-30
 
 ---
 
@@ -42,7 +42,8 @@
 
 - **Usable:** ~3.68TB
 - **Filesystem:** ZFS mirror
-- **Snapshots:** ZnapZend — daily kept 7 days, weekly kept 30 days on photos and backups datasets
+- **Snapshots:** ZnapZend — daily kept 7 days, weekly kept 30 days on photos and backups datasets (historically documented; retention not reverified during the PBS incident)
+- **Health checked 2026-10-30:** `zpool status -v` reported pool and both mirror members `ONLINE`, zero READ/WRITE/CKSUM errors, and no known data errors.
 
 ---
 
@@ -55,6 +56,7 @@
 | isos | Parity Array | /mnt/user/isos | Proxmox ISO images |
 | photos | ZFS Mirror | /mnt/user/photos | Immich library |
 | backups | ZFS Mirror | /mnt/user/backups | PBS backups, Docker stacks, Docker appdata |
+| system | ZFS Mirror | /mnt/user/system | Unraid system share (location confirmed; contents not reverified) |
 
 ### data share folder structure
 ```
@@ -105,6 +107,35 @@ data/
 - **SMB:** Disabled on all shares (NFS only)
 
 > **Note:** The `data` share is mounted on docker-prod-01 as a single NFSv3 mount at `/data`. This is required for hardlinks and atomic moves to work correctly across media and downloads. See `architecture/decisions-log.md` for rationale.
+
+### PBS NFS Filesystem and October 2026 Incident
+
+**Verified storage topology (October 30):**
+
+```text
+PBS pbs-prod-01:/mnt/backups/pbs
+  -> NFSv3 mount 192.168.30.16:/mnt/user/backups at /mnt/backups
+  -> Unraid /mnt/user/backups (fuse.shfs)
+  -> ZFS dataset zfs-mirror/backups at /mnt/zfs-mirror/backups
+  -> /mnt/zfs-mirror/backups/pbs (existing PBS datastore)
+```
+
+The `backups` share is configured with `shareUseCache="only"`, `shareCachePool="zfs-mirror"`, and no secondary pool. The `photos` and `system` shares also live solely under `/mnt/zfs-mirror`, based on read-only directory checks. The PBS datastore directory is owned by UID/GID `34:34` and includes `.chunks`, `.lock`, `ct`, and `vm`.
+
+**Current mount/export observations (not changes):**
+
+- Unraid export: `/mnt/user/backups`, `fsid=101`, `async`, `no_subtree_check`, and `no_root_squash`; permitted networks include 192.168.30.0/24, 192.168.10.0/24, and 10.0.0.0/30.
+- PBS client mount: NFSv3 with `soft,timeo=30,retrans=3` and systemd automount, configured in `/etc/fstab` on PBS.
+- Unraid FUSE mount: `fuse.shfs` at `/mnt/user` with `fuse_remember="330"` (also visible as `remember=330` in the `shfs` process arguments).
+- **Settings → Global Share Settings → Permit exclusive shares = No.** This setting remains unchanged.
+
+**Incident evidence:** The long-running PBS proxy held a stale descriptor to `/mnt/backups/pbs/.lock`, and backup operations failed with `ESTALE` and client connection resets. The underlying ZFS lock file's timestamps dated to March 18 and the Unraid `shfs` process had run since July 28. The original invalidation event was not proven; do not record FUSE as a conclusively established root cause.
+
+**Recovery on October 30:** Restarting only `proxmox-backup-proxy` cleared the immediate stale descriptor. The next manual CT 100 backup and both 02:00 scheduled PVE backup jobs succeeded; CT 100 passed integrity verification. **No NAS configuration, export, filesystem, ownership, or global exclusive-share change was made.**
+
+**Operator decision:** Keep existing share behavior and monitor Discord alerts. A PBS-specific direct-ZFS NFS export may be investigated later as a limited-scope alternative, but remains **unimplemented** and needs a reviewed maintenance/cutover plan. Do not enable exclusive shares globally to address PBS without assessing impact on `photos`, `system`, and other services. Do not manually remove `.lock` or backup datastore data.
+
+See `runbooks/backup-schedule.md` and `runbooks/backup-restore.md` for the incident chronology and recovery procedure.
 
 ---
 
@@ -159,12 +190,12 @@ Target IP used by rsync scripts: `192.168.30.16` (VLAN 30 data interface — not
 
 ## Plugins Installed
 
-| Plugin | Purpose |
-|---|---|
-| NUT | UPS graceful shutdown |
-| ZFS Master | ZFS pool management UI |
-| ZnapZend | ZFS snapshot scheduling |
-| Intel-GPU-TOP | iGPU monitoring |
-| Dynamix System Temp | CPU/board temp monitoring |
-| Unassigned Devices | External drive management |
+| Plugin              | Purpose                     |
+| ------------------- | --------------------------- |
+| NUT                 | UPS graceful shutdown       |
+| ZFS Master          | ZFS pool management UI      |
+| ZnapZend            | ZFS snapshot scheduling     |
+| Intel-GPU-TOP       | iGPU monitoring             |
+| Dynamix System Temp | CPU/board temp monitoring   |
+| Unassigned Devices  | External drive management   |
 | Fix Common Problems | Configuration health checks |

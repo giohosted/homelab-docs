@@ -2,7 +2,7 @@
 
 **Role:** Primary Proxmox node — runs all primary VMs and LXCs  
 **Status:** Active  
-**Last Updated:** 2026-10-29
+**Last Updated:** 2026-10-30
 
 ---
 
@@ -88,6 +88,14 @@
 
 > local-lvm ghost entry was present after install and removed via `pvesm remove local-lvm` — pve-prod-01 uses local-zfs for VM disks.  
 > local-zfs entry was lost at one point and re-added via: `pvesm add zfspool local-zfs --pool rpool/data --content rootdir,images`
+
+### PBS Backup Status — October 30, 2026
+
+The daily 02:00 Proxmox job `backup-54015f90-26e5` targets `pbs-prod-01` (PBS datastore `nas-backups`) and includes CT 100 and VMs 101, 104, 106, and 107 on this node. PBS VM 103 is excluded at the cluster level.
+
+Following repeated failures through October 29, the PBS proxy on VM 103 was found holding a stale NFS datastore `.lock` descriptor. The operator restarted only `proxmox-backup-proxy` at 00:55 CDT on October 30. The October 30 scheduled pve-prod-01 job ran **02:00–02:22 CDT** and finished `TASK OK`, with success messages for all five guests (including Dragonwilds VM 106 and AI Observer VM 107).
+
+The manual CT 100 backup at 00:57 CDT also succeeded, and its PBS integrity verification at 01:02 CDT reported zero errors. Independent integrity verification of all other new snapshots and an isolated restore test remain outstanding. No NAS/NFS/FUSE configuration changes were implemented; recurrence prevention remains open. See `runbooks/backup-schedule.md` and `runbooks/backup-restore.md`.
 
 ---
 

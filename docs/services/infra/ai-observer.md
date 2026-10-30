@@ -5,7 +5,7 @@
 **Proxmox Host:** pve-prod-01 (192.168.10.11)  
 **Proxmox VMID:** 107  
 **Status:** Active — Proxmox integration verified end-to-end  
-**Last Updated:** 2026-10-29
+**Last Updated:** 2026-10-30
 
 ---
 
@@ -416,53 +416,42 @@ This confirms the complete connection from ChatGPT through the tunnel, MCP serve
 
 ## Backup and Recovery Status
 
-**Status: Additional verification required.**
+**Status: October 30 PBS backup task successful; archive integrity and restoration still require verification.**
 
 ### Proxmox VM Backup Coverage
 
-A live query confirmed that the cluster has an enabled backup job scheduled for 02:00, targeting `pbs-prod-01`.
+The cluster has an enabled daily 02:00 Proxmox backup job targeting `pbs-prod-01`. It includes VM 107 and excludes the PBS server VM 103.
 
-The job includes all guests except VM 103, meaning observer VM 107 is within its configured selection.
+During the October 29 incident, the VM 107 backup failed with a `connection reset`. PBS investigations confirmed an invalid, long-lived NFS datastore `.lock` file descriptor in the backup proxy, which returned `ESTALE`. The operator restarted `proxmox-backup-proxy` on October 30 at 00:55 CDT, restoring backup execution; the original event that invalidated the handle is not known.
 
-However, a live backup-archive query for VM 107 returned **zero visible backup archives** on October 30, 2026.
+The **October 30, 2026 scheduled VM 107 backup completed successfully** on `pve-prod-01` at approximately 02:22 CDT; this was verified in its Proxmox task log. That task included the primary VM disk and EFI disk. This confirms a successful backup *task*, not a separately completed PBS snapshot-integrity check or restoration test.
 
-Therefore:
+- Successful VM 107 scheduled backup task: **verified** (October 30).
+- Independent PBS snapshot-level integrity verification: **pending**.
+- Safe isolated VM restoration and service validation: **pending**.
+- Separate observer file-level backup: **not implemented/verified**.
 
-- Backup-job configuration is verified.
-    
-- A successful observer VM backup has not been verified.
-    
-- A restoration test has not been completed.
-    
-
-The next operational task is to verify successful backup execution and confirm a recoverable VM 107 archive in PBS.
+The earlier read-only Proxmox archive query returned zero visible snapshots even when PBS showed older backup groups; it is not definitive evidence of archive absence. Check PBS datastore Content directly for the new observer snapshot before claiming it is independently visible and verified.
 
 ### Configuration and Credential Recovery
 
 The VM's configuration and credentials are spread across several locations:
 
 - `/opt/stacks/proxmox-mcp/compose.yaml` — version-controlled in `homelab-infra`.
-    
 - `/opt/stacks/proxmox-mcp/.env` — Git-excluded Proxmox MCP credentials and configuration.
-    
 - `/etc/tunnel-client/config.yaml` — Git-excluded tunnel configuration.
-    
 - `/etc/tunnel-client/openai-runtime.key` — Git-excluded OpenAI credential.
-    
 - `/etc/tunnel-client/mcp-authorization` — Git-excluded MCP bearer credential.
-    
 - `/etc/systemd/system/tunnel-client.service` — Native systemd unit.
-    
 - `/opt/tunnel-client/` — Installed tunnel-client binaries.
-    
 
 Existing Docker-host rsync backup jobs must **not** be assumed to protect the observer VM or its `/etc/tunnel-client` configuration.
 
-A complete backup and restoration procedure for the observer has not yet been verified.
+A complete backup and restoration procedure for the observer has not yet been verified. A successful VM backup task reduces exposure but does not replace an integrity check, secure credential recovery, or an isolated restoration test.
 
-Until verified, recoverability depends on appropriate VM backups and access to the separately saved credentials in Bitwarden.
+Credentials remain separately retained in Bitwarden according to the established workflow. Avoid copying plaintext credentials into Git repositories or ordinary documentation.
 
-Avoid copying plaintext credentials into Git repositories or ordinary documentation.
+See `runbooks/backup-schedule.md` for the October 2026 PBS incident and `runbooks/ai-observer-operations.md` for the recovery plan.
 
 ---
 
@@ -608,6 +597,6 @@ No elevated management privileges should be introduced merely for convenience.
     
 - Docker and Unraid MCP integrations remain future work.
     
-- The observer VM's backup and credential-recovery procedures still require verification.
+- The October 30 observer VM backup task succeeded; independent snapshot verification, credential-recovery checks, and an isolated restoration test remain outstanding.
     
 - Documentation should be updated when implementations change, but planned integrations must not be recorded as completed until tested.
