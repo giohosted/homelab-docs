@@ -1,6 +1,6 @@
 # Architecture Decisions Log
 
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-10-29
 
 ---
 
@@ -13,8 +13,11 @@
 **What was considered:**
 
 - Gigabyte B760M DS3H DDR4 (original plan — already owned)
+    
 - MSI PRO B660M-A DDR4 (found in IT closet, spare)
-- ASUS TUF Gaming Z690-Plus WiFi D4 (purchased used ~$100 on Reddit r/hardwareswap)
+    
+- ASUS TUF Z690-Plus WiFi D4 (purchased used ~$100 on Reddit r/hardwareswap)
+    
 
 **Why:** The Gigabyte board has only 1x usable PCIe slot (one x16 physical slot, two x1 slots). The NAS needs to run both the LSI SAS 9120-8i HBA (x8 card, requires x8 or x16 slot) and the 10GbE SFP+ NIC (requires x4 minimum) simultaneously — physically impossible on the Gigabyte board. The MSI board was ruled out due to known Realtek NIC driver issues in Linux. The ASUS TUF Z690 has a second x16 physical slot wired at x4 from the chipset, which fits both cards with no conflict. ATX form factor, solid VRM, Intel 2.5GbE onboard, and BIOS already updated for 13th gen.
 
@@ -27,7 +30,9 @@
 **What was considered:**
 
 - Intel X520 (older, very common in homelabs)
+    
 - Dell Intel X710-DA2 (newer chipset, dual port)
+    
 
 **Why:** X710 has a newer chipset than the X520 with better long-term driver support in Linux. Dual port provides future flexibility at no meaningful cost difference at used prices. Only one port is in use (DAC to MS-A2) but the second is available if needed later.
 
@@ -80,7 +85,9 @@
 **What was considered:**
 
 - Building a second full node using spare i5-13600, spare mobo, and extra 32GB RAM
+    
 - Using the Optiplex as-is (free from work)
+    
 
 **Why:** The Optiplex's workload is intentionally light — PBS VM and one AdGuard LXC. HA is explicitly not enabled in this design (Optiplex cannot absorb MS-A2's workload anyway), so a matched second node provides no real benefit. Building a second powerful node means higher idle power draw and cost for no meaningful gain. Selling the i5-13600 and extra RAM recoups ~$250-300. The Optiplex is free and perfectly adequate for its role.
 
@@ -125,6 +132,8 @@
 **Decision:** VLAN 10 (Management), VLAN 20 (Trusted), VLAN 30 (Services), VLAN 40 (IoT).
 
 **Why:** Clean separation of concerns. Management VLAN isolates infrastructure devices (Proxmox hosts, NAS, switches) from everything else. Trusted is personal devices. Services is all v3 VMs and LXCs. IoT is fully isolated with internet-only access. Default VLAN 1 intentionally not used as management — devices should never accidentally land on the management VLAN.
+
+**Historical note (2026-10-29):** This records the original four-VLAN design. VLAN 50 (Game Servers) was subsequently introduced for dedicated game-server workloads. Proxmox VM 106 (`dragonwilds-server`) has been verified with VLAN tag 50. Its complete addressing and UniFi firewall configuration remain to be verified. See `architecture/network/vlan-design.md`.
 
 ---
 
@@ -227,7 +236,9 @@
 **What was considered:**
 
 - Separate `media` and `downloads` shares exported individually (original v3 setup)
+    
 - Single `data` share containing both as subfolders (chosen)
+    
 
 **Why:** Hardlinks require files to be on the same filesystem. Separate NFS mounts — even from the same NAS — are separate filesystems from the client's perspective. When Radarr imports a file from `/data/downloads` to `/data/media`, hardlinks only work if both paths resolve to the same underlying mount. With separate mounts they silently fall back to copy+delete, breaking seeding and wasting IO. A single `data` share with subfolders presents one filesystem to docker-prod-01. This is the correct pattern per the TRaSH guide for Unraid setups.
 
@@ -242,7 +253,9 @@
 **What was considered:**
 
 - NFSv4 (Unraid default)
+    
 - NFSv3 (chosen)
+    
 
 **Why:** NFSv4 uses a pseudo-root filesystem that automatically automounts sub-shares on top of a parent mount as the client traverses into them. Even after switching to a single `data` share fstab entry, NFSv4 was causing `media` and `downloads` to be automounted as separate NFS mounts on docker-prod-01 — recreating the separate-filesystem problem. NFSv3 does not have this pseudo-root behavior. Mounts are explicit and static. The `data` share mounts once at `/data` and stays that way.
 
@@ -305,7 +318,9 @@
 **What was considered:**
 
 - pve-prod-01 (original plan — more powerful CPU)
+    
 - pve-prod-02 (chosen — more RAM headroom)
+    
 
 **Why:** At Phase 4 Wave 5 start, pve-prod-01 was already running docker-prod-01 (8GB RAM) and auth-prod-01 (4GB RAM), with docker-prod-01 confirmed to have been swapping (1GB swap usage before RAM bump). Adding a 6GB Immich VM would have pushed pve-prod-01 RAM utilization uncomfortably high. pve-prod-02 was only running PBS (2GB) and one AdGuard LXC (512MB) — ample headroom for the 6GB Immich VM. The CPU performance difference between the i5-9500T and Ryzen 9 7945HX is meaningful for ML workloads but acceptable for a homelab Immich instance where indexing runs in the background.
 
@@ -342,7 +357,9 @@
 **What was considered:**
 
 - Two Bazarr instances (one per Sonarr/Radarr pair)
+    
 - Single Bazarr covering TV + Movies only (chosen)
+    
 
 **Why:** Bazarr 1.5.6 supports only one Sonarr and one Radarr instance. Running two Bazarr instances adds operational overhead with minimal benefit — anime subtitles are typically embedded in the release or not needed at all. 4K movies are for local viewing via Infuse which handles embedded subtitles natively. The value of automatic subtitle hunting is highest for regular TV and 1080p movies.
 
@@ -373,8 +390,11 @@
 **What was considered:**
 
 - Single interface on VLAN 30 for everything (management + NFS)
+    
 - Single interface on VLAN 10 for everything (would require firewall hole for services to reach NFS)
+    
 - Dual interface separating management and data planes (chosen)
+    
 
 **Why:** The NAS holds backups, photos, and all irreplaceable data. Putting the Unraid management UI on VLAN 30 alongside services means a compromised container could reach it. Putting everything on VLAN 10 requires poking holes in the management VLAN for NFS traffic, undermining its isolation. Dual interface solves both problems cleanly — services on VLAN 30 reach NFS via 192.168.30.16, the firewall hard-blocks VLAN 30 → VLAN 10, so no compromised container can ever reach the Unraid UI at 192.168.10.10. Management UI is only reachable from Trusted (VLAN 20) on TCP 443.
 
@@ -387,7 +407,9 @@
 **What was considered:**
 
 - Spare 2.5GbE PCIe NIC installed in NAS for VLAN 30 interface
+    
 - X710 Port 2 DAC to switch SFP+ port (chosen)
+    
 
 **Why:** The NAS data interface is the busiest path in the entire setup — NFS mounts for the ARR stack, Plex streaming, PBS backup traffic all flow through it simultaneously. 10GbE on this path is the highest-value use of the switch's remaining SFP+ port. The MS-A2 VM/LXC traffic (Traefik, ARR API calls, DNS) never approaches 2.5GbE saturation, so the MS-A2 uses its onboard 2.5GbE RJ45 for LAN instead.
 
@@ -400,7 +422,9 @@
 **What was considered:**
 
 - 1M DAC from MS-A2 SFP+ to switch SFP+ (original plan)
+    
 - Onboard 2.5GbE RJ45 to switch RJ45 (chosen)
+    
 
 **Why:** VM/LXC workloads on pve-prod-01 (Traefik, ARR stack, Authentik, Immich, DNS) do not come close to saturating 2.5GbE. Using the DAC on MS-A2 would consume the switch's last SFP+ port for no meaningful performance gain, while the NAS data interface benefits significantly from 10GbE. Repurposing the 1M DAC to the NAS eliminates the need to purchase an additional cable.
 
@@ -413,7 +437,9 @@
 **What was considered:**
 
 - VLAN 30 (Services) — would co-locate Pi with services it monitors, but requires explicit firewall rule for QDevice traffic to reach Proxmox nodes on VLAN 10
+    
 - VLAN 10 (Management) — chosen
+    
 
 **Why:** QDevice is infrastructure — it belongs on the management network with the Proxmox nodes it serves as a tiebreaker. VLAN 10 has outbound reach to all VLANs, so Beszel and Uptime Kuma can probe services on VLAN 30 without any extra firewall rules. Return traffic is handled by the stateful firewall (allow established connections). Placing the Pi on VLAN 30 would require punching a hole from VLAN 30 → VLAN 10 for QDevice, which is exactly the kind of management VLAN exposure the design aims to avoid.
 
@@ -426,8 +452,11 @@
 **What was considered:**
 
 - 10.0.x.x (e.g. 10.0.10.0/24 per VLAN)
+    
 - 10.10.x.x (e.g. 10.10.10.0/24 per VLAN — aesthetically cleaner, NAS would be 10.10.10.10)
+    
 - 192.168.x.x (chosen — carry forward)
+    
 
 **Why:** No practical benefit to switching. Both 10.x.x.x and 192.168.x.x are RFC 1918 private ranges with identical routing behavior. 192.168.x.x gives 254 hosts per VLAN which is more than sufficient for a homelab. The UDM-SE is already configured, v2 devices are already on 192.168.20.x, and all documentation is already written around 192.168.x.x. Switching creates documentation churn, reconfiguration work, and risk to the live v2 setup for zero functional gain.
 
@@ -440,8 +469,11 @@
 **What was considered:**
 
 - Boot existing v2 Proxmox SSD on MS-A2 hardware — rejected due to Secure Boot and MAC address/hardware mismatch issues
+    
 - Copy TrueNAS → Synology → Unraid (double transfer, ~28-30 hours total) — rejected as unnecessarily slow
+    
 - TrueNAS VM on pve-prod-01 → Unraid direct copy (~14-15 hours, single transfer) — chosen
+    
 
 **Why:** ZFS RAIDZ1 cannot be natively read by Unraid. A temporary TrueNAS VM with HBA passthrough is the cleanest single-transfer path — import the existing pool, copy to Unraid over LAN, decommission the VM. Avoids double transfer time and keeps the LSI HBA in use without extra steps. v2 Proxmox host Gigabyte mobo was sold before this decision was finalized, making Option 1 (booting old SSD on new hardware) the only alternative, which was rejected due to hardware compatibility issues.
 
@@ -454,7 +486,9 @@
 **What was considered:**
 
 - Mounting at a simplified path (e.g. `/downloads/ebooks`) inside the container
+    
 - Mounting at the exact client path (chosen)
+    
 
 **Why:** Per Shelfmark documentation, the torrent client directory must be mounted at exactly the same path inside the container as it appears to qBittorrent. If paths differ, hardlink creation fails silently — Shelfmark falls back to copy, the original file in downloads gets deleted after import, and qBit's seeding torrent is broken. Matching the path exactly is the only reliable way to ensure hardlinks work.
 
@@ -467,7 +501,9 @@
 **What was considered:**
 
 - Copy mode (no hardlink) — destination is ingest folder, CWA deletes after import, original in downloads also gone, seeding broken
+    
 - Hardlink mode with ingest as destination (chosen)
+    
 
 **Why:** Shelfmark warns against hardlinking when the destination is a library ingest folder, because CWA deletes files from ingest after import. The warning assumes the ingest copy IS the only copy. In this setup it is not — the original lives in qBit's download folder, and Shelfmark hardlinks a second inode to ingest. CWA deletes the ingest hardlink; the original in downloads is untouched. Seeding continues. The warning does not apply to this pattern.
 
@@ -512,7 +548,9 @@
 **What was considered:**
 
 - Editing the cluster-wide `nas-isos` entry to use `192.168.30.16` for all nodes — rejected, would break pve-prod-01's DAC link NFS mount
+    
 - Adding a duplicate storage entry scoped per-node (chosen)
+    
 
 **Why:** The cluster-wide `nas-isos` storage was configured to use `10.0.0.2` (the point-to-point DAC link) which is only reachable from pve-prod-01. pve-prod-02 has no connection to the DAC link — it can only reach the NAS via `192.168.30.16` on VLAN 30. Changing the entry to `192.168.30.16` would break pve-prod-01's storage. Scoping separate entries per node gives each node the correct path without affecting the other.
 
@@ -533,7 +571,9 @@
 **What was considered:**
 
 - Immich maintenance mode UI restore (attempted first — failed silently mid-migration)
+    
 - Direct psql restore via `gunzip | docker exec psql` (chosen)
+    
 
 **Why:** The Immich UI restore was interrupted mid-migration, leaving the database in an inconsistent state with empty tables. The direct psql restore is reliable, provides clear output, and bypasses the UI entirely. For future restores, always use the CLI method.
 
@@ -546,7 +586,9 @@
 **What was considered:**
 
 - Non-standard internal path `/usr/src/app/upload` (used initially — caused DB path mismatch)
+    
 - Official mapping `:/data` (chosen)
+    
 
 **Why:** Immich stores asset paths in its database using the internal container path. Using a non-standard internal path creates a permanent divergence from Immich's own tooling and documentation — any future migration, restore, or upgrade that references the official compose will result in broken asset paths. Using the official mapping ensures the database paths match what Immich and its backup/restore tooling expect, making future migrations straightforward.
 
@@ -557,3 +599,230 @@
 **Decision:** Increase docker-prod-01 RAM allocation from 6GB to 8GB during Phase 4 Wave 5.
 
 **Why:** Verified via `free -h` that docker-prod-01 had 1GB of active swap usage — evidence of real memory pressure during ARR stack operation (search bursts, simultaneous container startup). 8GB provides comfortable headroom for the full stack (Traefik, ARR stack, books stack, torrent stack) with room to grow. auth-prod-01 was also checked and found to have only 268KB swap — no bump needed there.
+
+---
+
+## AI Observer & MCP
+
+### AI Observer — Dedicated VM, Not Shared Docker Host
+
+**Decision:** Deploy AI Observer on a dedicated Ubuntu Server VM (`observer-prod-01`, VM 107) on pve-prod-01 instead of placing AI integration services on docker-prod-01.
+
+**What was considered:**
+
+- Deploying the MCP server alongside existing production application containers on docker-prod-01.
+    
+- Deploying AI Observer on its own lightweight VM (chosen).
+    
+
+**Why:** AI integrations introduce another path into infrastructure management APIs. Separating them from the main application Docker host reduces shared administrative and application exposure, creates an independent operating-system boundary, and allows credentials, networking, updates, and service management to be handled separately.
+
+The dedicated VM also provides a controlled location for adding future infrastructure integrations without modifying the primary production Docker environment.
+
+**Implemented configuration:** 2 vCPU, 2 GiB RAM, 20 GiB disk, VLAN 30, IP `192.168.30.17`.
+
+The VM and its Proxmox configuration were verified through the live Homelab Proxmox integration.
+
+---
+
+### Proxmox MCP — Read-Only First
+
+**Decision:** Deploy Proxmox MCP with read-only capabilities and defer all write, delete, and execution functionality.
+
+**What was considered:**
+
+- Enabling management operations during the initial integration.
+    
+- Restricting the integration to observation, diagnostics, and auditing (chosen).
+    
+
+**Why:** The immediate goal is to allow ChatGPT to inspect infrastructure, diagnose problems, and provide recommendations without introducing the risk of accidental or unauthorized state changes.
+
+Read-only access also provides an opportunity to evaluate MCP reliability, tool behavior, information exposure, and day-to-day usefulness before considering expanded permissions.
+
+**Implemented controls:**
+
+- `PROXMOX_ALLOW_WRITES=false`
+    
+- `PROXMOX_ALLOW_DELETES=false`
+    
+- `PROXMOX_ALLOW_EXEC=false`
+    
+- Dedicated Proxmox account with `PVEAuditor` permissions.
+    
+
+The read-only integration was successfully tested through authenticated MCP tool calls and through the ChatGPT plugin.
+
+**Future consideration:** Write permissions may be evaluated after the read-only deployment has demonstrated reliable behavior. Any expansion requires a separate permissions review, narrowly scoped capabilities, explicit user authorization for consequential changes, and verification of the actual available operations.
+
+No write access is currently authorized or implemented.
+
+---
+
+### Proxmox Access — Dedicated API Identity and Targeted Firewall Exception
+
+**Decision:** Use a dedicated Proxmox API identity with audit-only privileges, combined with a narrowly scoped UniFi firewall exception.
+
+**What was considered:**
+
+- Using an existing Proxmox administrative account.
+    
+- Granting the observer broad access to VLAN 10.
+    
+- Creating a dedicated read-only account and permitting only the required API connection (chosen).
+    
+
+**Why:** A dedicated identity prevents the AI integration from inheriting human administrator privileges. Audit-only permissions limit the impact of a compromised token or unintended MCP request.
+
+Network access is restricted independently of API permissions, so the observer cannot rely on broad Services-to-Management connectivity.
+
+**Implemented access:**
+
+- Account: `observer@pve`
+    
+- API token: `observer@pve!proxmox-mcp`
+    
+- Role: `PVEAuditor`
+    
+- Source: `192.168.30.17`
+    
+- Destination: `192.168.10.11`
+    
+- Protocol: TCP
+    
+- Port: `8006`
+    
+
+The MCP server also validates the Proxmox HTTPS endpoint using a pinned TLS certificate fingerprint.
+
+**Verification:** Authenticated Proxmox API requests succeeded after the targeted firewall exception was implemented. A subsequent end-to-end ChatGPT MCP query successfully returned live cluster data.
+
+The precise current UniFi rule configuration remains subject to periodic firewall audits.
+
+---
+
+### OpenAI Secure MCP Tunnel — Outbound-Only Access
+
+**Decision:** Use OpenAI Secure MCP Tunnel to connect ChatGPT to the privately hosted Proxmox MCP server.
+
+**What was considered:**
+
+- Exposing the MCP server through a public HTTPS endpoint.
+    
+- Routing the MCP server through the existing Traefik and Cloudflare Tunnel infrastructure.
+    
+- Using OpenAI Secure MCP Tunnel with the MCP server bound to localhost (chosen).
+    
+
+**Why:** An outbound tunnel avoids introducing a publicly reachable management-related service and eliminates the need for inbound internet port forwarding.
+
+It also keeps the AI Observer independent of the existing application reverse-proxy and Cloudflare Tunnel configuration.
+
+The Proxmox MCP endpoint remains accessible only on `127.0.0.1:8080` within observer-prod-01.
+
+The OpenAI tunnel client forwards authenticated requests to this local endpoint.
+
+**Implemented connection:**
+
+- Tunnel name: `homelab-proxmox`
+    
+- Tunnel client: OpenAI `tunnel-client`
+    
+- MCP endpoint: `http://127.0.0.1:8080/mcp`
+    
+- OpenAI control-plane connection: Outbound HTTPS
+    
+- ChatGPT plugin: `Homelab Proxmox`
+    
+
+**Verification:** The tunnel service passed its readiness checks, and ChatGPT successfully invoked `proxmox_get_cluster_status` through the integration.
+
+This OpenAI tunnel is distinct from the Cloudflare Tunnel used to expose existing homelab applications.
+
+---
+
+### AI Observer — Docker Compose for MCP, systemd for Tunnel Client
+
+**Decision:** Run Proxmox MCP as a Docker Compose container while running the OpenAI tunnel client as a native systemd service.
+
+**What was considered:**
+
+- Managing all AI Observer components as Docker containers.
+    
+- Deploying the tunnel client separately as a host-level service (chosen).
+    
+
+**Why:** Proxmox MCP is a containerized application with a straightforward Compose deployment and an existing configuration workflow in `homelab-infra`.
+
+The OpenAI tunnel client has a dedicated native Linux binary and systemd deployment model. Running it separately provides explicit service-account isolation, protected host-level credentials, independent restart behavior, and straightforward journal-based diagnostics.
+
+The two components can be maintained and updated independently without requiring access to the Docker socket from the tunnel service.
+
+**Implemented locations:**
+
+- Proxmox MCP Compose: `/opt/stacks/proxmox-mcp/compose.yaml`
+    
+- Proxmox MCP environment: `/opt/stacks/proxmox-mcp/.env`
+    
+- Tunnel binary: `/opt/tunnel-client/tunnel-client`
+    
+- Tunnel configuration: `/etc/tunnel-client/config.yaml`
+    
+- Tunnel systemd unit: `/etc/systemd/system/tunnel-client.service`
+    
+
+The tunnel daemon runs as the dedicated unprivileged `tunnel-client` account, without Docker group membership.
+
+**Operational choice:** Manage the observer through SSH and CLI rather than extending the existing Dockman deployment to this host.
+
+---
+
+### AI Observer — Dedicated Credentials and Git Exclusions
+
+**Decision:** Keep Proxmox MCP and OpenAI tunnel credentials outside version-controlled configuration, using protected local files and Bitwarden for credential retention.
+
+**What was considered:**
+
+- Embedding tokens directly into Compose, systemd, or tunnel configuration.
+    
+- Persisting GitHub credentials through plaintext Git credential storage.
+    
+- Separating credentials from committed configuration and restricting their filesystem permissions (chosen).
+    
+
+**Why:** The observer handles credentials that can access infrastructure monitoring APIs and OpenAI tunnel services. These credentials should not be copied into Git history, exposed in command arguments unnecessarily, or made readable by unrelated services.
+
+The deployment uses a protected `.env` file for Proxmox MCP and separate protected credential files for the OpenAI tunnel client.
+
+The `homelab-infra` repository contains the MCP Compose configuration, while secrets remain excluded from Git.
+
+The initial Git workflow avoided persistently storing a GitHub personal access token through Git's plaintext credential helper.
+
+**Recovery consideration:** The configuration under `/etc/tunnel-client`, the MCP `.env`, and the tunnel systemd service are not automatically covered merely because the Compose repository exists in Git.
+
+Backup and credential-recovery procedures must explicitly account for these files.
+
+A verified observer backup and restoration procedure remains outstanding.
+
+---
+
+### AI Observer — Expand Integrations Incrementally
+
+**Decision:** Implement and verify Proxmox MCP first, then evaluate additional read-only integrations separately.
+
+**Planned integrations:**
+
+- Unraid monitoring and diagnostics.
+    
+- Docker host and container monitoring.
+    
+- Potential future controlled write operations, subject to additional authorization and security review.
+    
+
+**Why:** Each integration introduces different credentials, permissions, network dependencies, and potential failure modes.
+
+Completing one end-to-end integration before introducing additional systems allows the architecture, security boundaries, operational workflow, and recovery procedures to be validated incrementally.
+
+**Current state:** Proxmox MCP is implemented and verified. Unraid and Docker MCP integrations have not yet been implemented.
+
+**Related documentation:** `services/infra/ai-observer.md` and `runbooks/ai-observer-operations.md`
