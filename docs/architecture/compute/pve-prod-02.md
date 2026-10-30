@@ -78,11 +78,11 @@
 
 ## Guests
 
-| ID  | Name | Type | VLAN | IP | Status |
-|-----|------|------|------|----|--------|
-| 102 | dns-prod-02 | LXC (Debian 12) | 30 | 192.168.30.15 | Running |
-| 103 | pbs-prod-01 | VM (PBS 4.1.0) | 30 | 192.168.30.12 | Running |
-| 106 | immich-prod-01 | VM (Ubuntu 24.04) | 30 | 192.168.30.14 | Running — 2 vCPU, 6GB RAM, 32GB disk |
+| ID  | Name           | Type              | VLAN | IP            | Status                               |
+| --- | -------------- | ----------------- | ---- | ------------- | ------------------------------------ |
+| 102 | dns-prod-02    | LXC (Debian 12)   | 30   | 192.168.30.15 | Running                              |
+| 103 | pbs-prod-01    | VM (PBS 4.1.0)    | 30   | 192.168.30.12 | Running                              |
+| 105 | immich-prod-01 | VM (Ubuntu 24.04) | 30   | 192.168.30.14 | Running — 2 vCPU, 6GB RAM, 32GB disk |
 
 > immich-prod-01 was moved here from pve-prod-01 due to RAM headroom — pve-prod-01 was already running docker-prod-01 (8GB) and auth-prod-01 (4GB). pve-prod-02 had ample capacity. See `architecture/decisions-log.md`.
 
