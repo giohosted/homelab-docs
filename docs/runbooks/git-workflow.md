@@ -1,6 +1,6 @@
 # Git Workflow — homelab-infra
 
-**Applies to:** docker-prod-01, auth-prod-01, immich-prod-01 (`/opt/stacks`)
+**Applies to:** docker-prod-01, auth-prod-01, immich-prod-01, observer-prod-01 (`/opt/stacks`)
 **Repo:** homelab-infra (private, GitHub)
 **Last Updated:** 2026-03-16
 
