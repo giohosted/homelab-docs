@@ -1,0 +1,5551 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/runbooks/ai-observer-operations/">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>AI Observer — Operations & Recovery Runbook - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ai-observer-operations-recovery-runbook" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AI Observer — Operations &amp; Recovery Runbook
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Purpose
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Purpose">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#operational-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operational Principles
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-component-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Component Reference
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Component Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Infrastructure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Services
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Paths
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-normal-operating-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Normal Operating State
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Normal Operating State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#expected-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      Expected State
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-request-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      End-to-End Request Path
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-routine-health-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Routine Health Checks
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Routine Health Checks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-connect-to-the-observer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Connect to the Observer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-check-mcp-container-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Check MCP Container Status
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-check-mcp-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Check MCP Health
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-check-tunnel-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Check Tunnel Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-check-tunnel-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Check Tunnel Readiness
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-verify-chatgpt-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6 — Verify ChatGPT Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-check-unraid-mcp-and-tunnel" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Check — Unraid MCP and Tunnel
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-quick-diagnostic-command-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Quick Diagnostic Command Reference
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Quick Diagnostic Command Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#docker-and-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Docker and MCP
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tunnel-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tunnel Client
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operating-system-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operating System Resources
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-listening-ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Local Listening Ports
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#git-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Git Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-troubleshooting-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Troubleshooting Workflow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Troubleshooting Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnostic-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      Diagnostic Sequence
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-troubleshooting-mcp-container-unavailable" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. Troubleshooting — MCP Container Unavailable
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Troubleshooting — MCP Container Unavailable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptoms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Symptoms
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#investigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Investigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-causes-to-investigate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Causes to Investigate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-troubleshooting-tunnel-client-unavailable" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Troubleshooting — Tunnel Client Unavailable
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Troubleshooting — Tunnel Client Unavailable">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptoms_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Symptoms
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#investigation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Investigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-causes-to-investigate_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Causes to Investigate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-troubleshooting-proxmox-api-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Troubleshooting — Proxmox API Connectivity
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Troubleshooting — Proxmox API Connectivity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptoms_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Symptoms
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Path
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#investigation_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Investigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firewall-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentication-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication Errors
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tls-fingerprint-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      TLS Fingerprint Errors
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-troubleshooting-chatgpt-plugin" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Troubleshooting — ChatGPT Plugin
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Troubleshooting — ChatGPT Plugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#symptoms_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Symptoms
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#investigation_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Investigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentication-distinction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication Distinction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tool-specific-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tool-Specific Errors
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unraid-specific-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unraid-Specific Failures
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-service-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Service Management
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10. Service Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-mcp-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox MCP — Docker Compose
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tunnel-client-systemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tunnel Client — systemd
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unraid-mcp-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unraid MCP — Docker Compose
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unraid-tunnel-systemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unraid Tunnel — systemd
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restart-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restart Order
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-updating-proxmox-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. Updating Proxmox MCP
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Updating Proxmox MCP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-updating" class="md-nav__link">
+    <span class="md-ellipsis">
+      Before Updating
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update Procedure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-update-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Post-Update Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-updating-openai-tunnel-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. Updating OpenAI Tunnel Client
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12. Updating OpenAI Tunnel Client">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-documented-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Documented Version
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#required-update-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      Required Update Process
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rollback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-git-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      13. Git Workflow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. Git Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-only-git-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Read-Only Git Checks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synchronizing-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Synchronizing Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-and-commits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Changes and Commits
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-credential-management-and-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      14. Credential Management and Rotation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. Credential Management and Rotation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-rotation-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Rotation Procedure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-api-token-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox API Token Rotation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcp-bearer-token-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Bearer Token Rotation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#openai-runtime-api-key-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI Runtime API Key Rotation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#credential-file-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Credential File Permissions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-security-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      15. Security Verification
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15. Security Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox Permissions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unraid-api-and-mcp-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unraid API and MCP Permissions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcp-configuration-proxmox" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Configuration — Proxmox
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tunnel-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tunnel Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firewall" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Changes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-backup-and-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      16. Backup and Recovery
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. Backup and Recovery">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Status
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-distinction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Important Distinction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#required-recovery-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Required Recovery Assets
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-verification-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Verification Checklist
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#independent-configuration-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Independent Configuration Backup
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-disaster-recovery-vm-restoration" class="md-nav__link">
+    <span class="md-ellipsis">
+      17. Disaster Recovery — VM Restoration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="17. Disaster Recovery — VM Restoration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-assess-the-incident" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Assess the Incident
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-verify-recovery-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Verify Recovery Source
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-plan-a-safe-restore" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Plan a Safe Restore
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-restore-the-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Restore the VM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-inspect-restored-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Inspect Restored Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-restore-production-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6 — Restore Production Connectivity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-7-validate-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 7 — Validate Recovery
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-8-record-the-outcome" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 8 — Record the Outcome
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-recovery-rebuilding-without-a-vm-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      18. Recovery — Rebuilding Without a VM Backup
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-known-issues-and-outstanding-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      19. Known Issues and Outstanding Work
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="19. Known Issues and Outstanding Work">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pbs-backup-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Backup Failures
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observer-disaster-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      Observer Disaster Recovery
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-mcp-integrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional MCP Integrations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-operational-completion-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      20. Operational Completion Criteria
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-unraid-mcp-operations-security-expansion-and-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      21. Unraid MCP — Operations, Security, Expansion, and Recovery
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="21. Unraid MCP — Operations, Security, Expansion, and Recovery">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deployment-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment Identity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#routine-read-only-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Routine Read-Only Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#checking-exposed-tools-without-printing-secrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Checking Exposed Tools Without Printing Secrets
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expand-read-only-monitoring-deliberately" class="md-nav__link">
+    <span class="md-ellipsis">
+      Expand Read-Only Monitoring Deliberately
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updating-the-unraid-rust-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating the Unraid Rust Image
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tunnel-runtime-and-credential-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tunnel Runtime and Credential Files
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-unraid-storage-issue-separate-incident" class="md-nav__link">
+    <span class="md-ellipsis">
+      Known Unraid Storage Issue (Separate Incident)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-and-completion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery and Completion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Related Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture-and-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture and Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operational-runbooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operational Runbooks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#source-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Source Repositories
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-operational-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Final Operational Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="ai-observer-operations-recovery-runbook">AI Observer — Operations &amp; Recovery Runbook<a class="headerlink" href="#ai-observer-operations-recovery-runbook" title="Permanent link">&para;</a></h1>
+<p><strong>Service:</strong> AI Observer<br />
+<strong>Host:</strong> observer-prod-01 (<code>192.168.30.17</code>)<br />
+<strong>Proxmox VMID:</strong> 107<br />
+<strong>Proxmox Node:</strong> pve-prod-01<br />
+<strong>Environment:</strong> Homelab v3<br />
+<strong>Last Updated:</strong> 2026-10-30<br />
+<strong>Service Status:</strong> Proxmox and Unraid MCP integrations implemented and end-to-end verified<br />
+<strong>Backup Status:</strong> October 30 scheduled backup successful; integrity and restore testing pending</p>
+<hr />
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>This runbook provides operational procedures for managing the Homelab v3 AI Observer.</p>
+<p>It covers:</p>
+<ul>
+<li>
+<p>Routine service health checks.</p>
+</li>
+<li>
+<p>Verifying ChatGPT-to-Proxmox and ChatGPT-to-Unraid connectivity.</p>
+</li>
+<li>
+<p>Managing the Proxmox and Unraid MCP containers.</p>
+</li>
+<li>
+<p>Managing two OpenAI Secure MCP Tunnel services using one installed tunnel-client binary.</p>
+</li>
+<li>
+<p>Troubleshooting common failures.</p>
+</li>
+<li>
+<p>Reviewing security and permissions.</p>
+</li>
+<li>
+<p>Performing controlled updates.</p>
+</li>
+<li>
+<p>Handling credentials and token rotation.</p>
+</li>
+<li>
+<p>Preparing for backup and disaster recovery.</p>
+</li>
+<li>
+<p>Validating recovery and returning the service to operation.</p>
+</li>
+</ul>
+<p>This document is an operational reference, not a deployment history or architecture specification.</p>
+<p>For implementation details, component configuration, security design, and architectural decisions, refer to:</p>
+<p><code>services/infra/ai-observer.md</code></p>
+<h3 id="operational-principles">Operational Principles<a class="headerlink" href="#operational-principles" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>Prefer read-only investigation before making changes.</p>
+</li>
+<li>
+<p>Make one consequential change at a time.</p>
+</li>
+<li>
+<p>Verify the effect of each change before proceeding.</p>
+</li>
+<li>
+<p>Do not expose infrastructure credentials in logs, documentation, screenshots, or chat.</p>
+</li>
+<li>
+<p>Preserve the read-only security model.</p>
+</li>
+<li>
+<p>Do not expand network access or permissions during routine troubleshooting.</p>
+</li>
+<li>
+<p>Verify complete end-to-end operation rather than relying only on process status.</p>
+</li>
+<li>
+<p>Do not claim backup or recovery readiness until the relevant procedures have been tested.</p>
+</li>
+</ol>
+<hr />
+<h2 id="1-component-reference">1. Component Reference<a class="headerlink" href="#1-component-reference" title="Permanent link">&para;</a></h2>
+<h3 id="infrastructure">Infrastructure<a class="headerlink" href="#infrastructure" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VM</td>
+<td>observer-prod-01</td>
+</tr>
+<tr>
+<td>Proxmox VMID</td>
+<td>107</td>
+</tr>
+<tr>
+<td>Proxmox node</td>
+<td>pve-prod-01</td>
+</tr>
+<tr>
+<td>Operating system</td>
+<td>Ubuntu Server 26.04.1 LTS</td>
+</tr>
+<tr>
+<td>IP address</td>
+<td>192.168.30.17/24</td>
+</tr>
+<tr>
+<td>VLAN</td>
+<td>30 — Services</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td>2 vCPU</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>2 GiB</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>20 GiB</td>
+</tr>
+<tr>
+<td>Primary administration</td>
+<td>SSH</td>
+</tr>
+<tr>
+<td>Administrative user</td>
+<td>gio</td>
+</tr>
+</tbody>
+</table>
+<h3 id="services">Services<a class="headerlink" href="#services" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+<th>Management</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox MCP</td>
+<td>Docker Compose</td>
+<td><code>sudo docker compose</code></td>
+</tr>
+<tr>
+<td>Unraid MCP (Rust 0.6.3)</td>
+<td>Docker Compose</td>
+<td><code>sudo docker compose</code> in <code>/opt/stacks/unraid-mcp</code></td>
+</tr>
+<tr>
+<td>OpenAI Secure MCP Tunnels (Proxmox and Unraid)</td>
+<td>Two native systemd services</td>
+<td><code>sudo systemctl</code></td>
+</tr>
+<tr>
+<td>ChatGPT integration</td>
+<td>Homelab Proxmox and Homelab Unraid plugins</td>
+<td>ChatGPT Plugins</td>
+</tr>
+<tr>
+<td>Proxmox API</td>
+<td>Proxmox VE HTTPS API</td>
+<td>Dedicated read-only API identity</td>
+</tr>
+<tr>
+<td>Unraid API</td>
+<td>Unraid GraphQL HTTPS API</td>
+<td>Dedicated 14-category READ_ANY API key</td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-paths">Key Paths<a class="headerlink" href="#key-paths" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/opt/stacks/proxmox-mcp/</code></td>
+<td>MCP Compose stack</td>
+</tr>
+<tr>
+<td><code>/opt/stacks/proxmox-mcp/compose.yaml</code></td>
+<td>Version-controlled Compose configuration</td>
+</tr>
+<tr>
+<td><code>/opt/stacks/proxmox-mcp/.env</code></td>
+<td>MCP environment configuration and credentials</td>
+</tr>
+<tr>
+<td><code>/opt/stacks/unraid-mcp/compose.yaml</code></td>
+<td>Unraid MCP Compose stack</td>
+</tr>
+<tr>
+<td><code>/opt/stacks/unraid-mcp/.env</code></td>
+<td>Protected Unraid GraphQL API key and MCP bearer token</td>
+</tr>
+<tr>
+<td><code>/etc/unraid-mcp/unraid.crt</code></td>
+<td>Trusted self-signed Unraid server certificate</td>
+</tr>
+<tr>
+<td><code>/opt/tunnel-client/</code></td>
+<td>Installed OpenAI tunnel-client files</td>
+</tr>
+<tr>
+<td><code>/opt/tunnel-client/tunnel-client</code></td>
+<td>Tunnel-client executable</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/config.yaml</code></td>
+<td>Tunnel configuration</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/openai-runtime.key</code></td>
+<td>Restricted OpenAI runtime credential</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/mcp-authorization</code></td>
+<td>Local MCP bearer authorization</td>
+</tr>
+<tr>
+<td><code>/etc/systemd/system/tunnel-client.service</code></td>
+<td>Proxmox tunnel systemd service unit</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/config.yaml</code></td>
+<td>Unraid tunnel configuration</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/openai-runtime.key</code></td>
+<td>Unraid OpenAI runtime key</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/mcp-authorization</code></td>
+<td>Unraid MCP bearer header</td>
+</tr>
+<tr>
+<td><code>/etc/systemd/system/tunnel-client-unraid.service</code></td>
+<td>Unraid tunnel systemd service unit</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Important:</strong> Proxmox and Unraid each use a separate MCP container and a separate tunnel systemd service; both tunnel processes reuse the existing <code>tunnel-client</code> account and installed binary.</p>
+<p>A healthy tunnel does not necessarily mean the MCP server is healthy, and a healthy MCP server does not guarantee that ChatGPT can reach it.</p>
+<hr />
+<h2 id="2-normal-operating-state">2. Normal Operating State<a class="headerlink" href="#2-normal-operating-state" title="Permanent link">&para;</a></h2>
+<p>AI Observer is considered operational when all required components are available and a read-only query succeeds end-to-end.</p>
+<h3 id="expected-state">Expected State<a class="headerlink" href="#expected-state" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Expected Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Observer VM</td>
+<td>Running</td>
+</tr>
+<tr>
+<td>Docker engine</td>
+<td>Available</td>
+</tr>
+<tr>
+<td>Proxmox MCP container</td>
+<td>Running</td>
+</tr>
+<tr>
+<td>Unraid MCP container</td>
+<td>Running and healthy</td>
+</tr>
+<tr>
+<td>MCP health endpoint</td>
+<td>HTTP 200</td>
+</tr>
+<tr>
+<td>Tunnel systemd services</td>
+<td>Both active and enabled</td>
+</tr>
+<tr>
+<td>Tunnel readiness endpoint</td>
+<td>HTTP 200</td>
+</tr>
+<tr>
+<td>Local MCP authentication</td>
+<td>Functioning</td>
+</tr>
+<tr>
+<td>Proxmox API connection</td>
+<td>Reachable and authenticated</td>
+</tr>
+<tr>
+<td>Unraid GraphQL API connection</td>
+<td>Reachable and authenticated with TLS verification</td>
+</tr>
+<tr>
+<td>ChatGPT integration</td>
+<td>Connected</td>
+</tr>
+<tr>
+<td>Live MCP tool call</td>
+<td>Successfully returns Proxmox and Unraid information using the respective plugins</td>
+</tr>
+<tr>
+<td>MCP permissions</td>
+<td>Read-only; Unraid exposes 26 read / 0 write tools</td>
+</tr>
+</tbody>
+</table>
+<h3 id="end-to-end-request-path">End-to-End Request Path<a class="headerlink" href="#end-to-end-request-path" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ChatGPT
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  | Homelab Proxmox plugin -&gt; outbound tunnel -&gt; tunnel-client.service
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  |                             -&gt; 127.0.0.1:8080/mcp
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  |                             -&gt; Proxmox API 192.168.10.11:8006
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  |
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  | Homelab Unraid plugin  -&gt; outbound tunnel -&gt; tunnel-client-unraid.service
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                                -&gt; 127.0.0.1:8082/mcp
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                                -&gt; Unraid HTTPS API 192.168.30.16:443
+</code></pre></div>
+<p>MCP endpoints: Proxmox <code>http://127.0.0.1:8080/mcp</code>; Unraid <code>http://127.0.0.1:8082/mcp</code>.</p>
+<p>Tunnel readiness endpoints: Proxmox <code>http://127.0.0.1:8081/readyz</code>; Unraid <code>http://127.0.0.1:8083/readyz</code>.</p>
+<p>Neither endpoint requires a public DNS record or inbound internet port forwarding.</p>
+<hr />
+<h2 id="3-routine-health-checks">3. Routine Health Checks<a class="headerlink" href="#3-routine-health-checks" title="Permanent link">&para;</a></h2>
+<p>These checks are read-only and are appropriate for initial troubleshooting.</p>
+<h3 id="step-1-connect-to-the-observer">Step 1 — Connect to the Observer<a class="headerlink" href="#step-1-connect-to-the-observer" title="Permanent link">&para;</a></h3>
+<p>From an authorized administrative workstation:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ssh gio@192.168.30.17
+</code></pre></div>
+<p>SSH access uses key-based authentication.</p>
+<p>Direct root SSH login and SSH password authentication were disabled during deployment.</p>
+<p>If SSH fails, investigate network and VM availability before changing SSH configuration.</p>
+<h3 id="step-2-check-mcp-container-status">Step 2 — Check MCP Container Status<a class="headerlink" href="#step-2-check-mcp-container-status" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cd /opt/stacks/proxmox-mcp
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>sudo docker compose ps
+</code></pre></div>
+<p>Expected result: The <code>proxmox-mcp</code> container is running.</p>
+<p>Check recent container logs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo docker compose logs --tail 50 proxmox-mcp
+</code></pre></div>
+<p>Look for:</p>
+<ul>
+<li>
+<p>Startup errors.</p>
+</li>
+<li>
+<p>Configuration validation failures.</p>
+</li>
+<li>
+<p>Authentication failures.</p>
+</li>
+<li>
+<p>Proxmox API connection errors.</p>
+</li>
+<li>
+<p>TLS verification failures.</p>
+</li>
+<li>
+<p>Unexpected container restarts.</p>
+</li>
+</ul>
+<p><strong>Security:</strong> Logs may contain sensitive operational information. Review and redact them before sharing externally.</p>
+<h3 id="step-3-check-mcp-health">Step 3 — Check MCP Health<a class="headerlink" href="#step-3-check-mcp-health" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>curl -fsS --max-time 5 http://127.0.0.1:8080/health
+</code></pre></div>
+<p>Expected response:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>{"status":"ok"}
+</code></pre></div>
+<p>This establishes that the MCP HTTP health endpoint is responding.</p>
+<p>It does not independently verify Proxmox authentication, API permissions, or ChatGPT connectivity.</p>
+<h3 id="step-4-check-tunnel-service">Step 4 — Check Tunnel Service<a class="headerlink" href="#step-4-check-tunnel-service" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sudo systemctl status tunnel-client --no-pager
+</code></pre></div>
+<p>Expected result: <code>active (running)</code>.</p>
+<p>Check whether the service is enabled at boot:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>systemctl is-enabled tunnel-client
+</code></pre></div>
+<p>Expected result:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>enabled
+</code></pre></div>
+<p>Inspect recent logs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sudo journalctl -u tunnel-client -n 50 --no-pager
+</code></pre></div>
+<p>Look for authentication failures, connection errors, repeated restarts, and configuration problems.</p>
+<h3 id="step-5-check-tunnel-readiness">Step 5 — Check Tunnel Readiness<a class="headerlink" href="#step-5-check-tunnel-readiness" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>curl -fsS --max-time 5 http://127.0.0.1:8081/readyz
+</code></pre></div>
+<p>Expected response:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>ready
+</code></pre></div>
+<p>A successful readiness response confirms the tunnel client reports itself ready.</p>
+<p>It does not replace a successful live MCP tool invocation.</p>
+<h3 id="step-6-verify-chatgpt-access">Step 6 — Verify ChatGPT Access<a class="headerlink" href="#step-6-verify-chatgpt-access" title="Permanent link">&para;</a></h3>
+<p>In ChatGPT, use the Homelab Proxmox plugin to request:</p>
+<blockquote>
+<p>Check the current Proxmox cluster status, including quorum and the status of both nodes.</p>
+</blockquote>
+<p>A successful response should contain information retrieved through the live MCP integration.</p>
+<p>The initially verified cluster configuration included:</p>
+<ul>
+<li>
+<p>Cluster name: <code>homelab-v3</code></p>
+</li>
+<li>
+<p>Two Proxmox nodes.</p>
+</li>
+<li>
+<p>Proxmox VE 9.1.6 at initial deployment.</p>
+</li>
+<li>
+<p>Cluster quorum present.</p>
+</li>
+</ul>
+<p>Versions and operational state may change over time. Treat these as historical reference values, not guaranteed current results.</p>
+<p><strong>This is the final end-to-end health check for Proxmox.</strong></p>
+<h3 id="additional-check-unraid-mcp-and-tunnel">Additional Check — Unraid MCP and Tunnel<a class="headerlink" href="#additional-check-unraid-mcp-and-tunnel" title="Permanent link">&para;</a></h3>
+<p>On <code>observer-prod-01</code>, inspect the second integration independently (read-only commands):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/unraid-mcp
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">50</span><span class="w"> </span>--no-color<span class="w"> </span>unraid-mcp
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>systemctl<span class="w"> </span>is-active<span class="w"> </span>tunnel-client-unraid.service
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>systemctl<span class="w"> </span>is-enabled<span class="w"> </span>tunnel-client-unraid.service
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span>http://127.0.0.1:8083/readyz
+</code></pre></div>
+<p>Expected: healthy <code>unraid-mcp</code>, active and enabled Unraid tunnel, <code>ready</code> response. The container logs should show <code>trusting extra CA certificates from bundle count=1</code>. The local MCP endpoint normally returns HTTP 401 without a bearer token; that proves it is reachable, <strong>not</strong> that upstream GraphQL authentication is working.</p>
+<p>Then, in ChatGPT, call the <code>Homelab Unraid</code> plugin with <code>unraid_info</code>. Confirm it returns live <code>nas-prod-01</code> system information. This end-to-end check is required before closing an Unraid MCP incident. Do not call write/management actions as a connectivity test.</p>
+<hr />
+<h2 id="4-quick-diagnostic-command-reference">4. Quick Diagnostic Command Reference<a class="headerlink" href="#4-quick-diagnostic-command-reference" title="Permanent link">&para;</a></h2>
+<p>Run these commands on observer-prod-01 unless otherwise noted.</p>
+<h3 id="docker-and-mcp">Docker and MCP<a class="headerlink" href="#docker-and-mcp" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>cd /opt/stacks/proxmox-mcp
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>sudo docker compose ps
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>sudo docker compose images
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>sudo docker compose config --quiet
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>sudo docker compose logs --tail 100 proxmox-mcp
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>curl -fsS --max-time 5 http://127.0.0.1:8080/health
+</code></pre></div>
+<h3 id="tunnel-client">Tunnel Client<a class="headerlink" href="#tunnel-client" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>sudo systemctl status tunnel-client --no-pager
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>systemctl is-enabled tunnel-client
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>sudo journalctl -u tunnel-client -n 100 --no-pager
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>curl -fsS --max-time 5 http://127.0.0.1:8081/readyz
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a># Unraid
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>sudo systemctl status tunnel-client-unraid --no-pager
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>systemctl is-enabled tunnel-client-unraid
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>curl -fsS --max-time 5 http://127.0.0.1:8083/readyz
+</code></pre></div>
+<h3 id="operating-system-resources">Operating System Resources<a class="headerlink" href="#operating-system-resources" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uptime
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>free -h
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>df -h /
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>df -h /opt
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>sudo docker stats --no-stream proxmox-mcp unraid-mcp
+</code></pre></div>
+<h3 id="network">Network<a class="headerlink" href="#network" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>ip -br addr show ens18
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>ip route
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>ip route get 192.168.10.11
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>getent hosts api.openai.com
+</code></pre></div>
+<h3 id="local-listening-ports">Local Listening Ports<a class="headerlink" href="#local-listening-ports" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>sudo ss -lntp
+</code></pre></div>
+<p>Verify that the MCP and tunnel readiness services are bound to localhost rather than all interfaces.</p>
+<p>Expected local endpoints:</p>
+<ul>
+<li>
+<p><code>127.0.0.1:8080</code> — Proxmox MCP.</p>
+</li>
+<li>
+<p><code>127.0.0.1:8081</code> — Proxmox tunnel readiness.</p>
+</li>
+<li><code>127.0.0.1:8082</code> — Unraid MCP.</li>
+<li><code>127.0.0.1:8083</code> — Unraid tunnel readiness.</li>
+</ul>
+<h3 id="git-configuration">Git Configuration<a class="headerlink" href="#git-configuration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>cd /opt/stacks
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>git status
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>git log --oneline -5
+</code></pre></div>
+<p>Do not run Git commands that overwrite local changes as part of basic diagnostics.</p>
+<hr />
+<h2 id="5-troubleshooting-workflow">5. Troubleshooting Workflow<a class="headerlink" href="#5-troubleshooting-workflow" title="Permanent link">&para;</a></h2>
+<p>When ChatGPT cannot retrieve Proxmox or Unraid data, first identify the affected plugin and investigate its independent container, tunnel, and upstream API path in order.</p>
+<h3 id="diagnostic-sequence">Diagnostic Sequence<a class="headerlink" href="#diagnostic-sequence" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>Is observer-prod-01 running?</p>
+</li>
+<li>
+<p>Can the observer be reached over SSH?</p>
+</li>
+<li>
+<p>Which integration is affected — Proxmox, Unraid, or both?</p>
+</li>
+<li>
+<p>Is the affected MCP container running?</p>
+</li>
+<li>
+<p>Does its local health/MCP endpoint respond?</p>
+</li>
+<li>
+<p>Is the corresponding tunnel-client systemd service running?</p>
+</li>
+<li>
+<p>Does that tunnel readiness endpoint respond?</p>
+</li>
+<li>
+<p>Can the MCP service reach and authenticate to its upstream API?</p>
+</li>
+<li>
+<p>Does ChatGPT recognize and invoke the intended plugin?</p>
+</li>
+<li>
+<p>Does a live read-only tool call succeed?</p>
+</li>
+</ol>
+<p>Do not restart all components simultaneously.</p>
+<p>Use the failed check to identify the affected layer.</p>
+<hr />
+<h2 id="6-troubleshooting-mcp-container-unavailable">6. Troubleshooting — MCP Container Unavailable<a class="headerlink" href="#6-troubleshooting-mcp-container-unavailable" title="Permanent link">&para;</a></h2>
+<h3 id="symptoms">Symptoms<a class="headerlink" href="#symptoms" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p>Docker reports the MCP container as stopped or restarting.</p>
+</li>
+<li>
+<p><code>127.0.0.1:8080/health</code> does not respond.</p>
+</li>
+<li>
+<p>Tunnel requests fail because the local MCP endpoint is unavailable.</p>
+</li>
+</ul>
+<h3 id="investigation">Investigation<a class="headerlink" href="#investigation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>cd /opt/stacks/proxmox-mcp
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>sudo docker compose ps
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>sudo docker compose logs --tail 100 proxmox-mcp
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>sudo docker compose config --quiet
+</code></pre></div>
+<p>Check Docker service status:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>sudo systemctl status docker --no-pager
+</code></pre></div>
+<p>Check available resources:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>free -h
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>df -h /
+</code></pre></div>
+<h3 id="common-causes-to-investigate">Common Causes to Investigate<a class="headerlink" href="#common-causes-to-investigate" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p>Docker engine unavailable.</p>
+</li>
+<li>
+<p>Invalid Compose configuration.</p>
+</li>
+<li>
+<p>Missing or unreadable <code>.env</code> file.</p>
+</li>
+<li>
+<p>Invalid environment variables.</p>
+</li>
+<li>
+<p>Container image problems.</p>
+</li>
+<li>
+<p>Port-binding conflict.</p>
+</li>
+<li>
+<p>Memory or disk exhaustion.</p>
+</li>
+</ul>
+<h3 id="recovery">Recovery<a class="headerlink" href="#recovery" title="Permanent link">&para;</a></h3>
+<p>After identifying and addressing the cause, an authorized administrator may start or recreate the affected service:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>cd /opt/stacks/proxmox-mcp
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>sudo docker compose up -d --no-deps proxmox-mcp
+</code></pre></div>
+<p>This is a state-changing operation, not a read-only check.</p>
+<p>After recovery, verify:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>sudo docker compose ps
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>curl -fsS http://127.0.0.1:8080/health
+</code></pre></div>
+<p>Then confirm tunnel readiness and perform a live ChatGPT MCP query.</p>
+<p>Do not assume that recreating the container resolves configuration or credential problems.</p>
+<hr />
+<h2 id="7-troubleshooting-tunnel-client-unavailable">7. Troubleshooting — Tunnel Client Unavailable<a class="headerlink" href="#7-troubleshooting-tunnel-client-unavailable" title="Permanent link">&para;</a></h2>
+<h3 id="symptoms_1">Symptoms<a class="headerlink" href="#symptoms_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><code>tunnel-client.service</code> is inactive or failed.</p>
+</li>
+<li>
+<p>Tunnel readiness endpoint does not respond.</p>
+</li>
+<li>
+<p>ChatGPT cannot reach MCP despite a healthy local MCP container.</p>
+</li>
+<li>
+<p>Systemd logs show repeated reconnect or authentication failures.</p>
+</li>
+</ul>
+<h3 id="investigation_1">Investigation<a class="headerlink" href="#investigation_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>sudo systemctl status tunnel-client --no-pager
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>sudo journalctl -u tunnel-client -n 100 --no-pager
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>systemctl is-enabled tunnel-client
+</code></pre></div>
+<p>Check local readiness:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>curl -fsS --max-time 5 http://127.0.0.1:8081/readyz
+</code></pre></div>
+<p>Confirm that the MCP service is available independently:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>curl -fsS --max-time 5 http://127.0.0.1:8080/health
+</code></pre></div>
+<h3 id="common-causes-to-investigate_1">Common Causes to Investigate<a class="headerlink" href="#common-causes-to-investigate_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p>Incorrect tunnel configuration.</p>
+</li>
+<li>
+<p>Expired, revoked, or invalid OpenAI runtime credential.</p>
+</li>
+<li>
+<p>Incorrect MCP Authorization header.</p>
+</li>
+<li>
+<p>Inaccessible credential files.</p>
+</li>
+<li>
+<p>Missing or incompatible tunnel-client binary.</p>
+</li>
+<li>
+<p>Outbound HTTPS connectivity failure.</p>
+</li>
+<li>
+<p>DNS resolution problems.</p>
+</li>
+<li>
+<p>Local MCP endpoint unavailable.</p>
+</li>
+</ul>
+<h3 id="recovery_1">Recovery<a class="headerlink" href="#recovery_1" title="Permanent link">&para;</a></h3>
+<p>Once the cause is identified and the proposed action is approved, a controlled service restart may be appropriate:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>sudo systemctl restart tunnel-client
+</code></pre></div>
+<p>Verify:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>sudo systemctl status tunnel-client --no-pager
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>curl -fsS http://127.0.0.1:8081/readyz
+</code></pre></div>
+<p>Review logs after the restart:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>sudo journalctl -u tunnel-client -n 50 --no-pager
+</code></pre></div>
+<p>Finish with an end-to-end ChatGPT MCP query.</p>
+<p>Do not repeatedly restart the service when authentication or configuration errors remain unresolved.</p>
+<hr />
+<h2 id="8-troubleshooting-proxmox-api-connectivity">8. Troubleshooting — Proxmox API Connectivity<a class="headerlink" href="#8-troubleshooting-proxmox-api-connectivity" title="Permanent link">&para;</a></h2>
+<h3 id="symptoms_2">Symptoms<a class="headerlink" href="#symptoms_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p>MCP health responds but Proxmox tool calls fail.</p>
+</li>
+<li>
+<p>Connection timeout to Proxmox.</p>
+</li>
+<li>
+<p>Authentication or permission errors.</p>
+</li>
+<li>
+<p>TLS certificate verification failures.</p>
+</li>
+</ul>
+<h3 id="network-path">Network Path<a class="headerlink" href="#network-path" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Destination</th>
+<th>Protocol</th>
+<th>Port</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>observer-prod-01 — 192.168.30.17</td>
+<td>pve-prod-01 — 192.168.10.11</td>
+<td>TCP</td>
+<td>8006</td>
+</tr>
+</tbody>
+</table>
+<p>The observer resides on VLAN 30, while the Proxmox management interface resides on VLAN 10.</p>
+<p>A targeted UniFi firewall exception permits this connection.</p>
+<h3 id="investigation_2">Investigation<a class="headerlink" href="#investigation_2" title="Permanent link">&para;</a></h3>
+<p>Check observer networking:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>ip -br addr show ens18
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>ip route get 192.168.10.11
+</code></pre></div>
+<p>Check MCP logs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>cd /opt/stacks/proxmox-mcp
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>sudo docker compose logs --tail 100 proxmox-mcp
+</code></pre></div>
+<p>If <code>nc</code> is installed, check TCP reachability:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>nc -vz -w 5 192.168.10.11 8006
+</code></pre></div>
+<p>A successful TCP connection demonstrates reachability to the port. It does not prove that Proxmox authentication or TLS fingerprint verification is working.</p>
+<h3 id="firewall-verification">Firewall Verification<a class="headerlink" href="#firewall-verification" title="Permanent link">&para;</a></h3>
+<p>Confirm the documented rule exists and is evaluated before the general Services-to-Management deny rule.</p>
+<p><strong>Documented rule:</strong></p>
+<ul>
+<li>
+<p>Name: <code>Allow Observer to Proxmox API</code></p>
+</li>
+<li>
+<p>Source: <code>192.168.30.17</code></p>
+</li>
+<li>
+<p>Destination: <code>192.168.10.11</code></p>
+</li>
+<li>
+<p>Destination port: TCP 8006</p>
+</li>
+<li>
+<p>Action: Allow</p>
+</li>
+</ul>
+<p>Do not substitute a broad VLAN 30-to-VLAN 10 allowance.</p>
+<h3 id="authentication-errors">Authentication Errors<a class="headerlink" href="#authentication-errors" title="Permanent link">&para;</a></h3>
+<p>If the API is reachable but authentication fails:</p>
+<ol>
+<li>
+<p>Verify the dedicated Proxmox account exists.</p>
+</li>
+<li>
+<p>Verify the API token is still valid.</p>
+</li>
+<li>
+<p>Confirm the MCP configuration references the expected token ID.</p>
+</li>
+<li>
+<p>Confirm the secret is available to the container.</p>
+</li>
+<li>
+<p>Review recent permission or token changes.</p>
+</li>
+</ol>
+<p><strong>Account:</strong> <code>observer@pve</code><br />
+<strong>Token ID:</strong> <code>observer@pve!proxmox-mcp</code><br />
+<strong>Role:</strong> <code>PVEAuditor</code></p>
+<p>Do not print the token secret into logs or chat.</p>
+<h3 id="tls-fingerprint-errors">TLS Fingerprint Errors<a class="headerlink" href="#tls-fingerprint-errors" title="Permanent link">&para;</a></h3>
+<p>The MCP connection uses a pinned certificate fingerprint.</p>
+<p>If Proxmox certificates change, a fingerprint mismatch may prevent connection.</p>
+<p>Before updating a fingerprint:</p>
+<ol>
+<li>
+<p>Confirm the current Proxmox certificate through an authorized administrative interface.</p>
+</li>
+<li>
+<p>Verify that any certificate change was expected.</p>
+</li>
+<li>
+<p>Obtain and independently validate the replacement fingerprint.</p>
+</li>
+<li>
+<p>Update the protected MCP configuration through the approved change process.</p>
+</li>
+<li>
+<p>Recreate the MCP container if required.</p>
+</li>
+<li>
+<p>Verify authenticated access.</p>
+</li>
+</ol>
+<p>Do not disable TLS verification as a shortcut.</p>
+<hr />
+<h2 id="9-troubleshooting-chatgpt-plugin">9. Troubleshooting — ChatGPT Plugin<a class="headerlink" href="#9-troubleshooting-chatgpt-plugin" title="Permanent link">&para;</a></h2>
+<h3 id="symptoms_3">Symptoms<a class="headerlink" href="#symptoms_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p>Homelab Proxmox does not appear as an available plugin.</p>
+</li>
+<li>
+<p>The plugin appears connected but tool calls fail.</p>
+</li>
+<li>
+<p>The plugin cannot retrieve live cluster information.</p>
+</li>
+<li>
+<p>Unexpected authentication or MCP tool-discovery errors occur.</p>
+</li>
+</ul>
+<h3 id="investigation_3">Investigation<a class="headerlink" href="#investigation_3" title="Permanent link">&para;</a></h3>
+<p>First confirm the observer's local services are healthy:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>curl -fsS http://127.0.0.1:8080/health
+<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>
+<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>curl -fsS http://127.0.0.1:8081/readyz
+</code></pre></div>
+<p>Then inspect the tunnel logs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>sudo journalctl -u tunnel-client -n 100 --no-pager
+</code></pre></div>
+<p>In ChatGPT:</p>
+<ol>
+<li>
+<p>Confirm the Homelab Proxmox plugin remains connected.</p>
+</li>
+<li>
+<p>Confirm it references the intended <code>homelab-proxmox</code> tunnel.</p>
+</li>
+<li>
+<p>Retry a basic read-only cluster-status request.</p>
+</li>
+<li>
+<p>Determine whether the failure affects all tools or a specific operation.</p>
+</li>
+</ol>
+<h3 id="authentication-distinction">Authentication Distinction<a class="headerlink" href="#authentication-distinction" title="Permanent link">&para;</a></h3>
+<p>The ChatGPT plugin was configured with the <strong>No authentication</strong> option because it does not require a separate end-user OAuth flow.</p>
+<p>This does not mean the local MCP endpoint is unauthenticated.</p>
+<p>The tunnel client supplies the configured bearer token when forwarding requests to the MCP server.</p>
+<p>Do not remove the MCP Authorization requirement to resolve a ChatGPT connection problem.</p>
+<h3 id="tool-specific-errors">Tool-Specific Errors<a class="headerlink" href="#tool-specific-errors" title="Permanent link">&para;</a></h3>
+<p>An individual tool failure does not necessarily indicate that the tunnel is broken.</p>
+<p>Examples include:</p>
+<ul>
+<li>
+<p>API privileges insufficient for a particular endpoint.</p>
+</li>
+<li>
+<p>Unsupported operation.</p>
+</li>
+<li>
+<p>Invalid tool arguments.</p>
+</li>
+<li>
+<p>Proxmox endpoint unavailable.</p>
+</li>
+<li>
+<p>Target guest not running.</p>
+</li>
+<li>
+<p>Guest-agent functionality unavailable.</p>
+</li>
+</ul>
+<p>Investigate the individual error before making changes to the global integration.</p>
+<p>A read-only API account may legitimately be denied access to endpoints requiring administrative privileges. The Unraid API key is not intended for every potentially readable GraphQL endpoint, only the intended monitoring categories.</p>
+<p>Do not grant administrator permissions merely to eliminate those errors.</p>
+<hr />
+<h3 id="unraid-specific-failures">Unraid-Specific Failures<a class="headerlink" href="#unraid-specific-failures" title="Permanent link">&para;</a></h3>
+<p>Use Section 21 for detailed Unraid MCP and tunnel commands. Diagnose independently of Proxmox:</p>
+<ul>
+<li>Rust MCP unavailable or port <code>8082</code> not responding: inspect <code>/opt/stacks/unraid-mcp/</code> Compose state and container logs.</li>
+<li>TLS trust failure: verify <code>UNRAID_API_CA_BUNDLE=/certs/unraid.crt</code>, the certificate mount, and <code>UNRAID_API_SKIP_TLS_VERIFY=false</code>. Do not disable certificate verification.</li>
+<li>HTTP 401 from local MCP without the bearer token is expected; an authenticated tool call or ChatGPT query is the functional test.</li>
+<li>Upstream <code>forbidden</code> / permission errors for an <strong>individual tool</strong> may mean the dedicated 14-category <code>READ_ANY</code> key does not grant that GraphQL field. Investigate before expanding permissions.</li>
+<li>Tool missing from ChatGPT: compare the actual 26-name tool inventory with the <code>UNRAID_RMCP_ENABLED_TOOLS</code> policy and check plugin tool refresh. Never remove the allowlist as a diagnostic shortcut.</li>
+<li>The Unraid array currently has a disabled first parity drive. This is a <strong>NAS hardware/storage incident</strong>, not an MCP fault; it is deliberately unresolved pending a separate controlled repair workflow in <code>architecture/storage/nas-prod-01.md</code>.</li>
+</ul>
+<hr />
+<h2 id="10-service-management">10. Service Management<a class="headerlink" href="#10-service-management" title="Permanent link">&para;</a></h2>
+<p>AI Observer uses Docker Compose for its two MCP containers and native systemd services for its two secure tunnels. The Unraid and Proxmox services should be managed independently.</p>
+<h3 id="proxmox-mcp-docker-compose">Proxmox MCP — Docker Compose<a class="headerlink" href="#proxmox-mcp-docker-compose" title="Permanent link">&para;</a></h3>
+<p><strong>Directory:</strong> <code>/opt/stacks/proxmox-mcp</code></p>
+<p>Read-only status:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>cd /opt/stacks/proxmox-mcp
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>
+<a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>sudo docker compose ps
+</code></pre></div>
+<p>View logs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>sudo docker compose logs --tail 100 proxmox-mcp
+</code></pre></div>
+<p>Authorized service restart:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>sudo docker compose restart proxmox-mcp
+</code></pre></div>
+<p>Authorized service recreation:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>sudo docker compose up -d --no-deps proxmox-mcp
+</code></pre></div>
+<h3 id="tunnel-client-systemd">Tunnel Client — systemd<a class="headerlink" href="#tunnel-client-systemd" title="Permanent link">&para;</a></h3>
+<p>Read-only status:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>sudo systemctl status tunnel-client --no-pager
+</code></pre></div>
+<p>View logs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>sudo journalctl -u tunnel-client -n 100 --no-pager
+</code></pre></div>
+<p>Authorized restart:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>sudo systemctl restart tunnel-client
+</code></pre></div>
+<h3 id="unraid-mcp-docker-compose">Unraid MCP — Docker Compose<a class="headerlink" href="#unraid-mcp-docker-compose" title="Permanent link">&para;</a></h3>
+<p>Read-only checks:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/unraid-mcp
+<a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">100</span><span class="w"> </span>--no-color<span class="w"> </span>unraid-mcp
+<a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+</code></pre></div>
+<p>Only with approval after identifying a fault:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/unraid-mcp
+<a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--no-deps<span class="w"> </span>unraid-mcp
+</code></pre></div>
+<p>This affects only the Unraid MCP stack, not the NAS array or Proxmox MCP. Consult Section 21 for updates and verification.</p>
+<h3 id="unraid-tunnel-systemd">Unraid Tunnel — systemd<a class="headerlink" href="#unraid-tunnel-systemd" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>systemctl<span class="w"> </span>is-active<span class="w"> </span>tunnel-client-unraid.service
+<a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>systemctl<span class="w"> </span>is-enabled<span class="w"> </span>tunnel-client-unraid.service
+<a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>sudo<span class="w"> </span>journalctl<span class="w"> </span>-u<span class="w"> </span>tunnel-client-unraid<span class="w"> </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--no-pager
+<a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span>http://127.0.0.1:8083/readyz
+</code></pre></div>
+<p>After confirming a tunnel-specific failure and receiving approval, restart only <code>tunnel-client-unraid.service</code>, then recheck readiness and a live ChatGPT tool call. Both tunnel services use <code>/opt/tunnel-client/tunnel-client</code>; do not upgrade that shared binary while debugging only one integration.</p>
+<h3 id="restart-order">Restart Order<a class="headerlink" href="#restart-order" title="Permanent link">&para;</a></h3>
+<p>If both services require recovery:</p>
+<ol>
+<li>
+<p>Identify why each service is unhealthy.</p>
+</li>
+<li>
+<p>Restore Proxmox MCP availability.</p>
+</li>
+<li>
+<p>Verify the MCP health endpoint.</p>
+</li>
+<li>
+<p>Restore or verify the tunnel client.</p>
+</li>
+<li>
+<p>Verify tunnel readiness.</p>
+</li>
+<li>
+<p>Perform an end-to-end ChatGPT tool call.</p>
+</li>
+</ol>
+<p>Do not routinely restart both services when only one component is affected.</p>
+<hr />
+<h2 id="11-updating-proxmox-mcp">11. Updating Proxmox MCP<a class="headerlink" href="#11-updating-proxmox-mcp" title="Permanent link">&para;</a></h2>
+<p>The MCP image currently uses:</p>
+<p><code>ghcr.io/mattoddie/proxmox-mcp:latest</code></p>
+<p>This is a mutable image tag. A newer image may be downloaded without any Compose file change.</p>
+<h3 id="before-updating">Before Updating<a class="headerlink" href="#before-updating" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>Review the upstream project and release notes.</p>
+</li>
+<li>
+<p>Check the running version or image ID.</p>
+</li>
+<li>
+<p>Confirm the required functionality remains supported.</p>
+</li>
+<li>
+<p>Verify that a suitable backup or recovery procedure is available.</p>
+</li>
+<li>
+<p>Confirm the existing MCP and tunnel health checks pass.</p>
+</li>
+<li>
+<p>Confirm the update does not introduce new permissions or externally exposed listeners.</p>
+</li>
+</ol>
+<p><strong>Known limitation:</strong> The scheduled Proxmox backup system failed on October 29, 2026 but completed successfully on both nodes on October 30 after an approved PBS proxy restart. Full recovery validation remains outstanding.</p>
+<p>Do not assume that observer-prod-01 has a usable backup until PBS coverage has been verified.</p>
+<h3 id="update-procedure">Update Procedure<a class="headerlink" href="#update-procedure" title="Permanent link">&para;</a></h3>
+<p>Follow the established Docker update procedure in:</p>
+<p><code>runbooks/updating-containers.md</code></p>
+<p>The observer-specific commands are:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>cd /opt/stacks/proxmox-mcp
+<a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>
+<a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>sudo docker compose images
+<a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a>
+<a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a>sudo docker compose config --quiet
+</code></pre></div>
+<p>After approval and backup verification:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>sudo docker compose pull proxmox-mcp
+<a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>
+<a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>sudo docker compose up -d --no-deps proxmox-mcp
+</code></pre></div>
+<h3 id="post-update-verification">Post-Update Verification<a class="headerlink" href="#post-update-verification" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>sudo docker compose ps
+<a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>
+<a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a>sudo docker compose logs --tail 100 proxmox-mcp
+<a id="__codelineno-47-4" name="__codelineno-47-4" href="#__codelineno-47-4"></a>
+<a id="__codelineno-47-5" name="__codelineno-47-5" href="#__codelineno-47-5"></a>curl -fsS http://127.0.0.1:8080/health
+</code></pre></div>
+<p>Then check tunnel readiness:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>curl -fsS http://127.0.0.1:8081/readyz
+</code></pre></div>
+<p>Finish with a live ChatGPT MCP query.</p>
+<h3 id="security-verification">Security Verification<a class="headerlink" href="#security-verification" title="Permanent link">&para;</a></h3>
+<p>Confirm that the deployed configuration still has:</p>
+<ul>
+<li>
+<p><code>PROXMOX_ALLOW_WRITES=false</code></p>
+</li>
+<li>
+<p><code>PROXMOX_ALLOW_DELETES=false</code></p>
+</li>
+<li>
+<p><code>PROXMOX_ALLOW_EXEC=false</code></p>
+</li>
+<li>
+<p>MCP listener bound to localhost.</p>
+</li>
+<li>
+<p>No Docker socket mount.</p>
+</li>
+<li>
+<p>Dedicated Proxmox API identity.</p>
+</li>
+<li>
+<p>TLS fingerprint verification enabled.</p>
+</li>
+</ul>
+<p>Do not expand privileges as part of routine updates.</p>
+<hr />
+<h2 id="12-updating-openai-tunnel-client">12. Updating OpenAI Tunnel Client<a class="headerlink" href="#12-updating-openai-tunnel-client" title="Permanent link">&para;</a></h2>
+<p>The OpenAI tunnel client is installed as a native Linux binary.</p>
+<p><strong>Binary:</strong> <code>/opt/tunnel-client/tunnel-client</code><br />
+<strong>Service:</strong> <code>tunnel-client.service</code></p>
+<p>It is not updated through Docker Compose.</p>
+<h3 id="current-documented-version">Current Documented Version<a class="headerlink" href="#current-documented-version" title="Permanent link">&para;</a></h3>
+<p><code>0.0.18</code></p>
+<p>This version was installed from an official release with a verified SHA-256 checksum.</p>
+<h3 id="required-update-process">Required Update Process<a class="headerlink" href="#required-update-process" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>Confirm the current installed version.</p>
+</li>
+<li>
+<p>Review the official release notes.</p>
+</li>
+<li>
+<p>Identify the correct Linux AMD64 release artifact.</p>
+</li>
+<li>
+<p>Download the release through an approved channel.</p>
+</li>
+<li>
+<p>Verify the artifact's published checksum.</p>
+</li>
+<li>
+<p>Confirm compatibility with the existing tunnel configuration.</p>
+</li>
+<li>
+<p>Preserve the current working binary and configuration for rollback.</p>
+</li>
+<li>
+<p>Install the verified replacement.</p>
+</li>
+<li>
+<p>Restart the systemd service through an approved maintenance action.</p>
+</li>
+<li>
+<p>Verify readiness and end-to-end ChatGPT functionality.</p>
+</li>
+</ol>
+<p><strong>Official project:</strong></p>
+<p><code>https://github.com/openai/tunnel-client</code></p>
+<p>Use the release-specific official installation instructions rather than assuming future packages retain the same filenames or installation layout.</p>
+<p>The deployed release also includes a matching <code>cloudflared</code> binary and manifest.</p>
+<p>Do not update only one part of the release bundle unless the upstream release instructions explicitly support doing so.</p>
+<h3 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a>sudo systemctl status tunnel-client --no-pager
+<a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a>
+<a id="__codelineno-49-3" name="__codelineno-49-3" href="#__codelineno-49-3"></a>curl -fsS http://127.0.0.1:8081/readyz
+<a id="__codelineno-49-4" name="__codelineno-49-4" href="#__codelineno-49-4"></a>
+<a id="__codelineno-49-5" name="__codelineno-49-5" href="#__codelineno-49-5"></a>sudo journalctl -u tunnel-client -n 50 --no-pager
+</code></pre></div>
+<p>Then perform a live Proxmox query through ChatGPT.</p>
+<h3 id="rollback">Rollback<a class="headerlink" href="#rollback" title="Permanent link">&para;</a></h3>
+<p>If a tunnel-client update fails:</p>
+<ul>
+<li>
+<p>Review the systemd logs.</p>
+</li>
+<li>
+<p>Identify whether the failure is configuration-related, credential-related, or binary-related.</p>
+</li>
+<li>
+<p>Confirm the previous binary and required supporting files are available.</p>
+</li>
+<li>
+<p>Restore the previous known-good release only when compatible with the current configuration.</p>
+</li>
+<li>
+<p>Verify service health and ChatGPT integration afterward.</p>
+</li>
+</ul>
+<p>Do not overwrite protected credential files during routine binary updates.</p>
+<hr />
+<h2 id="13-git-workflow">13. Git Workflow<a class="headerlink" href="#13-git-workflow" title="Permanent link">&para;</a></h2>
+<p>The observer uses the private <code>homelab-infra</code> repository.</p>
+<p><strong>Local repository:</strong> <code>/opt/stacks</code></p>
+<p>Only the intended infrastructure configuration is committed.</p>
+<p>The Proxmox MCP <code>.env</code> file remains excluded from Git.</p>
+<h3 id="read-only-git-checks">Read-Only Git Checks<a class="headerlink" href="#read-only-git-checks" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a>cd /opt/stacks
+<a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a>
+<a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a>git status
+<a id="__codelineno-50-4" name="__codelineno-50-4" href="#__codelineno-50-4"></a>
+<a id="__codelineno-50-5" name="__codelineno-50-5" href="#__codelineno-50-5"></a>git log --oneline -5
+</code></pre></div>
+<h3 id="synchronizing-configuration">Synchronizing Configuration<a class="headerlink" href="#synchronizing-configuration" title="Permanent link">&para;</a></h3>
+<p>Before modifying version-controlled files:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a>cd /opt/stacks
+<a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>
+<a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a>git status
+</code></pre></div>
+<p>When the working tree is clean, an authorized synchronization may use:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a>git -c credential.helper= pull --ff-only
+</code></pre></div>
+<p>This disables configured credential helpers for that operation and avoids deliberately persisting GitHub authentication through the plaintext credential helper.</p>
+<p>Do not put a GitHub token directly in a shell command or remote URL.</p>
+<h3 id="changes-and-commits">Changes and Commits<a class="headerlink" href="#changes-and-commits" title="Permanent link">&para;</a></h3>
+<p>Follow:</p>
+<p><code>runbooks/git-workflow.md</code></p>
+<p>Do not use <code>git reset --hard</code>, force-push, or overwrite local modifications as routine troubleshooting steps.</p>
+<p>Git configuration does not replace backup of credentials, systemd units, or other host-level files.</p>
+<hr />
+<h2 id="14-credential-management-and-rotation">14. Credential Management and Rotation<a class="headerlink" href="#14-credential-management-and-rotation" title="Permanent link">&para;</a></h2>
+<p>AI Observer uses several independent credentials.</p>
+<table>
+<thead>
+<tr>
+<th>Credential</th>
+<th>Purpose</th>
+<th>Storage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox API token</td>
+<td>Read-only Proxmox API access</td>
+<td>Protected MCP <code>.env</code> and Bitwarden</td>
+</tr>
+<tr>
+<td>Proxmox MCP bearer token</td>
+<td>Authenticates local Proxmox MCP requests</td>
+<td>Proxmox <code>.env</code>, Proxmox tunnel authorization file, secure credential storage</td>
+</tr>
+<tr>
+<td>Unraid MCP bearer token</td>
+<td>Authenticates local Unraid MCP requests</td>
+<td>Unraid <code>.env</code>, Unraid tunnel authorization file; Bitwarden retention pending verification</td>
+</tr>
+<tr>
+<td>Proxmox OpenAI runtime API key</td>
+<td>Connects Proxmox tunnel client to OpenAI</td>
+<td><code>/etc/tunnel-client/openai-runtime.key</code> and Bitwarden</td>
+</tr>
+<tr>
+<td>Unraid OpenAI runtime API key</td>
+<td>Connects Unraid tunnel client to OpenAI</td>
+<td><code>/etc/tunnel-client-unraid/openai-runtime.key</code> and Bitwarden</td>
+</tr>
+<tr>
+<td>Unraid GraphQL API key</td>
+<td>Read-only access to the Unraid GraphQL API</td>
+<td>Unraid <code>.env</code> and Bitwarden</td>
+</tr>
+<tr>
+<td>GitHub credential</td>
+<td>Accesses <code>homelab-infra</code></td>
+<td>Bitwarden / interactive authentication</td>
+</tr>
+</tbody>
+</table>
+<p>Credential rotation is a consequential maintenance operation.</p>
+<p><strong>Do not rotate multiple credentials simultaneously.</strong></p>
+<h3 id="general-rotation-procedure">General Rotation Procedure<a class="headerlink" href="#general-rotation-procedure" title="Permanent link">&para;</a></h3>
+<p>For each credential:</p>
+<ol>
+<li>
+<p>Confirm the current service is healthy.</p>
+</li>
+<li>
+<p>Verify the credential's exact role and affected components.</p>
+</li>
+<li>
+<p>Identify the new credential's required permissions.</p>
+</li>
+<li>
+<p>Create the replacement through the appropriate authorized platform.</p>
+</li>
+<li>
+<p>Store the new credential securely.</p>
+</li>
+<li>
+<p>Update the relevant protected configuration.</p>
+</li>
+<li>
+<p>Restart or recreate only the component that requires the new credential.</p>
+</li>
+<li>
+<p>Verify the new credential works.</p>
+</li>
+<li>
+<p>Revoke the old credential when no longer needed.</p>
+</li>
+<li>
+<p>Confirm the old credential is no longer accepted.</p>
+</li>
+<li>
+<p>Update the relevant credential-management record.</p>
+</li>
+</ol>
+<p>Do not include actual credential values in documentation.</p>
+<h3 id="proxmox-api-token-rotation">Proxmox API Token Rotation<a class="headerlink" href="#proxmox-api-token-rotation" title="Permanent link">&para;</a></h3>
+<p>The existing API identity is:</p>
+<p><code>observer@pve!proxmox-mcp</code></p>
+<p>The API account uses the <code>PVEAuditor</code> role.</p>
+<p>Before rotating:</p>
+<ul>
+<li>
+<p>Confirm the current Proxmox permissions.</p>
+</li>
+<li>
+<p>Confirm the replacement credential remains read-only.</p>
+</li>
+<li>
+<p>Determine whether the replacement uses a new token ID or the existing identity.</p>
+</li>
+<li>
+<p>Preserve a tested recovery path.</p>
+</li>
+</ul>
+<p>Update the protected MCP configuration.</p>
+<p>Recreate the MCP service only when necessary.</p>
+<p>Verify authenticated read-only Proxmox queries afterward.</p>
+<p><strong>Never grant elevated privileges simply to complete a token rotation.</strong></p>
+<h3 id="mcp-bearer-token-rotation">MCP Bearer Token Rotation<a class="headerlink" href="#mcp-bearer-token-rotation" title="Permanent link">&para;</a></h3>
+<p>Each integration has its <strong>own</strong> MCP bearer token between its respective tunnel client and local MCP server. Do not accidentally copy the Proxmox token into the Unraid tunnel or vice versa.</p>
+<p>Its configured value must be consistent on both sides.</p>
+<p>The protected tunnel authorization file contains the complete Authorization header value, including the <code>Bearer</code> prefix.</p>
+<p>Before changing either side:</p>
+<ol>
+<li>
+<p>Confirm the current token storage and configuration.</p>
+</li>
+<li>
+<p>Prepare a new strong token.</p>
+</li>
+<li>
+<p>Store the replacement securely.</p>
+</li>
+<li>
+<p>Update the MCP environment and corresponding tunnel authorization file through an approved procedure.</p>
+</li>
+<li>
+<p>Preserve ownership and permissions.</p>
+</li>
+<li>
+<p>Recreate or restart the affected services in a controlled sequence.</p>
+</li>
+<li>
+<p>Verify the tunnel can authenticate to MCP.</p>
+</li>
+<li>
+<p>Perform a live ChatGPT tool call.</p>
+</li>
+</ol>
+<p>A brief interruption may occur while both components transition to the replacement token.</p>
+<p>Do not display token values in terminal output.</p>
+<h3 id="openai-runtime-api-key-rotation">OpenAI Runtime API Key Rotation<a class="headerlink" href="#openai-runtime-api-key-rotation" title="Permanent link">&para;</a></h3>
+<p>Each tunnel client has its <strong>own</strong> runtime key restricted to the permissions required to read and use that tunnel.</p>
+<p>It should not use broad administrative platform credentials.</p>
+<p>During rotation:</p>
+<ol>
+<li>
+<p>Create a replacement key with the required restricted permissions.</p>
+</li>
+<li>
+<p>Store it securely.</p>
+</li>
+<li>
+<p>Update the appropriate protected key file (<code>/etc/tunnel-client/openai-runtime.key</code> for Proxmox; <code>/etc/tunnel-client-unraid/openai-runtime.key</code> for Unraid) through an approved secret-handling procedure.</p>
+</li>
+<li>
+<p>Preserve the file's required ownership and permissions.</p>
+</li>
+<li>
+<p>Restart only the affected tunnel service.</p>
+</li>
+<li>
+<p>Verify tunnel readiness.</p>
+</li>
+<li>
+<p>Verify ChatGPT connectivity.</p>
+</li>
+<li>
+<p>Revoke the previous key after successful transition.</p>
+</li>
+</ol>
+<h3 id="credential-file-permissions">Credential File Permissions<a class="headerlink" href="#credential-file-permissions" title="Permanent link">&para;</a></h3>
+<p>Documented tunnel credential paths:</p>
+<ul>
+<li>
+<p><code>/etc/tunnel-client/openai-runtime.key</code></p>
+</li>
+<li>
+<p><code>/etc/tunnel-client/mcp-authorization</code></p>
+</li>
+<li>
+<p><code>/etc/tunnel-client/config.yaml</code></p>
+</li>
+<li><code>/etc/tunnel-client-unraid/openai-runtime.key</code></li>
+<li><code>/etc/tunnel-client-unraid/mcp-authorization</code></li>
+<li><code>/etc/tunnel-client-unraid/config.yaml</code></li>
+</ul>
+<p>The initial deployment used root-owned protected files with restricted permissions.</p>
+<p>Before changing ownership or access permissions, inspect the effective systemd user, group, and file-access mechanism.</p>
+<p>Do not assume another host's permissions are appropriate.</p>
+<p>Read-only inspection:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a>sudo stat -c '%U %G %a %n' \
+<a id="__codelineno-53-2" name="__codelineno-53-2" href="#__codelineno-53-2"></a>  /etc/tunnel-client \
+<a id="__codelineno-53-3" name="__codelineno-53-3" href="#__codelineno-53-3"></a>  /etc/tunnel-client/config.yaml \
+<a id="__codelineno-53-4" name="__codelineno-53-4" href="#__codelineno-53-4"></a>  /etc/tunnel-client/openai-runtime.key \
+<a id="__codelineno-53-5" name="__codelineno-53-5" href="#__codelineno-53-5"></a>  /etc/tunnel-client/mcp-authorization \
+<a id="__codelineno-53-6" name="__codelineno-53-6" href="#__codelineno-53-6"></a>  /etc/tunnel-client-unraid \
+<a id="__codelineno-53-7" name="__codelineno-53-7" href="#__codelineno-53-7"></a>  /etc/tunnel-client-unraid/config.yaml \
+<a id="__codelineno-53-8" name="__codelineno-53-8" href="#__codelineno-53-8"></a>  /etc/tunnel-client-unraid/openai-runtime.key \
+<a id="__codelineno-53-9" name="__codelineno-53-9" href="#__codelineno-53-9"></a>  /etc/tunnel-client-unraid/mcp-authorization
+</code></pre></div>
+<p>Inspect service identity:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a>systemctl show tunnel-client tunnel-client-unraid \
+<a id="__codelineno-54-2" name="__codelineno-54-2" href="#__codelineno-54-2"></a>  -p User \
+<a id="__codelineno-54-3" name="__codelineno-54-3" href="#__codelineno-54-3"></a>  -p Group \
+<a id="__codelineno-54-4" name="__codelineno-54-4" href="#__codelineno-54-4"></a>  -p SupplementaryGroups
+</code></pre></div>
+<p>These commands show metadata without printing secret contents.</p>
+<p>Do not change ownership or permissions until the current access model is understood.</p>
+<hr />
+<h2 id="15-security-verification">15. Security Verification<a class="headerlink" href="#15-security-verification" title="Permanent link">&para;</a></h2>
+<p>Periodically review whether the implementation continues to match its documented security boundaries.</p>
+<h3 id="proxmox-permissions">Proxmox Permissions<a class="headerlink" href="#proxmox-permissions" title="Permanent link">&para;</a></h3>
+<p>Verify:</p>
+<ul>
+<li>
+<p>Dedicated account <code>observer@pve</code> exists.</p>
+</li>
+<li>
+<p>API token has only the intended permissions.</p>
+</li>
+<li>
+<p>Account role remains <code>PVEAuditor</code>.</p>
+</li>
+<li>
+<p>No elevated administrative permissions were introduced.</p>
+</li>
+</ul>
+<h3 id="unraid-api-and-mcp-permissions">Unraid API and MCP Permissions<a class="headerlink" href="#unraid-api-and-mcp-permissions" title="Permanent link">&para;</a></h3>
+<p>Verify:</p>
+<ul>
+<li>The dedicated Unraid API key retains only the intended 14 <code>READ_ANY</code> categories; no write grants.</li>
+<li>The Rust MCP <code>UNRAID_RMCP_PROJECTION</code> remains <code>atomic</code>.</li>
+<li>The <code>UNRAID_RMCP_ENABLED_TOOLS</code> allowlist matches the exact 26 action names documented in <code>services/infra/ai-observer.md</code>.</li>
+<li>The ChatGPT plugin still lists 26 read tools and zero write tools.</li>
+<li>TLS CA-bundle trust is in use and <code>UNRAID_API_SKIP_TLS_VERIFY=false</code>.</li>
+<li>The MCP published port is bound to <code>127.0.0.1:8082</code>, not to every observer interface.</li>
+<li>No Unraid Docker socket or NAS filesystem is mounted into the MCP container.</li>
+</ul>
+<h3 id="mcp-configuration-proxmox">MCP Configuration — Proxmox<a class="headerlink" href="#mcp-configuration-proxmox" title="Permanent link">&para;</a></h3>
+<p>Verify:</p>
+<ul>
+<li>
+<p>Write operations remain disabled.</p>
+</li>
+<li>
+<p>Delete operations remain disabled.</p>
+</li>
+<li>
+<p>Execution functionality remains disabled.</p>
+</li>
+<li>
+<p>Docker socket is not mounted.</p>
+</li>
+<li>
+<p>HTTP listener is restricted to localhost.</p>
+</li>
+<li>
+<p>Container security settings remain consistent with the architecture document.</p>
+</li>
+</ul>
+<h3 id="tunnel-configuration">Tunnel Configuration<a class="headerlink" href="#tunnel-configuration" title="Permanent link">&para;</a></h3>
+<p>Verify:</p>
+<ul>
+<li>
+<p>Both native tunnel systemd services remain enabled.</p>
+</li>
+<li>
+<p>Dedicated <code>tunnel-client</code> service account is used.</p>
+</li>
+<li>
+<p>Service account has no unnecessary administrative groups.</p>
+</li>
+<li>
+<p>Both sets of tunnel credential files remain protected.</p>
+</li>
+<li>
+<p>Both tunnels use outbound connectivity only.</p>
+</li>
+<li>
+<p>No unnecessary public listeners are present.</p>
+</li>
+</ul>
+<h3 id="firewall">Firewall<a class="headerlink" href="#firewall" title="Permanent link">&para;</a></h3>
+<p>Verify the targeted exception remains limited to:</p>
+<p><code>192.168.30.17 → 192.168.10.11 TCP 8006</code></p>
+<p>Do not broaden this exception to the full Services VLAN or Management VLAN.</p>
+<h3 id="security-changes">Security Changes<a class="headerlink" href="#security-changes" title="Permanent link">&para;</a></h3>
+<p>Any change involving:</p>
+<ul>
+<li>
+<p>API privileges.</p>
+</li>
+<li>
+<p>MCP tool permissions.</p>
+</li>
+<li>
+<p>Secret storage.</p>
+</li>
+<li>
+<p>Public network exposure.</p>
+</li>
+<li>
+<p>Tunnel authentication.</p>
+</li>
+<li>
+<p>Service account permissions.</p>
+</li>
+</ul>
+<p>requires a deliberate review and subsequent verification.</p>
+<p>Update service documentation only after confirming the implemented state.</p>
+<hr />
+<h2 id="16-backup-and-recovery">16. Backup and Recovery<a class="headerlink" href="#16-backup-and-recovery" title="Permanent link">&para;</a></h2>
+<h3 id="current-status">Current Status<a class="headerlink" href="#current-status" title="Permanent link">&para;</a></h3>
+<p><strong>AI Observer VM 107 completed its October 30, 2026 scheduled PBS backup successfully</strong>, confirmed through the pve-prod-01 task log. Its earlier October 29 backup failed with <code>connection reset</code> during the PBS stale-NFS-lock incident.</p>
+<p>The immediate failure was traced to a stale <code>/mnt/backups/pbs/.lock</code> handle retained by the long-running <code>proxmox-backup-proxy</code> process; a targeted operator-approved proxy restart at 00:55 CDT on October 30 was followed by successful manual and scheduled backups on both Proxmox nodes. The originating NFS/FUSE invalidation event remains unknown, and the operator elected to monitor Discord alerts without changing Unraid or NFS.</p>
+<p><strong>Still unverified:</strong> Independent integrity verification of the October 30 VM 107 snapshot, validation of recoverable host-level configuration and credentials, and a safe isolated restore. The successful backup task is not sufficient evidence of end-to-end observer recoverability. See <code>runbooks/backup-schedule.md</code> for detailed incident evidence.</p>
+<hr />
+<h3 id="important-distinction">Important Distinction<a class="headerlink" href="#important-distinction" title="Permanent link">&para;</a></h3>
+<p>The enabled backup job demonstrates intended coverage.</p>
+<p>It does not demonstrate:</p>
+<ul>
+<li>
+<p>Successful archive creation.</p>
+</li>
+<li>
+<p>Data integrity.</p>
+</li>
+<li>
+<p>Recovery-point availability.</p>
+</li>
+<li>
+<p>Successful restoration.</p>
+</li>
+<li>
+<p>Complete disaster recovery.</p>
+</li>
+</ul>
+<p>Do not mark the observer as recoverable until these have been verified.</p>
+<h3 id="required-recovery-assets">Required Recovery Assets<a class="headerlink" href="#required-recovery-assets" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Recovery Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Observer virtual machine</td>
+<td>October 30 PBS backup task succeeded; snapshot integrity/restore test pending</td>
+</tr>
+<tr>
+<td>MCP Compose configurations (Proxmox and Unraid)</td>
+<td><code>homelab-infra</code> repository when committed; Unraid commit not yet verified</td>
+</tr>
+<tr>
+<td>MCP <code>.env</code> files</td>
+<td>Protected backup and separately retained credentials (both stacks)</td>
+</tr>
+<tr>
+<td>Both tunnel configuration directories</td>
+<td>Verified VM backup or protected configuration backup</td>
+</tr>
+<tr>
+<td>Both OpenAI tunnel runtime keys</td>
+<td>Secure credential storage</td>
+</tr>
+<tr>
+<td>MCP bearer tokens</td>
+<td>Secure credential storage; confirm Unraid bearer token has separately been saved to Bitwarden</td>
+</tr>
+<tr>
+<td>Both tunnel systemd units</td>
+<td>Verified VM backup or protected configuration backup</td>
+</tr>
+<tr>
+<td>Shared tunnel binaries</td>
+<td>Verified official release artifacts</td>
+</tr>
+<tr>
+<td>Unraid server TLS certificate bundle</td>
+<td>Verified VM backup or trusted certificate re-enrollment</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backup-verification-checklist">Backup Verification Checklist<a class="headerlink" href="#backup-verification-checklist" title="Permanent link">&para;</a></h3>
+<p>Before declaring observer recovery ready:</p>
+<ul>
+<li>
+<p><strong>Completed:</strong> Immediate PBS proxy stale-handle failure cleared; continue monitoring for recurrence.</p>
+</li>
+<li>
+<p><strong>Completed:</strong> October 30 VM 107 scheduled backup task succeeded.</p>
+</li>
+<li>
+<p><strong>Pending:</strong> Independently confirm the new VM 107 snapshot in PBS.</p>
+</li>
+<li>
+<p>Backup verification succeeds.</p>
+</li>
+<li>
+<p>Required host-level configuration is confirmed within the recovery source.</p>
+</li>
+<li>
+<p>Credentials are available through approved secure storage.</p>
+</li>
+<li>
+<p>A safe restoration test is completed.</p>
+</li>
+<li>
+<p>Restored services pass local health checks.</p>
+</li>
+<li>
+<p>End-to-end read-only Proxmox connectivity is verified.</p>
+</li>
+</ul>
+<p>Only items explicitly marked <strong>Completed</strong> are verified; all remaining checklist items are outstanding requirements.</p>
+<h3 id="independent-configuration-backup">Independent Configuration Backup<a class="headerlink" href="#independent-configuration-backup" title="Permanent link">&para;</a></h3>
+<p>A separate encrypted configuration backup has been considered but has not been implemented or verified.</p>
+<p>If introduced later, it must protect sensitive configuration without placing credentials into Git or ordinary documentation.</p>
+<p>It should include appropriate encryption, key recovery, retention, access controls, and restoration testing.</p>
+<p>Do not assume existing Docker-host rsync jobs back up the observer.</p>
+<hr />
+<h2 id="17-disaster-recovery-vm-restoration">17. Disaster Recovery — VM Restoration<a class="headerlink" href="#17-disaster-recovery-vm-restoration" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> Procedure outline only — not yet tested.</p>
+<p>This section describes the intended operational recovery sequence.</p>
+<p>Do not execute a production restoration without first confirming a valid backup and assessing the effects on the existing observer deployment.</p>
+<h3 id="step-1-assess-the-incident">Step 1 — Assess the Incident<a class="headerlink" href="#step-1-assess-the-incident" title="Permanent link">&para;</a></h3>
+<p>Determine:</p>
+<ul>
+<li>
+<p>Whether the original observer VM still exists.</p>
+</li>
+<li>
+<p>Whether it is running or stopped.</p>
+</li>
+<li>
+<p>Whether the virtual disks remain intact.</p>
+</li>
+<li>
+<p>Whether the problem is limited to a service.</p>
+</li>
+<li>
+<p>Whether a full VM restoration is necessary.</p>
+</li>
+</ul>
+<p>Prefer repairing a failed service when the underlying VM and data remain healthy.</p>
+<h3 id="step-2-verify-recovery-source">Step 2 — Verify Recovery Source<a class="headerlink" href="#step-2-verify-recovery-source" title="Permanent link">&para;</a></h3>
+<p>In Proxmox/PBS:</p>
+<ol>
+<li>
+<p>Locate the intended VM 107 backup.</p>
+</li>
+<li>
+<p>Confirm its timestamp.</p>
+</li>
+<li>
+<p>Confirm archive availability.</p>
+</li>
+<li>
+<p>Check backup verification status.</p>
+</li>
+<li>
+<p>Review the required restore destination and available storage.</p>
+</li>
+<li>
+<p>Confirm that any necessary credentials are recoverable.</p>
+</li>
+</ol>
+<p>If no valid backup exists, do not assume a restoration is possible.</p>
+<h3 id="step-3-plan-a-safe-restore">Step 3 — Plan a Safe Restore<a class="headerlink" href="#step-3-plan-a-safe-restore" title="Permanent link">&para;</a></h3>
+<p>Before restoring:</p>
+<ul>
+<li>
+<p>Confirm the intended target Proxmox node.</p>
+</li>
+<li>
+<p>Choose an appropriate VMID.</p>
+</li>
+<li>
+<p>Confirm available disk space.</p>
+</li>
+<li>
+<p>Account for the observer's existing static IP address.</p>
+</li>
+<li>
+<p>Prevent duplicate production observer instances.</p>
+</li>
+<li>
+<p>Prevent simultaneous use of the same tunnel identity during a test restoration.</p>
+</li>
+</ul>
+<p><strong>Important:</strong> An isolated test VM must not start with the same production IP and active tunnel credentials on the same network as the original observer.</p>
+<p>For a restoration test, use an isolated network or disconnected virtual NIC until the restored system can be safely inspected.</p>
+<h3 id="step-4-restore-the-vm">Step 4 — Restore the VM<a class="headerlink" href="#step-4-restore-the-vm" title="Permanent link">&para;</a></h3>
+<p>Follow the general Proxmox restore process in:</p>
+<p><code>runbooks/backup-restore.md</code></p>
+<p>The exact restore operation depends on the available backup archive and whether the operation is a test or a production replacement.</p>
+<p>Do not overwrite a running VM without a reviewed recovery plan.</p>
+<h3 id="step-5-inspect-restored-configuration">Step 5 — Inspect Restored Configuration<a class="headerlink" href="#step-5-inspect-restored-configuration" title="Permanent link">&para;</a></h3>
+<p>Confirm:</p>
+<ul>
+<li>
+<p>Operating system starts.</p>
+</li>
+<li>
+<p>Expected disks are mounted.</p>
+</li>
+<li>
+<p>Network configuration is present.</p>
+</li>
+<li>
+<p>Docker and Compose are installed.</p>
+</li>
+<li>
+<p>Both MCP Compose files exist (<code>proxmox-mcp</code> and <code>unraid-mcp</code>).</p>
+</li>
+<li>
+<p>Both MCP <code>.env</code> files exist with correct permissions and contain valid recovered credentials.</p>
+</li>
+<li>
+<p>Shared tunnel binaries and both systemd units exist.</p>
+</li>
+<li>
+<p>Both protected tunnel configuration directories are accessible to the <code>tunnel-client</code> service account.</p>
+</li>
+<li>
+<p>The trusted Unraid CA bundle exists and matches the expected NAS certificate.</p>
+</li>
+<li>
+<p>API and tunnel credentials are valid.</p>
+</li>
+</ul>
+<p>Do not immediately expose a test-restored observer to the production network.</p>
+<h3 id="step-6-restore-production-connectivity">Step 6 — Restore Production Connectivity<a class="headerlink" href="#step-6-restore-production-connectivity" title="Permanent link">&para;</a></h3>
+<p>For an approved production recovery:</p>
+<ol>
+<li>
+<p>Confirm the original observer is no longer actively using the production identity.</p>
+</li>
+<li>
+<p>Restore the intended network configuration.</p>
+</li>
+<li>
+<p>Confirm both MCP containers start correctly.</p>
+</li>
+<li>
+<p>Confirm both tunnel services start correctly without duplicating production identities.</p>
+</li>
+<li>
+<p>Verify the Proxmox and Unraid API connections.</p>
+</li>
+<li>
+<p>Verify both ChatGPT plugins and their read-only tool inventories.</p>
+</li>
+<li>
+<p>Confirm the restored instance is the only active production observer for that identity.</p>
+</li>
+</ol>
+<h3 id="step-7-validate-recovery">Step 7 — Validate Recovery<a class="headerlink" href="#step-7-validate-recovery" title="Permanent link">&para;</a></h3>
+<p>Run the routine health checks in Section 3.</p>
+<p>Perform a live read-only ChatGPT query through each of the Proxmox and Unraid plugins.</p>
+<p>Only after these checks pass should the service be marked restored.</p>
+<h3 id="step-8-record-the-outcome">Step 8 — Record the Outcome<a class="headerlink" href="#step-8-record-the-outcome" title="Permanent link">&para;</a></h3>
+<p>Document:</p>
+<ul>
+<li>
+<p>Failure cause, if established.</p>
+</li>
+<li>
+<p>Backup archive used.</p>
+</li>
+<li>
+<p>Recovery actions performed.</p>
+</li>
+<li>
+<p>Configuration or credential changes.</p>
+</li>
+<li>
+<p>Verification results.</p>
+</li>
+<li>
+<p>Remaining risks.</p>
+</li>
+<li>
+<p>Documentation updates required.</p>
+</li>
+</ul>
+<p>A restoration procedure is not considered tested merely because it has been written.</p>
+<hr />
+<h2 id="18-recovery-rebuilding-without-a-vm-backup">18. Recovery — Rebuilding Without a VM Backup<a class="headerlink" href="#18-recovery-rebuilding-without-a-vm-backup" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> Contingency approach, not a verified restoration procedure.</p>
+<p>If no usable VM backup exists, the observer may require rebuilding from its documented architecture and recovered credentials.</p>
+<p>A fresh installation would need:</p>
+<ol>
+<li>
+<p>A supported Ubuntu Server VM.</p>
+</li>
+<li>
+<p>Appropriate Proxmox VM configuration.</p>
+</li>
+<li>
+<p>VLAN 30 networking.</p>
+</li>
+<li>
+<p>SSH key-based administration.</p>
+</li>
+<li>
+<p>Docker and Compose installation.</p>
+</li>
+<li>
+<p>The private <code>homelab-infra</code> repository.</p>
+</li>
+<li>
+<p>The Proxmox and Unraid MCP Compose configurations.</p>
+</li>
+<li>
+<p>Recovered environment variables and API/MCP bearer secrets for both containers; verified Unraid certificate bundle.</p>
+</li>
+<li>
+<p>The verified OpenAI tunnel-client release.</p>
+</li>
+<li>
+<p>Both tunnel systemd units and their separate protected configurations.</p>
+</li>
+<li>
+<p>Separate restricted OpenAI runtime credentials for each tunnel.</p>
+</li>
+<li>
+<p>Valid read-only Proxmox and Unraid API credentials.</p>
+</li>
+<li>
+<p>Successful local and end-to-end testing through both ChatGPT plugins.</p>
+</li>
+</ol>
+<p>Do not generate new credentials or replace existing production credentials unnecessarily.</p>
+<p>A rebuild may require reestablishing or reauthorizing the tunnel and plugin configuration if the original credentials or identity are unavailable.</p>
+<p>Because this procedure has not been tested, the complete time and effort required to rebuild the observer are not established.</p>
+<hr />
+<h2 id="19-known-issues-and-outstanding-work">19. Known Issues and Outstanding Work<a class="headerlink" href="#19-known-issues-and-outstanding-work" title="Permanent link">&para;</a></h2>
+<h3 id="pbs-backup-failures">PBS Backup Failures<a class="headerlink" href="#pbs-backup-failures" title="Permanent link">&para;</a></h3>
+<p><strong>Status:</strong> Operational backup execution restored October 30; originating NFS/FUSE trigger and permanent prevention remain unresolved.</p>
+<p>The October 29 backup attempt of VM 107 and other guests failed with connection resets. PBS logs identified a stale datastore <code>.lock</code> file descriptor in the proxy process (<code>ESTALE</code>); a targeted restart at 00:55 CDT on October 30 cleared the immediate failure. Both PVE nodes then completed their scheduled backup jobs, including VM 107 (<code>TASK OK</code>).</p>
+<p><strong>Operational decision:</strong> Keep Unraid's <code>Permit exclusive shares</code> setting at <code>No</code> and retain the existing FUSE-backed NFS configuration for now. The operator will monitor Discord alerts. No direct-ZFS export, NFS remount, storage migration, or other persistent modification was implemented.</p>
+<p><strong>Next action:</strong> Verify the VM 107 snapshot itself, plan a safe isolated restore, and respond to any recurrence using the read-only diagnostic workflow in <code>runbooks/backup-restore.md</code>. Do not equate job completion with proven recoverability.</p>
+<hr />
+<h3 id="observer-disaster-recovery">Observer Disaster Recovery<a class="headerlink" href="#observer-disaster-recovery" title="Permanent link">&para;</a></h3>
+<p><strong>Status:</strong> Incomplete.</p>
+<p>VM 107's October 30 backup task succeeded, but independent snapshot-integrity verification and restoration are not yet complete.</p>
+<p><strong>Next action:</strong> Now that backup execution has resumed, verify the observer snapshot and complete an isolated restore test.</p>
+<h3 id="additional-mcp-integrations">Additional MCP Integrations<a class="headerlink" href="#additional-mcp-integrations" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Integration</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox MCP — read-only</td>
+<td>Implemented and verified</td>
+</tr>
+<tr>
+<td>ChatGPT Homelab Proxmox plugin</td>
+<td>Implemented and verified</td>
+</tr>
+<tr>
+<td>ChatGPT Homelab Unraid plugin</td>
+<td>Implemented, 26 read tools verified</td>
+</tr>
+<tr>
+<td>OpenAI Secure MCP Tunnels (Proxmox + Unraid)</td>
+<td>Both implemented and verified</td>
+</tr>
+<tr>
+<td>Unraid MCP</td>
+<td>Implemented, connected, 26 tools, end-to-end query verified</td>
+</tr>
+<tr>
+<td>Other-host Docker MCP</td>
+<td>Planned</td>
+</tr>
+<tr>
+<td>Proxmox write operations</td>
+<td>Deferred</td>
+</tr>
+<tr>
+<td>Automated maintenance actions</td>
+<td>Deferred</td>
+</tr>
+<tr>
+<td>Codex access through tunnel</td>
+<td>Not yet verified</td>
+</tr>
+</tbody>
+</table>
+<p>Do not document planned integrations as implemented until deployment and testing are complete.</p>
+<hr />
+<h2 id="20-operational-completion-criteria">20. Operational Completion Criteria<a class="headerlink" href="#20-operational-completion-criteria" title="Permanent link">&para;</a></h2>
+<p>A routine service check is complete when:</p>
+<ul>
+<li>
+<p>Observer VM is available.</p>
+</li>
+<li>
+<p>Both MCP containers are healthy.</p>
+</li>
+<li>
+<p>Both tunnel services are healthy and report ready.</p>
+</li>
+<li>
+<p>Proxmox and Unraid API connectivity succeeds with the intended read-only permissions.</p>
+</li>
+<li>
+<p>A live read-only ChatGPT MCP tool call succeeds through each plugin.</p>
+</li>
+<li>
+<p>No unexpected security or permission changes are identified.</p>
+</li>
+</ul>
+<p>A maintenance operation is complete when:</p>
+<ul>
+<li>
+<p>The intended change has been applied.</p>
+</li>
+<li>
+<p>Affected services are healthy.</p>
+</li>
+<li>
+<p>End-to-end functionality is verified.</p>
+</li>
+<li>
+<p>Any security implications have been reviewed.</p>
+</li>
+<li>
+<p>The actual implemented change is recorded in the appropriate documentation.</p>
+</li>
+</ul>
+<p>A disaster recovery exercise is complete only when:</p>
+<ul>
+<li>
+<p>A valid recovery source was used.</p>
+</li>
+<li>
+<p>Recovery operations finished successfully.</p>
+</li>
+<li>
+<p>Restored services passed operational checks.</p>
+</li>
+<li>
+<p>Production identity and network conflicts were prevented.</p>
+</li>
+<li>
+<p>End-to-end functionality was verified.</p>
+</li>
+<li>
+<p>Results and remaining risks were documented.</p>
+</li>
+</ul>
+<p><strong>Backup execution has recovered, but observer recovery readiness remains incomplete until archive integrity, credentials, and a safe restoration test are verified.</strong></p>
+<hr />
+<h2 id="21-unraid-mcp-operations-security-expansion-and-recovery">21. Unraid MCP — Operations, Security, Expansion, and Recovery<a class="headerlink" href="#21-unraid-mcp-operations-security-expansion-and-recovery" title="Permanent link">&para;</a></h2>
+<p>This section governs the <strong>implemented</strong> Unraid Rust MCP v0.6.3 integration. Detailed architecture and the complete 26-enabled / 35-additional-read / 83-write-disabled action inventories live in <code>services/infra/ai-observer.md</code>, with links to the upstream Rust source. Do not duplicate or manually reclassify tool lists here.</p>
+<h3 id="deployment-identity">Deployment Identity<a class="headerlink" href="#deployment-identity" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Implemented value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MCP stack</td>
+<td><code>/opt/stacks/unraid-mcp</code> (<code>compose.yaml</code>, protected <code>.env</code>)</td>
+</tr>
+<tr>
+<td>Image</td>
+<td><code>ghcr.io/dinglebear-ai/unraid-rmcp:latest</code></td>
+</tr>
+<tr>
+<td>Binary version tested</td>
+<td><code>unraid-rmcp 0.6.3</code></td>
+</tr>
+<tr>
+<td>MCP HTTP endpoint</td>
+<td><code>http://127.0.0.1:8082/mcp</code> (localhost only)</td>
+</tr>
+<tr>
+<td>Upstream API</td>
+<td><code>https://nas-prod-01.local/graphql</code> via <code>192.168.30.16:443</code></td>
+</tr>
+<tr>
+<td>Trusted CA bundle</td>
+<td><code>/etc/unraid-mcp/unraid.crt</code> -&gt; <code>/certs/unraid.crt</code></td>
+</tr>
+<tr>
+<td>MCP projection / tools</td>
+<td><code>atomic</code>, exactly 26 allowlisted read-only actions</td>
+</tr>
+<tr>
+<td>Tunnel ID</td>
+<td><code>tunnel_6ae54db66f7c8191a73960ac6eb77981</code></td>
+</tr>
+<tr>
+<td>Tunnel systemd unit</td>
+<td><code>tunnel-client-unraid.service</code></td>
+</tr>
+<tr>
+<td>Tunnel config directory</td>
+<td><code>/etc/tunnel-client-unraid/</code></td>
+</tr>
+<tr>
+<td>Tunnel health endpoint</td>
+<td><code>http://127.0.0.1:8083/readyz</code></td>
+</tr>
+<tr>
+<td>Linux service account</td>
+<td><code>tunnel-client</code> (shared with Proxmox tunnel)</td>
+</tr>
+<tr>
+<td>ChatGPT plugin</td>
+<td><code>Homelab Unraid</code> (connected; 26 read tools and zero write tools)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="routine-read-only-verification">Routine Read-Only Verification<a class="headerlink" href="#routine-read-only-verification" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/unraid-mcp<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-55-2" name="__codelineno-55-2" href="#__codelineno-55-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-55-3" name="__codelineno-55-3" href="#__codelineno-55-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+<a id="__codelineno-55-4" name="__codelineno-55-4" href="#__codelineno-55-4"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">50</span><span class="w"> </span>--no-color<span class="w"> </span>unraid-mcp
+<a id="__codelineno-55-5" name="__codelineno-55-5" href="#__codelineno-55-5"></a>
+<a id="__codelineno-55-6" name="__codelineno-55-6" href="#__codelineno-55-6"></a>systemctl<span class="w"> </span>is-active<span class="w"> </span>tunnel-client-unraid.service
+<a id="__codelineno-55-7" name="__codelineno-55-7" href="#__codelineno-55-7"></a>systemctl<span class="w"> </span>is-enabled<span class="w"> </span>tunnel-client-unraid.service
+<a id="__codelineno-55-8" name="__codelineno-55-8" href="#__codelineno-55-8"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span>http://127.0.0.1:8083/readyz
+<a id="__codelineno-55-9" name="__codelineno-55-9" href="#__codelineno-55-9"></a>
+<a id="__codelineno-55-10" name="__codelineno-55-10" href="#__codelineno-55-10"></a><span class="nb">cd</span><span class="w"> </span>/opt/tunnel-client
+<a id="__codelineno-55-11" name="__codelineno-55-11" href="#__codelineno-55-11"></a>sudo<span class="w"> </span>-u<span class="w"> </span>tunnel-client<span class="w"> </span>/opt/tunnel-client/tunnel-client<span class="w"> </span>doctor<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-55-12" name="__codelineno-55-12" href="#__codelineno-55-12"></a><span class="w">  </span>--config<span class="w"> </span>/etc/tunnel-client-unraid/config.yaml
+</code></pre></div>
+<p>Expect a healthy Docker container; log entry showing one trusted extra CA certificate; <code>active</code>, <code>enabled</code>, and <code>ready</code>; <code>RESULT ok</code> from the tunnel diagnostic. The diagnostic may report MCP target HTTP 401 without bearer auth; this is expected reachability feedback, not an authenticated GraphQL test. Conclude with a read-only <code>unraid_info</code> query from ChatGPT.</p>
+<h3 id="checking-exposed-tools-without-printing-secrets">Checking Exposed Tools Without Printing Secrets<a class="headerlink" href="#checking-exposed-tools-without-printing-secrets" title="Permanent link">&para;</a></h3>
+<p>The container's <code>.env</code> contains a private bearer token. Do not print it, dump <code>docker compose config</code>, use shell tracing (<code>set -x</code>), or paste secrets in support requests. To list current tools, a local administrator may run:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/unraid-mcp<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-56-2" name="__codelineno-56-2" href="#__codelineno-56-2"></a><span class="nv">MCP_TOKEN</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>sed<span class="w"> </span>-n<span class="w"> </span><span class="s1">'s/^UNRAID_RMCP_TOKEN=//p'</span><span class="w"> </span>.env<span class="k">)</span><span class="s2">"</span>
+<a id="__codelineno-56-3" name="__codelineno-56-3" href="#__codelineno-56-3"></a>
+<a id="__codelineno-56-4" name="__codelineno-56-4" href="#__codelineno-56-4"></a><span class="nb">printf</span><span class="w"> </span><span class="s1">'header = "Authorization: Bearer %s"\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$MCP_TOKEN</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-56-5" name="__codelineno-56-5" href="#__codelineno-56-5"></a><span class="w">  </span>curl<span class="w"> </span>--config<span class="w"> </span>-<span class="w"> </span>-fsS<span class="w"> </span>--max-time<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-56-6" name="__codelineno-56-6" href="#__codelineno-56-6"></a><span class="w">    </span>-H<span class="w"> </span><span class="s1">'Content-Type: application/json'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-56-7" name="__codelineno-56-7" href="#__codelineno-56-7"></a><span class="w">    </span>-H<span class="w"> </span><span class="s1">'Accept: application/json, text/event-stream'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-56-8" name="__codelineno-56-8" href="#__codelineno-56-8"></a><span class="w">    </span>-d<span class="w"> </span><span class="s1">'{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-56-9" name="__codelineno-56-9" href="#__codelineno-56-9"></a><span class="w">    </span>http://127.0.0.1:8082/mcp<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-56-10" name="__codelineno-56-10" href="#__codelineno-56-10"></a><span class="w">  </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import json,sys; d=json.load(sys.stdin); t=d["result"]["tools"]; print("Exposed:",len(t)); print("\n".join(x["name"] for x in t))'</span>
+<a id="__codelineno-56-11" name="__codelineno-56-11" href="#__codelineno-56-11"></a>
+<a id="__codelineno-56-12" name="__codelineno-56-12" href="#__codelineno-56-12"></a><span class="nb">unset</span><span class="w"> </span>MCP_TOKEN
+</code></pre></div>
+<p>Expected: exactly the 26 tools documented in <code>services/infra/ai-observer.md</code>, no management/write actions. Treat this as a diagnostic; do not use a tool discovery count to claim all 26 upstream queries were tested.</p>
+<h3 id="expand-read-only-monitoring-deliberately">Expand Read-Only Monitoring Deliberately<a class="headerlink" href="#expand-read-only-monitoring-deliberately" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Identify the requested use case and canonical action name in the <a href="https://github.com/dinglebear-ai/unraid/blob/main/unraid-rs/README.md#mcp-tool-reference">Rust README</a> and <a href="https://github.com/dinglebear-ai/unraid/blob/main/unraid-rs/src/mcp/schemas.rs">scope classification</a>. Review the deployed release, not just a potentially newer <code>main</code> branch.</li>
+<li>Confirm whether returned metadata could expose secrets or sensitive authentication, network, or configuration information. A <code>Scope::Read</code> action is not necessarily safe to publish broadly.</li>
+<li>Confirm the dedicated Unraid API key provides the required read permission. Prefer retaining the 14-category <code>READ_ANY</code> model, and don't add API privileges merely because a tool exists.</li>
+<li>Review <code>/opt/stacks/unraid-mcp/compose.yaml</code> and append only specifically approved canonical action names to <code>UNRAID_RMCP_ENABLED_TOOLS</code>. Never replace the allowlist with <code>*</code>; do not expose any write/admin action in the read-only deployment.</li>
+<li>Validate the Compose config (<code>sudo docker compose config --quiet</code>); review the expected tool count and changes <strong>before</strong> recreation. After approval, recreate only the Unraid container (<code>sudo docker compose up -d --force-recreate unraid-mcp</code>).</li>
+<li>Verify container health, CA certificate loading, exact <code>tools/list</code> inventory, and a real read-only tool call. Check the plugin's newly discovered inventory and repeat a live ChatGPT invocation. Tool refresh or reconnect may be required for client-side discovery.</li>
+<li>Update the canonical enabled/disabled inventory in <code>services/infra/ai-observer.md</code>, plus operations documentation as needed, only after verification.</li>
+</ol>
+<p>Some read-only actions excluded by design could expose API keys, identity configuration, remote access settings, or detailed environment variables. All write/admin actions remain out of scope under the current policy. A future write integration would require a separately approved security design and new credentials, not just an allowlist edit.</p>
+<h3 id="updating-the-unraid-rust-image">Updating the Unraid Rust Image<a class="headerlink" href="#updating-the-unraid-rust-image" title="Permanent link">&para;</a></h3>
+<p><code>latest</code> is a deliberate manually updated Docker tag. Do not assume it updates itself. Follow standard change/review practice, and check the upstream release notes for renamed tools or behavior changes.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-57-1" name="__codelineno-57-1" href="#__codelineno-57-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/unraid-mcp<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-57-2" name="__codelineno-57-2" href="#__codelineno-57-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+<a id="__codelineno-57-3" name="__codelineno-57-3" href="#__codelineno-57-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>pull<span class="w"> </span>unraid-mcp
+<a id="__codelineno-57-4" name="__codelineno-57-4" href="#__codelineno-57-4"></a>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--network<span class="w"> </span>none<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-57-5" name="__codelineno-57-5" href="#__codelineno-57-5"></a><span class="w">  </span>--entrypoint<span class="w"> </span>/usr/local/bin/runraid<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-57-6" name="__codelineno-57-6" href="#__codelineno-57-6"></a><span class="w">  </span>ghcr.io/dinglebear-ai/unraid-rmcp:latest<span class="w"> </span>--version
+</code></pre></div>
+<p>The <code>docker compose pull</code> changes the local image cache but does <strong>not</strong> restart the running service. After confirming the version and impact, obtain authorization before <code>sudo docker compose up -d --force-recreate unraid-mcp</code>. Then verify TLS, health, all enabled tool names, and an end-to-end ChatGPT read. Preserve the currently working image for rollback where feasible. Do not switch back to the old <code>ghcr.io/dinglebear-ai/runraid</code> image.</p>
+<h3 id="tunnel-runtime-and-credential-files">Tunnel Runtime and Credential Files<a class="headerlink" href="#tunnel-runtime-and-credential-files" title="Permanent link">&para;</a></h3>
+<p>Two tunnel services use the same <code>/opt/tunnel-client/tunnel-client</code> binary and the same Linux account, but separate unit files, tunnel IDs, health ports, OpenAI runtime keys, and MCP bearer tokens. Restarting <code>tunnel-client-unraid.service</code> does not intentionally restart <code>tunnel-client.service</code>; upgrading the shared binary may affect both after their next restart.</p>
+<table>
+<thead>
+<tr>
+<th>Protected path</th>
+<th>Purpose</th>
+<th>Expected ownership/mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/etc/tunnel-client-unraid/</code></td>
+<td>Credential/config directory</td>
+<td><code>root:tunnel-client</code> <code>0750</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/config.yaml</code></td>
+<td>Unraid tunnel configuration</td>
+<td><code>root:tunnel-client</code> <code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/openai-runtime.key</code></td>
+<td>OpenAI runtime secret</td>
+<td><code>root:tunnel-client</code> <code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/mcp-authorization</code></td>
+<td><code>Bearer &lt;token&gt;</code> for local MCP</td>
+<td><code>root:tunnel-client</code> <code>0640</code></td>
+</tr>
+<tr>
+<td><code>/opt/stacks/unraid-mcp/.env</code></td>
+<td>Unraid API key and MCP bearer secret</td>
+<td><code>gio</code> <code>0600</code> (verified at creation)</td>
+</tr>
+</tbody>
+</table>
+<p>The Unraid runtime API key and upstream Unraid API key were saved in Bitwarden. <strong>Separate Bitwarden retention of <code>UNRAID_RMCP_TOKEN</code> remains to be verified</strong>; do not mark credential recovery complete until confirmed. Never put the actual secret values into these Markdown files or Git.</p>
+<h3 id="known-unraid-storage-issue-separate-incident">Known Unraid Storage Issue (Separate Incident)<a class="headerlink" href="#known-unraid-storage-issue-separate-incident" title="Permanent link">&para;</a></h3>
+<p>The October 30 read-only <code>unraid_array</code> call discovered that the first 14 TB Seagate parity drive is <code>DISK_DSBL</code> / red X. Parity 2, both array data disks, and both ZFS mirror members appeared healthy. The operator saved Unraid diagnostics and plans to investigate a suspected SAS-to-SATA breakout cable in a <strong>separate conversation</strong>. No cable replacement, parity rebuild, disk reassignment, or array repair has been verified. Do <strong>not</strong> treat this storage issue as an MCP service failure. See <code>architecture/storage/nas-prod-01.md</code> for the live observation and unresolved status.</p>
+<h3 id="recovery-and-completion">Recovery and Completion<a class="headerlink" href="#recovery-and-completion" title="Permanent link">&para;</a></h3>
+<p>If Unraid MCP fails, inspect its Compose stack, local localhost binding, TLS bundle, the read-only GraphQL credentials, and <code>tunnel-client-unraid.service</code> one layer at a time. Avoid restarting Proxmox MCP as a troubleshooting shortcut.</p>
+<p>For observer VM recovery, restore both tunnel configuration directories, <strong>both</strong> MCP Compose stacks and protected <code>.env</code> files, trusted Unraid certificate, both systemd units, and the shared tunnel binaries. Ensure the isolated restore does not duplicate production IP or tunnel identities. No full restore procedure has been tested; use Section 17's isolation safeguards.</p>
+<p>Service readiness is demonstrated by healthy containers, ready tunnels, correct read-only tool inventory, and live ChatGPT tool execution. <strong>Full disaster recovery readiness is still unverified.</strong></p>
+<hr />
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<h3 id="architecture-and-service">Architecture and Service<a class="headerlink" href="#architecture-and-service" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>services/infra/ai-observer.md</code> — AI Observer architecture, deployment, networking, authentication, security, and the complete Unraid MCP enabled/disabled tool inventory.</li>
+<li>
+<p><code>architecture/storage/nas-prod-01.md</code> — Unraid storage architecture and unresolved primary-parity fault.</p>
+</li>
+<li>
+<p><code>architecture/compute/pve-prod-01.md</code> — Proxmox host and VM inventory.</p>
+</li>
+<li>
+<p><code>architecture/network/ip-addresses.md</code> — IP and VLAN allocations.</p>
+</li>
+<li>
+<p><code>architecture/network/firewall-rules.md</code> — Observer-to-Proxmox firewall exception.</p>
+</li>
+<li>
+<p><code>architecture/network/vlan-design.md</code> — Network segmentation design.</p>
+</li>
+<li>
+<p><code>architecture/decisions-log.md</code> — Architecture and security decisions.</p>
+</li>
+</ul>
+<h3 id="operational-runbooks">Operational Runbooks<a class="headerlink" href="#operational-runbooks" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><code>runbooks/backup-schedule.md</code> — Backup jobs, October 2026 PBS stale-lock incident, and current recovery-validation status.</p>
+</li>
+<li>
+<p><code>runbooks/backup-restore.md</code> — General Proxmox and Docker restoration procedures.</p>
+</li>
+<li>
+<p><code>runbooks/git-workflow.md</code> — Git synchronization and credential handling.</p>
+</li>
+<li>
+<p><code>runbooks/updating-containers.md</code> — Docker Compose updates.</p>
+</li>
+<li>
+<p><code>services/infra/dockman.md</code> — Existing Docker UI management boundaries.</p>
+</li>
+</ul>
+<h3 id="source-repositories">Source Repositories<a class="headerlink" href="#source-repositories" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><code>homelab-docs</code> — Obsidian documentation.</p>
+</li>
+<li>
+<p><code>homelab-infra</code> — Version-controlled Docker Compose configuration.</p>
+</li>
+</ul>
+<hr />
+<h2 id="final-operational-notes">Final Operational Notes<a class="headerlink" href="#final-operational-notes" title="Permanent link">&para;</a></h2>
+<p>AI Observer is intentionally a read-only monitoring and diagnostic integration.</p>
+<p>Its purpose is to provide useful live infrastructure visibility while minimizing the risk of unintended changes.</p>
+<p>The documented deployment connects ChatGPT to the Homelab v3 Proxmox cluster and <code>nas-prod-01</code> through separate local MCP services and outbound OpenAI Secure MCP Tunnels on a shared observer VM.</p>
+<p><strong>Both integrations are operational; full backup and disaster recovery readiness remain unverified.</strong></p>
+<p>All consequential service changes, credential rotations, and restoration procedures should follow the established one-step-at-a-time workflow with explicit authorization and post-change verification.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>

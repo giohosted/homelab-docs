@@ -1,0 +1,3260 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/runbooks/git-workflow/">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Git Workflow — homelab-infra - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#git-workflow-homelab-infra" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Git Workflow — homelab-infra
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repository-locations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Repository Locations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#host-specific-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Host-Specific Management
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-golden-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Golden Rule
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#standard-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standard Workflow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Standard Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-inspect-and-synchronize" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Inspect and Synchronize
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-make-your-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Make Your Changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-review-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Review Changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-stage-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Stage Changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Commit
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6 — Push
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-7-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 7 — Verify
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use-git-add-vs-git-add-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      When to Use git add . vs git add &lt;path&gt;
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#daily-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Daily Workflow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Daily Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#good-commit-message-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Good Commit Message Examples
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-new-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding a New Stack
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adding a New Stack">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#host-specific-file-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Host-Specific File Permissions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Checking What Changed
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-host-gotcha-stale-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-Host Gotcha — Stale Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multi-Host Gotcha — Stale Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-avoid-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      How to Avoid It
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-deployment-distinction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Important Deployment Distinction
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-host-git-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Per-Host Git Identity
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-and-isnt-in-git" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Is and Isn't in Git
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What Is and Isn't in Git">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#secrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Secrets
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Credentials
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Credentials">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#github-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      GitHub Authentication
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-credential-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Credential Storage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observer-prod-01-git-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      observer-prod-01 — Git Workflow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="observer-prod-01 — Git Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deployment-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment Decision
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#synchronize-without-persistent-credential-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Synchronize Without Persistent Credential Storage
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-an-observer-configuration-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      Commit an Observer Configuration Change
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#push-without-persistent-credential-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Push Without Persistent Credential Storage
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-excluded-from-git" class="md-nav__link">
+    <span class="md-ellipsis">
+      Files Excluded From Git
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="git-workflow-homelab-infra">Git Workflow — homelab-infra<a class="headerlink" href="#git-workflow-homelab-infra" title="Permanent link">&para;</a></h1>
+<p><strong>Applies to:</strong> docker-prod-01, auth-prod-01, immich-prod-01, observer-prod-01 (<code>/opt/stacks</code>)<br />
+<strong>Repo:</strong> <code>homelab-infra</code> (private, GitHub)<br />
+<strong>Last Updated:</strong> 2026-10-29</p>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p><code>/opt/stacks</code> on each participating host is a clone of the private <code>homelab-infra</code> GitHub repository.</p>
+<p>Docker Compose configuration files are maintained in this repository. Changes are committed and pushed to GitHub to preserve version history and keep the intended infrastructure configuration consistent across hosts.</p>
+<p><code>/opt/appdata</code> is not in Git — it contains persistent container state and application configuration.</p>
+<p>Secrets are excluded from version control, including <code>.env</code> files containing API tokens, passwords, and other sensitive information.</p>
+<h3 id="repository-locations">Repository Locations<a class="headerlink" href="#repository-locations" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Path</th>
+<th>What lives there</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>docker-prod-01</td>
+<td><code>/opt/stacks</code></td>
+<td>traefik, arr, books, torrent, dockman, cloudflared, adguardhome-sync, and other application stacks</td>
+<td>Active</td>
+</tr>
+<tr>
+<td>auth-prod-01</td>
+<td><code>/opt/stacks</code></td>
+<td>authentik</td>
+<td>Active</td>
+</tr>
+<tr>
+<td>immich-prod-01</td>
+<td><code>/opt/stacks</code></td>
+<td>immich</td>
+<td>Active</td>
+</tr>
+<tr>
+<td>observer-prod-01</td>
+<td><code>/opt/stacks</code></td>
+<td>proxmox-mcp</td>
+<td>Active</td>
+</tr>
+</tbody>
+</table>
+<p><strong>GitHub is the source of truth for committed Compose configuration — not any individual host.</strong></p>
+<p>However, GitHub does not contain the complete operational state of each service. Runtime data, secrets, host-level configuration, and installed system services must be managed and recovered separately.</p>
+<h3 id="host-specific-management">Host-Specific Management<a class="headerlink" href="#host-specific-management" title="Permanent link">&para;</a></h3>
+<p>The repository is shared, but each host manages its own deployed workloads.</p>
+<ul>
+<li>
+<p><strong>docker-prod-01:</strong> Docker Compose and Dockman.</p>
+</li>
+<li>
+<p><strong>auth-prod-01:</strong> Docker Compose.</p>
+</li>
+<li>
+<p><strong>immich-prod-01:</strong> Docker Compose.</p>
+</li>
+<li>
+<p><strong>observer-prod-01:</strong> Docker Compose through SSH and CLI.</p>
+</li>
+</ul>
+<p>The observer does not use Dockman.</p>
+<p>Its OpenAI Secure MCP Tunnel client is installed as a native systemd service rather than as a Docker Compose stack.</p>
+<p>See <code>services/infra/ai-observer.md</code>.</p>
+<hr />
+<h2 id="the-golden-rule">The Golden Rule<a class="headerlink" href="#the-golden-rule" title="Permanent link">&para;</a></h2>
+<p><strong>Always synchronize your local repository before making changes, and inspect your working tree before pulling or committing.</strong></p>
+<p>Because <code>homelab-infra</code> is cloned on multiple hosts, changes committed from one host must be incorporated into the others before additional work is committed.</p>
+<p>A safe workflow is:</p>
+<ol>
+<li>
+<p>Check the working tree.</p>
+</li>
+<li>
+<p>Synchronize with the remote repository if the working tree is clean.</p>
+</li>
+<li>
+<p>Make the intended changes.</p>
+</li>
+<li>
+<p>Review and stage only the appropriate files.</p>
+</li>
+<li>
+<p>Commit locally.</p>
+</li>
+<li>
+<p>Push to GitHub.</p>
+</li>
+<li>
+<p>Synchronize other hosts before making changes there.</p>
+</li>
+</ol>
+<p>Use <code>git pull --ff-only</code> for routine synchronization. It refuses a pull that would require an automatic merge.</p>
+<p><strong>Important:</strong> If local files are already modified, do not blindly pull, reset, or overwrite them. Inspect and reconcile the changes first.</p>
+<p>Git normally prevents a non-fast-forward push from overwriting newer remote commits. The principal risks are conflicts, stale deployments, and accidental replacement of configuration during manual conflict resolution.</p>
+<p>Never use force-push as a routine way to resolve synchronization problems.</p>
+<hr />
+<h2 id="standard-workflow">Standard Workflow<a class="headerlink" href="#standard-workflow" title="Permanent link">&para;</a></h2>
+<p>Use this process when making a Compose configuration change on a participating host.</p>
+<h3 id="step-1-inspect-and-synchronize">Step 1 — Inspect and Synchronize<a class="headerlink" href="#step-1-inspect-and-synchronize" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cd /opt/stacks
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a># Check the working tree before pulling
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>git status
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a># Synchronize when the working tree is clean
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>git pull --ff-only
+</code></pre></div>
+<p>If Git reports local modifications or a non-fast-forward situation, stop and investigate before continuing.</p>
+<h3 id="step-2-make-your-changes">Step 2 — Make Your Changes<a class="headerlink" href="#step-2-make-your-changes" title="Permanent link">&para;</a></h3>
+<p>Edit the appropriate Compose file or other version-controlled configuration.</p>
+<p>For example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>nano /opt/stacks/&lt;stack-name&gt;/compose.yaml
+</code></pre></div>
+<p>Do not place credentials directly in the Compose file.</p>
+<p>Use a Git-excluded <code>.env</code> file for sensitive environment variables when appropriate.</p>
+<h3 id="step-3-review-changes">Step 3 — Review Changes<a class="headerlink" href="#step-3-review-changes" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cd /opt/stacks
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a># Show modified and untracked files
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>git status
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a># Review changes to a specific file
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>git diff -- &lt;stack-name&gt;/compose.yaml
+</code></pre></div>
+<p>Ensure that only intended configuration changes are present.</p>
+<h3 id="step-4-stage-changes">Step 4 — Stage Changes<a class="headerlink" href="#step-4-stage-changes" title="Permanent link">&para;</a></h3>
+<p>Prefer explicitly staging the files you intend to commit:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git add -- &lt;stack-name&gt;/compose.yaml
+</code></pre></div>
+<p>Review the staged changes:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git diff --cached
+</code></pre></div>
+<p>Verify that no credentials, sensitive values, or unrelated changes have been staged.</p>
+<h3 id="step-5-commit">Step 5 — Commit<a class="headerlink" href="#step-5-commit" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git commit -m "brief description of what changed"
+</code></pre></div>
+<h3 id="step-6-push">Step 6 — Push<a class="headerlink" href="#step-6-push" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>git push
+</code></pre></div>
+<p>If the push is rejected because the remote repository has newer commits, inspect the divergence and reconcile the branches.</p>
+<p>Do not force-push to bypass the rejection.</p>
+<h3 id="step-7-verify">Step 7 — Verify<a class="headerlink" href="#step-7-verify" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>git status
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>git log --oneline -5
+</code></pre></div>
+<p>The expected result after a successful push is a clean working tree with the intended commit present.</p>
+<p><strong>Note:</strong> A successful Git push confirms that configuration was committed. It does not prove that a deployed container has been recreated or that the service is healthy.</p>
+<p>Application changes require separate deployment and service verification.</p>
+<hr />
+<h2 id="when-to-use-git-add-vs-git-add-path">When to Use <code>git add .</code> vs <code>git add &lt;path&gt;</code><a class="headerlink" href="#when-to-use-git-add-vs-git-add-path" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Recommended command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One specific Compose file changed</td>
+<td><code>git add -- &lt;stack-name&gt;/compose.yaml</code></td>
+</tr>
+<tr>
+<td>Multiple known files changed</td>
+<td><code>git add -- &lt;path1&gt; &lt;path2&gt;</code></td>
+</tr>
+<tr>
+<td>All changes were reviewed and should be committed</td>
+<td><code>git add .</code></td>
+</tr>
+<tr>
+<td>Unsure what changed</td>
+<td>Run <code>git status</code> and <code>git diff</code> first</td>
+</tr>
+<tr>
+<td>A secret or credential file appears</td>
+<td>Do not stage it; investigate why it is not excluded</td>
+</tr>
+</tbody>
+</table>
+<p><code>git add .</code> stages changes throughout the current directory tree, including new files that are not ignored.</p>
+<p>For a multi-host infrastructure repository, explicitly staging files is usually safer.</p>
+<p><strong>Always review the staged changes before committing.</strong></p>
+<hr />
+<h2 id="daily-workflow">Daily Workflow<a class="headerlink" href="#daily-workflow" title="Permanent link">&para;</a></h2>
+<p>After creating or editing a Compose configuration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cd /opt/stacks
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a># Check local state and synchronize before editing
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>git status
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>git pull --ff-only
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a># Make the intended configuration changes
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a># Review modifications
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>git status
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>git diff
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a># Stage only the intended files
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>git add -- &lt;path-to-changed-file&gt;
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a># Inspect the staged changes
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>git diff --cached
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a># Commit and push
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>git commit -m "brief description of what changed"
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>git push
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a># Verify
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>git status
+</code></pre></div>
+<p>On <code>observer-prod-01</code>, use the credential-handling procedure in the dedicated section below for authenticated pull and push operations.</p>
+<h3 id="good-commit-message-examples">Good Commit Message Examples<a class="headerlink" href="#good-commit-message-examples" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><code>add traefik compose</code></p>
+</li>
+<li>
+<p><code>add authentik compose</code></p>
+</li>
+<li>
+<p><code>add arr stack compose</code></p>
+</li>
+<li>
+<p><code>add immich compose</code></p>
+</li>
+<li>
+<p><code>add proxmox-mcp compose</code></p>
+</li>
+<li>
+<p><code>update sonarr-tv restart policy</code></p>
+</li>
+<li>
+<p><code>add gluetun killswitch to torrent stack</code></p>
+</li>
+<li>
+<p><code>fix immich compose - use official /data mount path</code></p>
+</li>
+<li>
+<p><code>update proxmox-mcp container limits</code></p>
+</li>
+</ul>
+<p>Commit messages should describe the actual configuration change, not merely state that files were updated.</p>
+<hr />
+<h2 id="adding-a-new-stack">Adding a New Stack<a class="headerlink" href="#adding-a-new-stack" title="Permanent link">&para;</a></h2>
+<p>Before creating a new stack, synchronize the repository:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>cd /opt/stacks
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>git status
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>git pull --ff-only
+</code></pre></div>
+<p>Create the stack directory and Compose file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mkdir -p /opt/stacks/&lt;stack-name&gt;
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>nano /opt/stacks/&lt;stack-name&gt;/compose.yaml
+</code></pre></div>
+<p>Create an appdata directory only when the application requires persistent host storage:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>mkdir -p /opt/appdata/&lt;app-name&gt;
+</code></pre></div>
+<p>Create a separate <code>.env</code> file if sensitive configuration is required:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>nano /opt/stacks/&lt;stack-name&gt;/.env
+</code></pre></div>
+<p>Confirm that <code>.env</code> is excluded from Git:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>cd /opt/stacks
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>git check-ignore -v &lt;stack-name&gt;/.env
+</code></pre></div>
+<p>Review and commit only the intended configuration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>git status
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>git add -- &lt;stack-name&gt;/compose.yaml
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>git diff --cached
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>git commit -m "add &lt;stack-name&gt; compose"
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>git push
+</code></pre></div>
+<h3 id="host-specific-file-permissions">Host-Specific File Permissions<a class="headerlink" href="#host-specific-file-permissions" title="Permanent link">&para;</a></h3>
+<p>Docker hosts do not necessarily share the same file ownership requirements.</p>
+<p>On <code>docker-prod-01</code>, Dockman requires specific ownership and permissions so it can modify Compose files.</p>
+<p>See <code>runbooks/new-stack-checklist.md</code>.</p>
+<p>Do not apply docker-prod-01's <code>gio:service</code> ownership requirements or UID/GID 2000 assumptions automatically to <code>observer-prod-01</code>.</p>
+<p>The observer is managed through the CLI, and its Proxmox MCP <code>.env</code> is restricted to the <code>gio</code> account.</p>
+<hr />
+<h2 id="checking-what-changed">Checking What Changed<a class="headerlink" href="#checking-what-changed" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cd /opt/stacks
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a># See files that are new, modified, or deleted
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>git status
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a># Compact status output
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>git status --short
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a># See recent commits
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>git log --oneline -10
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a># Inspect changes to a specific file
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>git diff -- &lt;file&gt;
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a># Inspect all staged changes
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>git diff --cached
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a># Show files included in the next commit
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>git diff --cached --name-only
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a># Confirm whether a file is ignored
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>git check-ignore -v &lt;path&gt;
+</code></pre></div>
+<p>Use <code>git status</code> and <code>git diff</code> before staging.</p>
+<p>Use <code>git diff --cached</code> after staging.</p>
+<p>These are separate checks and both are useful for avoiding accidental changes.</p>
+<hr />
+<h2 id="multi-host-gotcha-stale-files">Multi-Host Gotcha — Stale Files<a class="headerlink" href="#multi-host-gotcha-stale-files" title="Permanent link">&para;</a></h2>
+<p>Because the repository exists on multiple hosts, it is possible to work from an outdated local checkout.</p>
+<p>For example:</p>
+<ol>
+<li>
+<p>You update <code>traefik/compose.yaml</code> on docker-prod-01 and push it to GitHub.</p>
+</li>
+<li>
+<p>You SSH into auth-prod-01, whose repository has not been synchronized.</p>
+</li>
+<li>
+<p>You modify another file using the older local checkout.</p>
+</li>
+<li>
+<p>You attempt to commit and push the change.</p>
+</li>
+<li>
+<p>Git may reject the push because the remote branch has advanced.</p>
+</li>
+</ol>
+<p>This is expected behavior and protects the remote branch from accidental non-fast-forward updates.</p>
+<p>The danger comes from attempting to resolve the problem by force-pushing, discarding remote changes, or incorrectly resolving merge conflicts.</p>
+<h3 id="how-to-avoid-it">How to Avoid It<a class="headerlink" href="#how-to-avoid-it" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p>Synchronize before editing.</p>
+</li>
+<li>
+<p>Keep the working tree clean between tasks.</p>
+</li>
+<li>
+<p>Use <code>git pull --ff-only</code> for routine updates.</p>
+</li>
+<li>
+<p>Commit related changes together.</p>
+</li>
+<li>
+<p>Do not force-push routine infrastructure changes.</p>
+</li>
+<li>
+<p>Review conflicts carefully if divergent edits occur.</p>
+</li>
+</ul>
+<h3 id="important-deployment-distinction">Important Deployment Distinction<a class="headerlink" href="#important-deployment-distinction" title="Permanent link">&para;</a></h3>
+<p>Pulling newer Compose configuration onto a host does not automatically recreate its running containers.</p>
+<p>Git synchronization and Docker deployment are separate activities.</p>
+<p>Only deploy a stack when the relevant service change is intended and the appropriate maintenance procedure has been followed.</p>
+<hr />
+<h2 id="per-host-git-identity">Per-Host Git Identity<a class="headerlink" href="#per-host-git-identity" title="Permanent link">&para;</a></h2>
+<p>Each host needs Git author information before creating commits.</p>
+<p>The existing <code>homelab-infra</code> identity is:</p>
+<ul>
+<li>
+<p><strong>Name:</strong> <code>giohosted</code></p>
+</li>
+<li>
+<p><strong>Email:</strong> <code>delgadogiovanny@gmail.com</code></p>
+</li>
+</ul>
+<p>To configure identity for the repository without changing the system-wide Git configuration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>cd /opt/stacks
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>git config user.name "giohosted"
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>git config user.email "delgadogiovanny@gmail.com"
+</code></pre></div>
+<p>Verify:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>git config --get user.name
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>git config --get user.email
+</code></pre></div>
+<p>The original workflow used global Git identity configuration. That remains valid where already configured.</p>
+<p>Repository-local identity is preferable when a host may eventually use different repositories or Git identities.</p>
+<p><strong>Git identity is not GitHub authentication.</strong></p>
+<p>Setting <code>user.name</code> and <code>user.email</code> does not grant permission to pull or push a private repository.</p>
+<hr />
+<h2 id="what-is-and-isnt-in-git">What Is and Isn't in Git<a class="headerlink" href="#what-is-and-isnt-in-git" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>In Git</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/opt/stacks/*/compose.yaml</code></td>
+<td>Yes</td>
+<td>Intended infrastructure configuration; must not contain secrets</td>
+</tr>
+<tr>
+<td><code>/opt/stacks/*/.env</code></td>
+<td>No</td>
+<td>Gitignored; may contain passwords or API tokens</td>
+</tr>
+<tr>
+<td><code>/opt/stacks/*/.env.example</code></td>
+<td>Optional</td>
+<td>Placeholder values only; never real credentials</td>
+</tr>
+<tr>
+<td><code>/opt/appdata/</code></td>
+<td>No</td>
+<td>Persistent application configuration and runtime state</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/config.yaml</code></td>
+<td>No</td>
+<td>Observer host-level tunnel configuration, outside the repository</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/openai-runtime.key</code></td>
+<td>No</td>
+<td>Protected OpenAI credential</td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/mcp-authorization</code></td>
+<td>No</td>
+<td>Protected MCP bearer credential</td>
+</tr>
+<tr>
+<td><code>/etc/systemd/system/tunnel-client.service</code></td>
+<td>No</td>
+<td>Observer systemd service unit, outside the repository</td>
+</tr>
+<tr>
+<td><code>/opt/tunnel-client/</code></td>
+<td>No</td>
+<td>Installed tunnel-client binaries, outside the repository</td>
+</tr>
+</tbody>
+</table>
+<h3 id="secrets">Secrets<a class="headerlink" href="#secrets" title="Permanent link">&para;</a></h3>
+<p><code>.env</code> files are excluded from Git because they may contain sensitive values.</p>
+<p>Use <code>.env.example</code> files with placeholders when documenting which environment variables are needed.</p>
+<p>Do not commit:</p>
+<ul>
+<li>
+<p>Proxmox API token secrets.</p>
+</li>
+<li>
+<p>OpenAI API keys.</p>
+</li>
+<li>
+<p>MCP bearer tokens.</p>
+</li>
+<li>
+<p>GitHub personal access tokens.</p>
+</li>
+<li>
+<p>Application passwords.</p>
+</li>
+<li>
+<p>Private SSH keys.</p>
+</li>
+</ul>
+<p>A private GitHub repository is still not an appropriate secret store.</p>
+<h3 id="backup-considerations">Backup Considerations<a class="headerlink" href="#backup-considerations" title="Permanent link">&para;</a></h3>
+<p>The established Docker-host rsync backup procedures cover stacks and appdata on:</p>
+<ul>
+<li>
+<p>docker-prod-01</p>
+</li>
+<li>
+<p>auth-prod-01</p>
+</li>
+<li>
+<p>immich-prod-01</p>
+</li>
+</ul>
+<p>These backups are maintained separately from Git.</p>
+<p><strong>Observer exception:</strong> Do not assume that observer-prod-01 has an equivalent rsync backup or that its <code>/etc/tunnel-client</code> files are protected by the existing Docker-host jobs.</p>
+<p>Observer recovery depends on its separately verified VM backups, configuration recovery plan, and credentials retained securely in Bitwarden.</p>
+<p>The observer's complete backup and restoration procedure remains pending verification.</p>
+<p>See <code>services/infra/ai-observer.md</code> and <code>runbooks/backup-schedule.md</code>.</p>
+<hr />
+<h2 id="credentials">Credentials<a class="headerlink" href="#credentials" title="Permanent link">&para;</a></h2>
+<h3 id="github-authentication">GitHub Authentication<a class="headerlink" href="#github-authentication" title="Permanent link">&para;</a></h3>
+<p>Accessing the private <code>homelab-infra</code> repository requires an authorized GitHub identity.</p>
+<p>Authentication should use the minimum permissions required for the intended operation.</p>
+<p>For HTTPS-based Git operations, supported options include:</p>
+<ul>
+<li>
+<p>A short-lived or narrowly scoped GitHub personal access token.</p>
+</li>
+<li>
+<p>A secure credential manager or credential helper.</p>
+</li>
+<li>
+<p>Interactive authentication without persistent token storage.</p>
+</li>
+</ul>
+<p>For new credentials, prefer a fine-grained GitHub token restricted to <code>homelab-infra</code> with repository Contents permissions appropriate to the required read or write operations.</p>
+<p>A classic token with broad <code>repo</code> scope should not be the default for new deployments when a suitable fine-grained token can be used.</p>
+<h3 id="historical-credential-storage">Historical Credential Storage<a class="headerlink" href="#historical-credential-storage" title="Permanent link">&para;</a></h3>
+<p>The original Git workflow recommended:</p>
+<p><code>git config --global credential.helper store</code></p>
+<p>That helper persists credentials in plaintext in a local credential file, commonly <code>~/.git-credentials</code>.</p>
+<p>The current credential-helper configurations on docker-prod-01, auth-prod-01, and immich-prod-01 have not been independently audited as part of this documentation update.</p>
+<p>Do not assume those hosts have already migrated to a different authentication method.</p>
+<p>Credential storage on existing hosts should be reviewed separately before making changes.</p>
+<hr />
+<h2 id="observer-prod-01-git-workflow">observer-prod-01 — Git Workflow<a class="headerlink" href="#observer-prod-01-git-workflow" title="Permanent link">&para;</a></h2>
+<h3 id="deployment-decision">Deployment Decision<a class="headerlink" href="#deployment-decision" title="Permanent link">&para;</a></h3>
+<p>The observer uses the same private <code>homelab-infra</code> repository as the other Docker hosts, but it follows a more restrictive credential-handling approach.</p>
+<p><strong>Repository:</strong> <code>homelab-infra</code><br />
+<strong>Local path:</strong> <code>/opt/stacks</code><br />
+<strong>Managed stack:</strong> <code>proxmox-mcp</code><br />
+<strong>Administration:</strong> SSH and CLI<br />
+<strong>GitHub token storage:</strong> Bitwarden; not deliberately persisted through Git's plaintext credential helper.</p>
+<p>During initial deployment, authenticated Git operations were performed with the credential helper disabled for the individual command.</p>
+<p>This avoided saving the token through <code>credential.helper store</code>.</p>
+<h3 id="synchronize-without-persistent-credential-storage">Synchronize Without Persistent Credential Storage<a class="headerlink" href="#synchronize-without-persistent-credential-storage" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>cd /opt/stacks
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a># Inspect local changes
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>git status
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a># Pull without using configured Git credential helpers
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>git -c credential.helper= pull --ff-only
+</code></pre></div>
+<p>If Git prompts for HTTPS credentials, supply the authorized GitHub username and token interactively.</p>
+<p>Do not place a token directly in the command, remote URL, or Git configuration.</p>
+<h3 id="commit-an-observer-configuration-change">Commit an Observer Configuration Change<a class="headerlink" href="#commit-an-observer-configuration-change" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>cd /opt/stacks
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a># Inspect changes
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>git status
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>git diff -- proxmox-mcp/compose.yaml
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a># Stage only the intended file
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>git add -- proxmox-mcp/compose.yaml
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a># Review staged content
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>git diff --cached
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a># Commit
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>git commit -m "update proxmox-mcp configuration"
+</code></pre></div>
+<h3 id="push-without-persistent-credential-storage">Push Without Persistent Credential Storage<a class="headerlink" href="#push-without-persistent-credential-storage" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>cd /opt/stacks
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>git -c credential.helper= push
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>git status
+</code></pre></div>
+<p>This disables Git's configured credential helpers for the individual operation. It does not modify the host's permanent Git configuration.</p>
+<p><strong>Security note:</strong> Avoid placing credentials in shell arguments or URLs, which can expose them through command history or process inspection.</p>
+<h3 id="files-excluded-from-git">Files Excluded From Git<a class="headerlink" href="#files-excluded-from-git" title="Permanent link">&para;</a></h3>
+<p>The observer's credential-bearing files include:</p>
+<ul>
+<li>
+<p><code>/opt/stacks/proxmox-mcp/.env</code></p>
+</li>
+<li>
+<p><code>/etc/tunnel-client/openai-runtime.key</code></p>
+</li>
+<li>
+<p><code>/etc/tunnel-client/mcp-authorization</code></p>
+</li>
+</ul>
+<p>The host-level tunnel configuration and service unit also remain outside the Compose repository.</p>
+<p>A Git clone or pull alone is insufficient to rebuild the complete AI Observer.</p>
+<p>See <code>services/infra/ai-observer.md</code> for implementation details.</p>
+<hr />
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>Synchronize the repository before making configuration changes.</p>
+</li>
+<li>
+<p>Inspect local modifications before pulling.</p>
+</li>
+<li>
+<p>Prefer explicit file staging over <code>git add .</code>.</p>
+</li>
+<li>
+<p>Never use <code>git push --force</code> as a routine synchronization workaround.</p>
+</li>
+<li>
+<p>Commit intended configuration changes before making major deployment changes where practical, providing a rollback reference.</p>
+</li>
+<li>
+<p><code>.env</code> files remain excluded from Git.</p>
+</li>
+<li>
+<p>Git version control is not a substitute for backups.</p>
+</li>
+<li>
+<p>A successful commit or push does not verify the corresponding service deployment.</p>
+</li>
+<li>
+<p>The observer's tunnel client is not deployed through Docker Compose.</p>
+</li>
+<li>
+<p>Any new VM hosting Compose configuration should have Git installed, the correct repository cloned, an appropriate Git identity configured, and a secure authentication method established.</p>
+</li>
+</ul>
+<hr />
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><code>runbooks/new-stack-checklist.md</code> — Creating new stacks on docker-prod-01.</p>
+</li>
+<li>
+<p><code>runbooks/updating-containers.md</code> — Updating Docker Compose containers.</p>
+</li>
+<li>
+<p><code>runbooks/backup-schedule.md</code> — Backup jobs and current coverage.</p>
+</li>
+<li>
+<p><code>services/infra/dockman.md</code> — Docker Compose management on docker-prod-01.</p>
+</li>
+<li>
+<p><code>services/infra/ai-observer.md</code> — Observer architecture, deployment, and credentials.</p>
+</li>
+<li>
+<p><code>runbooks/ai-observer-operations.md</code> — Observer operations and recovery</p>
+</li>
+</ul>
+<p><strong>Related repositories:</strong></p>
+<ul>
+<li>
+<p><code>homelab-infra</code> — Infrastructure Compose configuration.</p>
+</li>
+<li>
+<p><code>homelab-docs</code> — Obsidian documentation and operational runbooks.</p>
+</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>
