@@ -6,13 +6,14 @@
 **Version:** v3.6.10  
 **Compose:** `/opt/stacks/traefik/compose.yaml`  
 **Appdata:** `/opt/appdata/traefik/`  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-10-31
 
 ---
 
 ## Overview
 
 Traefik is the v3 reverse proxy, replacing Nginx Proxy Manager from v2. It handles:
+
 - Routing internal requests to the correct container by hostname
 - TLS termination with a wildcard cert for `*.giohosted.com`
 - Cross-host routing to services on other VMs (auth-prod-01, immich-prod-01) via the file provider
@@ -52,7 +53,8 @@ Cloudflare is only involved in **certificate issuance** — not in the traffic p
 ### Docker Provider
 
 Traefik watches the Docker socket on docker-prod-01 for containers. Containers opt in via labels:
-```yaml
+
+```
 labels:
   - "traefik.enable=true"
   - "traefik.http.routers.<n>.rule=Host(`service.giohosted.com`)"
@@ -72,19 +74,57 @@ Used for routing to services on other VMs (cross-host). Traefik cannot discover 
 
 #### Current static routes
 
-| File | Hostname | Backend |
-|------|----------|---------|
-| `authentik.yml` | `auth.giohosted.com` | `http://192.168.30.13:9000` |
-| `immich.yml` | `photos.giohosted.com` | `http://192.168.30.14:2283` |
+|File|Hostname|Backend|
+|---|---|---|
+|`authentik.yml`|`auth.giohosted.com`|`http://192.168.30.13:9000`|
+|`immich.yml`|`photos.giohosted.com`|`http://192.168.30.14:2283`|
 
 ---
 
 ## Entrypoints
 
-| Name | Port | Notes |
-|------|------|-------|
-| web | 80 | HTTP — immediately redirects to websecure |
-| websecure | 443 | HTTPS — all traffic served here |
+|Name|Port|Notes|
+|---|---|---|
+|web|80|HTTP — immediately redirects to websecure|
+|websecure|443|HTTPS — all traffic served here; 600-second request read and idle connection timeouts configured|
+
+### Large Uploads — Responding Timeouts
+
+**Verified change (2026-10-31):** Certain Immich iOS video uploads over approximately 500 MB failed with `502 Bad Gateway` after roughly 60 seconds, although smaller uploads worked. Traefik's running `websecure` entrypoint initially had no explicit responding-timeout flags, so its default 60-second request-body `readTimeout` was the leading suspected cause.
+
+In `/opt/stacks/traefik/compose.yaml` on docker-prod-01, the following CLI flags were added under the Traefik service's existing `command:` list:
+
+```
+- --entrypoints.websecure.transport.respondingtimeouts.readtimeout=600s
+- --entrypoints.websecure.transport.respondingtimeouts.idletimeout=600s
+```
+
+- `readTimeout=600s` permits up to 10 minutes to read the complete client request, including large uploads. This is the setting directly relevant to the observed failures.
+- `idleTimeout=600s` controls how long an idle keep-alive connection remains open; it does not itself extend an active request-body upload.
+- Both are **static entrypoint settings**, not options in `/opt/appdata/traefik/config/immich.yml`.
+- Because `websecure` is a shared entrypoint, these values apply to other HTTPS services using it, not only Immich.
+- This was a timeout adjustment, **not** a new file-size cap or a change to external exposure. Immich remains LAN-only in the documented standard configuration.
+
+**Validation and deployment performed:**
+
+```
+# Before recreation: validated with no error output
+docker compose -f /opt/stacks/traefik/compose.yaml config --quiet
+
+# Recreated only the Traefik Compose service
+docker compose -f /opt/stacks/traefik/compose.yaml up -d --no-deps traefik
+
+# Verified both flags in the running container
+docker inspect "$(docker compose -f /opt/stacks/traefik/compose.yaml ps -q traefik)" \
+  --format '{{range .Args}}{{println .}}{{end}}' \
+  | grep -i timeout
+```
+
+The inspection returned both `readtimeout=600s` and `idletimeout=600s`. Previously failing large videos then uploaded successfully through the Immich iOS app using `https://photos.giohosted.com`.
+
+**Operational note:** Traefik recreation can briefly interrupt routing to internal services. A future change to static entrypoint flags requires Compose validation and container recreation; changes to watched file-provider routes generally do not.
+
+**Version-control status:** The running change has been validated, but the separate commit/push of `traefik/compose.yaml` to `homelab-infra` must be verified through Git before marking repository synchronization complete. See `runbooks/git-workflow.md`.
 
 ---
 
@@ -113,7 +153,8 @@ Restricts access to internal VLANs only. Applied to all admin and internal-only 
 ## Adding a New Service (Docker)
 
 For containers on docker-prod-01, add these labels to the compose service:
-```yaml
+
+```
 networks:
   - proxy
 
@@ -129,7 +170,8 @@ labels:
 Then add a DNS rewrite in AdGuard: `service.giohosted.com` → `192.168.30.11`
 
 The container must also be on the `proxy` Docker network:
-```yaml
+
+```
 networks:
   proxy:
     external: true
@@ -142,7 +184,8 @@ networks:
 For services running on other VMs (auth-prod-01, immich-prod-01, etc.):
 
 1. Create `/opt/appdata/traefik/config/<service>.yml`:
-```yaml
+
+```
 http:
   routers:
     <service>:
@@ -174,18 +217,21 @@ For services that need external access, cloudflared routes traffic through Traef
 1. Deploy the service with Traefik labels (Docker provider) or file provider static route as normal
 2. Add AdGuard DNS rewrite as normal
 3. In Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Published application routes → Add:
-   - Hostname: `service.giohosted.com`
-   - Service type: `HTTPS`
-   - URL: `192.168.30.11`
-   - Additional settings → TLS → **No TLS Verify: enabled**
+    - Hostname: `service.giohosted.com`
+    - Service type: `HTTPS`
+    - URL: `192.168.30.11`
+    - Additional settings → TLS → **No TLS Verify: enabled**
 
 ### Why HTTPS and not HTTP?
+
 Using `http://192.168.30.11` causes an infinite redirect loop — Traefik's HTTP→HTTPS redirect fires, cloudflared follows it, repeat forever. Always use `https://`.
 
 ### Why No TLS Verify?
+
 Traefik's cert is a hostname wildcard (`*.giohosted.com`) — it doesn't cover bare IPs. When cloudflared connects to `192.168.30.11` by IP, TLS verification fails. No TLS Verify bypasses this check.
 
 This is safe because:
+
 - The cloudflared → Traefik hop is entirely on the private LAN (192.168.30.0/24)
 - The Cloudflare Tunnel is already encrypted end-to-end via QUIC
 - The user's browser connection to Cloudflare's edge is fully protected by Cloudflare's own valid TLS
@@ -195,6 +241,7 @@ See `services/infra/cloudflared.md` for full cloudflared documentation.
 ---
 
 ## Directory Structure
+
 ```
 /opt/stacks/traefik/
   compose.yaml              ← in git
@@ -216,3 +263,4 @@ See `services/infra/cloudflared.md` for full cloudflared documentation.
 - The `proxy` Docker network is created by the Traefik compose — all containers that need Traefik routing must join this network
 - Middleware must be referenced as `local-only@docker` — using `local-only@file` causes Traefik to silently ignore it
 - File provider routes require the target service to expose its port on the host — containers on remote VMs are not reachable via Docker networking
+- Large Immich iOS video uploads were verified working after raising `websecure` responding timeouts to 600 seconds on 2026-10-31
