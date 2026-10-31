@@ -6,7 +6,7 @@
 **Proxmox Node:** pve-prod-01  
 **Environment:** Homelab v3  
 **Last Updated:** 2026-10-30  
-**Service Status:** Proxmox MCP integration implemented and verified  
+**Service Status:** Proxmox and Unraid MCP integrations implemented and end-to-end verified  
 **Backup Status:** October 30 scheduled backup successful; integrity and restore testing pending
 
 ---
@@ -19,11 +19,11 @@ It covers:
 
 - Routine service health checks.
     
-- Verifying ChatGPT-to-Proxmox connectivity.
+- Verifying ChatGPT-to-Proxmox and ChatGPT-to-Unraid connectivity.
     
-- Managing the Proxmox MCP container.
+- Managing the Proxmox and Unraid MCP containers.
     
-- Managing the OpenAI Secure MCP Tunnel client.
+- Managing two OpenAI Secure MCP Tunnel services using one installed tunnel-client binary.
     
 - Troubleshooting common failures.
     
@@ -88,9 +88,11 @@ For implementation details, component configuration, security design, and archit
 |Component|Technology|Management|
 |---|---|---|
 |Proxmox MCP|Docker Compose|`sudo docker compose`|
-|OpenAI Secure MCP Tunnel|Native systemd service|`sudo systemctl`|
-|ChatGPT integration|Homelab Proxmox plugin|ChatGPT Plugins|
+|Unraid MCP (Rust 0.6.3)|Docker Compose|`sudo docker compose` in `/opt/stacks/unraid-mcp`|
+|OpenAI Secure MCP Tunnels (Proxmox and Unraid)|Two native systemd services|`sudo systemctl`|
+|ChatGPT integration|Homelab Proxmox and Homelab Unraid plugins|ChatGPT Plugins|
 |Proxmox API|Proxmox VE HTTPS API|Dedicated read-only API identity|
+|Unraid API|Unraid GraphQL HTTPS API|Dedicated 14-category READ_ANY API key|
 
 ### Key Paths
 
@@ -99,14 +101,21 @@ For implementation details, component configuration, security design, and archit
 |`/opt/stacks/proxmox-mcp/`|MCP Compose stack|
 |`/opt/stacks/proxmox-mcp/compose.yaml`|Version-controlled Compose configuration|
 |`/opt/stacks/proxmox-mcp/.env`|MCP environment configuration and credentials|
+|`/opt/stacks/unraid-mcp/compose.yaml`|Unraid MCP Compose stack|
+|`/opt/stacks/unraid-mcp/.env`|Protected Unraid GraphQL API key and MCP bearer token|
+|`/etc/unraid-mcp/unraid.crt`|Trusted self-signed Unraid server certificate|
 |`/opt/tunnel-client/`|Installed OpenAI tunnel-client files|
 |`/opt/tunnel-client/tunnel-client`|Tunnel-client executable|
 |`/etc/tunnel-client/config.yaml`|Tunnel configuration|
 |`/etc/tunnel-client/openai-runtime.key`|Restricted OpenAI runtime credential|
 |`/etc/tunnel-client/mcp-authorization`|Local MCP bearer authorization|
-|`/etc/systemd/system/tunnel-client.service`|Tunnel systemd service unit|
+|`/etc/systemd/system/tunnel-client.service`|Proxmox tunnel systemd service unit|
+|`/etc/tunnel-client-unraid/config.yaml`|Unraid tunnel configuration|
+|`/etc/tunnel-client-unraid/openai-runtime.key`|Unraid OpenAI runtime key|
+|`/etc/tunnel-client-unraid/mcp-authorization`|Unraid MCP bearer header|
+|`/etc/systemd/system/tunnel-client-unraid.service`|Unraid tunnel systemd service unit|
 
-**Important:** The OpenAI tunnel and Proxmox MCP are independent processes.
+**Important:** Proxmox and Unraid each use a separate MCP container and a separate tunnel systemd service; both tunnel processes reuse the existing `tunnel-client` account and installed binary.
 
 A healthy tunnel does not necessarily mean the MCP server is healthy, and a healthy MCP server does not guarantee that ChatGPT can reach it.
 
@@ -123,53 +132,34 @@ AI Observer is considered operational when all required components are available
 |Observer VM|Running|
 |Docker engine|Available|
 |Proxmox MCP container|Running|
+|Unraid MCP container|Running and healthy|
 |MCP health endpoint|HTTP 200|
-|Tunnel systemd service|Active|
+|Tunnel systemd services|Both active and enabled|
 |Tunnel readiness endpoint|HTTP 200|
 |Local MCP authentication|Functioning|
 |Proxmox API connection|Reachable and authenticated|
+|Unraid GraphQL API connection|Reachable and authenticated with TLS verification|
 |ChatGPT integration|Connected|
-|Live MCP tool call|Successfully returns Proxmox information|
-|MCP permissions|Read-only|
+|Live MCP tool call|Successfully returns Proxmox and Unraid information using the respective plugins|
+|MCP permissions|Read-only; Unraid exposes 26 read / 0 write tools|
 
 ### End-to-End Request Path
 
 ```
 ChatGPT
-   |
-   v
-Homelab Proxmox Plugin
-   |
-   v
-OpenAI Secure MCP Tunnel
-   |
-   | Outbound HTTPS tunnel
-   v
-observer-prod-01
-   |
-   +-- tunnel-client.service
-   |      |
-   |      | Authenticated local HTTP
-   |      v
-   +-- Proxmox MCP container
-          |
-          | HTTPS / TCP 8006
-          | Pinned TLS fingerprint
-          | Read-only API token
-          v
-pve-prod-01 (192.168.10.11)
-          |
-          v
-Proxmox Cluster: homelab-v3
+  | Homelab Proxmox plugin -> outbound tunnel -> tunnel-client.service
+  |                             -> 127.0.0.1:8080/mcp
+  |                             -> Proxmox API 192.168.10.11:8006
+  |
+  | Homelab Unraid plugin  -> outbound tunnel -> tunnel-client-unraid.service
+                                -> 127.0.0.1:8082/mcp
+                                -> Unraid HTTPS API 192.168.30.16:443
 ```
 
-The MCP server listens locally at:
 
-`http://127.0.0.1:8080/mcp`
+MCP endpoints: Proxmox `http://127.0.0.1:8080/mcp`; Unraid `http://127.0.0.1:8082/mcp`.
 
-The tunnel readiness endpoint listens locally at:
-
-`http://127.0.0.1:8081/readyz`
+Tunnel readiness endpoints: Proxmox `http://127.0.0.1:8081/readyz`; Unraid `http://127.0.0.1:8083/readyz`.
 
 Neither endpoint requires a public DNS record or inbound internet port forwarding.
 
@@ -307,7 +297,25 @@ The initially verified cluster configuration included:
 
 Versions and operational state may change over time. Treat these as historical reference values, not guaranteed current results.
 
-**This is the final end-to-end health check.**
+**This is the final end-to-end health check for Proxmox.**
+
+### Additional Check — Unraid MCP and Tunnel
+
+On `observer-prod-01`, inspect the second integration independently (read-only commands):
+
+```bash
+cd /opt/stacks/unraid-mcp
+sudo docker compose ps
+sudo docker compose logs --tail 50 --no-color unraid-mcp
+sudo docker compose config --quiet
+systemctl is-active tunnel-client-unraid.service
+systemctl is-enabled tunnel-client-unraid.service
+curl -fsS --max-time 10 http://127.0.0.1:8083/readyz
+```
+
+Expected: healthy `unraid-mcp`, active and enabled Unraid tunnel, `ready` response. The container logs should show `trusting extra CA certificates from bundle count=1`. The local MCP endpoint normally returns HTTP 401 without a bearer token; that proves it is reachable, **not** that upstream GraphQL authentication is working.
+
+Then, in ChatGPT, call the `Homelab Unraid` plugin with `unraid_info`. Confirm it returns live `nas-prod-01` system information. This end-to-end check is required before closing an Unraid MCP incident. Do not call write/management actions as a connectivity test.
 
 ---
 
@@ -338,6 +346,11 @@ systemctl is-enabled tunnel-client
 sudo journalctl -u tunnel-client -n 100 --no-pager
 
 curl -fsS --max-time 5 http://127.0.0.1:8081/readyz
+
+# Unraid
+sudo systemctl status tunnel-client-unraid --no-pager
+systemctl is-enabled tunnel-client-unraid
+curl -fsS --max-time 5 http://127.0.0.1:8083/readyz
 ```
 
 ### Operating System Resources
@@ -351,7 +364,7 @@ df -h /
 
 df -h /opt
 
-sudo docker stats --no-stream proxmox-mcp
+sudo docker stats --no-stream proxmox-mcp unraid-mcp
 ```
 
 ### Network
@@ -378,7 +391,9 @@ Expected local endpoints:
 
 - `127.0.0.1:8080` — Proxmox MCP.
     
-- `127.0.0.1:8081` — Tunnel readiness.
+- `127.0.0.1:8081` — Proxmox tunnel readiness.
+- `127.0.0.1:8082` — Unraid MCP.
+- `127.0.0.1:8083` — Unraid tunnel readiness.
     
 
 ### Git Configuration
@@ -397,27 +412,29 @@ Do not run Git commands that overwrite local changes as part of basic diagnostic
 
 ## 5. Troubleshooting Workflow
 
-When ChatGPT cannot retrieve Proxmox data, investigate the connection in order.
+When ChatGPT cannot retrieve Proxmox or Unraid data, first identify the affected plugin and investigate its independent container, tunnel, and upstream API path in order.
 
 ### Diagnostic Sequence
 
 1. Is observer-prod-01 running?
     
 2. Can the observer be reached over SSH?
+
+3. Which integration is affected — Proxmox, Unraid, or both?
     
-3. Is the Proxmox MCP container running?
+4. Is the affected MCP container running?
     
-4. Does the MCP health endpoint respond?
+5. Does its local health/MCP endpoint respond?
     
-5. Is the tunnel-client systemd service running?
+6. Is the corresponding tunnel-client systemd service running?
     
-6. Does the tunnel readiness endpoint respond?
+7. Does that tunnel readiness endpoint respond?
     
-7. Can the MCP service reach and authenticate to Proxmox?
+8. Can the MCP service reach and authenticate to its upstream API?
     
-8. Does ChatGPT recognize and invoke the plugin?
+9. Does ChatGPT recognize and invoke the intended plugin?
     
-9. Does a live read-only tool call succeed?
+10. Does a live read-only tool call succeed?
     
 
 Do not restart all components simultaneously.
@@ -772,15 +789,28 @@ Examples include:
 
 Investigate the individual error before making changes to the global integration.
 
-A read-only API account may legitimately be denied access to endpoints requiring administrative privileges.
+A read-only API account may legitimately be denied access to endpoints requiring administrative privileges. The Unraid API key is not intended for every potentially readable GraphQL endpoint, only the intended monitoring categories.
 
 Do not grant administrator permissions merely to eliminate those errors.
 
 ---
 
+### Unraid-Specific Failures
+
+Use Section 21 for detailed Unraid MCP and tunnel commands. Diagnose independently of Proxmox:
+
+- Rust MCP unavailable or port `8082` not responding: inspect `/opt/stacks/unraid-mcp/` Compose state and container logs.
+- TLS trust failure: verify `UNRAID_API_CA_BUNDLE=/certs/unraid.crt`, the certificate mount, and `UNRAID_API_SKIP_TLS_VERIFY=false`. Do not disable certificate verification.
+- HTTP 401 from local MCP without the bearer token is expected; an authenticated tool call or ChatGPT query is the functional test.
+- Upstream `forbidden` / permission errors for an **individual tool** may mean the dedicated 14-category `READ_ANY` key does not grant that GraphQL field. Investigate before expanding permissions.
+- Tool missing from ChatGPT: compare the actual 26-name tool inventory with the `UNRAID_RMCP_ENABLED_TOOLS` policy and check plugin tool refresh. Never remove the allowlist as a diagnostic shortcut.
+- The Unraid array currently has a disabled first parity drive. This is a **NAS hardware/storage incident**, not an MCP fault; it is deliberately unresolved pending a separate controlled repair workflow in `architecture/storage/nas-prod-01.md`.
+
+---
+
 ## 10. Service Management
 
-AI Observer uses two independent service managers.
+AI Observer uses Docker Compose for its two MCP containers and native systemd services for its two secure tunnels. The Unraid and Proxmox services should be managed independently.
 
 ### Proxmox MCP — Docker Compose
 
@@ -831,6 +861,38 @@ Authorized restart:
 ```
 sudo systemctl restart tunnel-client
 ```
+
+### Unraid MCP — Docker Compose
+
+Read-only checks:
+
+```bash
+cd /opt/stacks/unraid-mcp
+sudo docker compose ps
+sudo docker compose logs --tail 100 --no-color unraid-mcp
+sudo docker compose config --quiet
+```
+
+Only with approval after identifying a fault:
+
+```bash
+cd /opt/stacks/unraid-mcp
+sudo docker compose up -d --no-deps unraid-mcp
+```
+
+This affects only the Unraid MCP stack, not the NAS array or Proxmox MCP. Consult Section 21 for updates and verification.
+
+### Unraid Tunnel — systemd
+
+```bash
+systemctl is-active tunnel-client-unraid.service
+systemctl is-enabled tunnel-client-unraid.service
+sudo journalctl -u tunnel-client-unraid -n 100 --no-pager
+curl -fsS --max-time 10 http://127.0.0.1:8083/readyz
+```
+
+After confirming a tunnel-specific failure and receiving approval, restart only `tunnel-client-unraid.service`, then recheck readiness and a live ChatGPT tool call. Both tunnel services use `/opt/tunnel-client/tunnel-client`; do not upgrade that shared binary while debugging only one integration.
+
 
 ### Restart Order
 
@@ -1083,8 +1145,11 @@ AI Observer uses several independent credentials.
 |Credential|Purpose|Storage|
 |---|---|---|
 |Proxmox API token|Read-only Proxmox API access|Protected MCP `.env` and Bitwarden|
-|MCP bearer token|Authenticates local MCP requests|MCP `.env`, tunnel authorization file, secure credential storage|
-|OpenAI runtime API key|Connects tunnel client to OpenAI|Protected tunnel credential file and secure credential storage|
+|Proxmox MCP bearer token|Authenticates local Proxmox MCP requests|Proxmox `.env`, Proxmox tunnel authorization file, secure credential storage|
+|Unraid MCP bearer token|Authenticates local Unraid MCP requests|Unraid `.env`, Unraid tunnel authorization file; Bitwarden retention pending verification|
+|Proxmox OpenAI runtime API key|Connects Proxmox tunnel client to OpenAI|`/etc/tunnel-client/openai-runtime.key` and Bitwarden|
+|Unraid OpenAI runtime API key|Connects Unraid tunnel client to OpenAI|`/etc/tunnel-client-unraid/openai-runtime.key` and Bitwarden|
+|Unraid GraphQL API key|Read-only access to the Unraid GraphQL API|Unraid `.env` and Bitwarden|
 |GitHub credential|Accesses `homelab-infra`|Bitwarden / interactive authentication|
 
 Credential rotation is a consequential maintenance operation.
@@ -1149,7 +1214,7 @@ Verify authenticated read-only Proxmox queries afterward.
 
 ### MCP Bearer Token Rotation
 
-The MCP bearer token is used between the tunnel client and the local MCP server.
+Each integration has its **own** MCP bearer token between its respective tunnel client and local MCP server. Do not accidentally copy the Proxmox token into the Unraid tunnel or vice versa.
 
 Its configured value must be consistent on both sides.
 
@@ -1180,7 +1245,7 @@ Do not display token values in terminal output.
 
 ### OpenAI Runtime API Key Rotation
 
-The tunnel client's runtime key is restricted to the permissions required to read and use the configured tunnel.
+Each tunnel client has its **own** runtime key restricted to the permissions required to read and use that tunnel.
 
 It should not use broad administrative platform credentials.
 
@@ -1190,11 +1255,11 @@ During rotation:
     
 2. Store it securely.
     
-3. Update `/etc/tunnel-client/openai-runtime.key` through an approved secret-handling procedure.
+3. Update the appropriate protected key file (`/etc/tunnel-client/openai-runtime.key` for Proxmox; `/etc/tunnel-client-unraid/openai-runtime.key` for Unraid) through an approved secret-handling procedure.
     
 4. Preserve the file's required ownership and permissions.
     
-5. Restart the tunnel service.
+5. Restart only the affected tunnel service.
     
 6. Verify tunnel readiness.
     
@@ -1212,6 +1277,9 @@ Documented tunnel credential paths:
 - `/etc/tunnel-client/mcp-authorization`
     
 - `/etc/tunnel-client/config.yaml`
+- `/etc/tunnel-client-unraid/openai-runtime.key`
+- `/etc/tunnel-client-unraid/mcp-authorization`
+- `/etc/tunnel-client-unraid/config.yaml`
     
 
 The initial deployment used root-owned protected files with restricted permissions.
@@ -1227,13 +1295,17 @@ sudo stat -c '%U %G %a %n' \
   /etc/tunnel-client \
   /etc/tunnel-client/config.yaml \
   /etc/tunnel-client/openai-runtime.key \
-  /etc/tunnel-client/mcp-authorization
+  /etc/tunnel-client/mcp-authorization \
+  /etc/tunnel-client-unraid \
+  /etc/tunnel-client-unraid/config.yaml \
+  /etc/tunnel-client-unraid/openai-runtime.key \
+  /etc/tunnel-client-unraid/mcp-authorization
 ```
 
 Inspect service identity:
 
 ```
-systemctl show tunnel-client \
+systemctl show tunnel-client tunnel-client-unraid \
   -p User \
   -p Group \
   -p SupplementaryGroups
@@ -1262,7 +1334,19 @@ Verify:
 - No elevated administrative permissions were introduced.
     
 
-### MCP Configuration
+### Unraid API and MCP Permissions
+
+Verify:
+
+- The dedicated Unraid API key retains only the intended 14 `READ_ANY` categories; no write grants.
+- The Rust MCP `UNRAID_RMCP_PROJECTION` remains `atomic`.
+- The `UNRAID_RMCP_ENABLED_TOOLS` allowlist matches the exact 26 action names documented in `services/infra/ai-observer.md`.
+- The ChatGPT plugin still lists 26 read tools and zero write tools.
+- TLS CA-bundle trust is in use and `UNRAID_API_SKIP_TLS_VERIFY=false`.
+- The MCP published port is bound to `127.0.0.1:8082`, not to every observer interface.
+- No Unraid Docker socket or NAS filesystem is mounted into the MCP container.
+
+### MCP Configuration — Proxmox
 
 Verify:
 
@@ -1283,15 +1367,15 @@ Verify:
 
 Verify:
 
-- Native systemd service remains enabled.
+- Both native tunnel systemd services remain enabled.
     
 - Dedicated `tunnel-client` service account is used.
     
 - Service account has no unnecessary administrative groups.
     
-- Credential files remain protected.
+- Both sets of tunnel credential files remain protected.
     
-- The tunnel uses outbound connectivity only.
+- Both tunnels use outbound connectivity only.
     
 - No unnecessary public listeners are present.
     
@@ -1363,13 +1447,14 @@ Do not mark the observer as recoverable until these have been verified.
 |Asset|Recovery Source|
 |---|---|
 |Observer virtual machine|October 30 PBS backup task succeeded; snapshot integrity/restore test pending|
-|MCP Compose configuration|`homelab-infra` repository|
-|MCP `.env`|Protected backup and separately retained credentials|
-|Tunnel configuration|Verified VM backup or protected configuration backup|
-|OpenAI runtime key|Secure credential storage|
-|MCP bearer token|Secure credential storage|
-|Tunnel systemd unit|Verified VM backup or protected configuration backup|
-|Tunnel binaries|Verified official release artifacts|
+|MCP Compose configurations (Proxmox and Unraid)|`homelab-infra` repository when committed; Unraid commit not yet verified|
+|MCP `.env` files|Protected backup and separately retained credentials (both stacks)|
+|Both tunnel configuration directories|Verified VM backup or protected configuration backup|
+|Both OpenAI tunnel runtime keys|Secure credential storage|
+|MCP bearer tokens|Secure credential storage; confirm Unraid bearer token has separately been saved to Bitwarden|
+|Both tunnel systemd units|Verified VM backup or protected configuration backup|
+|Shared tunnel binaries|Verified official release artifacts|
+|Unraid server TLS certificate bundle|Verified VM backup or trusted certificate re-enrollment|
 
 ### Backup Verification Checklist
 
@@ -1495,13 +1580,14 @@ Confirm:
     
 - Docker and Compose are installed.
     
-- MCP Compose files exist.
+- Both MCP Compose files exist (`proxmox-mcp` and `unraid-mcp`).
     
-- MCP `.env` exists with correct permissions.
+- Both MCP `.env` files exist with correct permissions and contain valid recovered credentials.
     
-- Tunnel binaries and systemd unit exist.
+- Shared tunnel binaries and both systemd units exist.
     
-- Protected tunnel configuration is accessible to the service.
+- Both protected tunnel configuration directories are accessible to the `tunnel-client` service account.
+- The trusted Unraid CA bundle exists and matches the expected NAS certificate.
     
 - API and tunnel credentials are valid.
     
@@ -1516,13 +1602,13 @@ For an approved production recovery:
     
 2. Restore the intended network configuration.
     
-3. Confirm the MCP container starts correctly.
+3. Confirm both MCP containers start correctly.
     
-4. Confirm the tunnel client starts correctly.
+4. Confirm both tunnel services start correctly without duplicating production identities.
     
-5. Verify the Proxmox API connection.
+5. Verify the Proxmox and Unraid API connections.
     
-6. Verify ChatGPT plugin connectivity.
+6. Verify both ChatGPT plugins and their read-only tool inventories.
     
 7. Confirm the restored instance is the only active production observer for that identity.
     
@@ -1531,7 +1617,7 @@ For an approved production recovery:
 
 Run the routine health checks in Section 3.
 
-Perform a live ChatGPT Proxmox query.
+Perform a live read-only ChatGPT query through each of the Proxmox and Unraid plugins.
 
 Only after these checks pass should the service be marked restored.
 
@@ -1578,19 +1664,19 @@ A fresh installation would need:
     
 6. The private `homelab-infra` repository.
     
-7. The Proxmox MCP Compose configuration.
+7. The Proxmox and Unraid MCP Compose configurations.
     
-8. Recovered MCP environment variables and authentication secret.
+8. Recovered environment variables and API/MCP bearer secrets for both containers; verified Unraid certificate bundle.
     
 9. The verified OpenAI tunnel-client release.
     
-10. The tunnel systemd unit and protected configuration.
+10. Both tunnel systemd units and their separate protected configurations.
     
-11. Restricted OpenAI runtime credentials.
+11. Separate restricted OpenAI runtime credentials for each tunnel.
     
-12. Valid Proxmox read-only API credentials.
+12. Valid read-only Proxmox and Unraid API credentials.
     
-13. Successful local and end-to-end testing.
+13. Successful local and end-to-end testing through both ChatGPT plugins.
     
 
 Do not generate new credentials or replace existing production credentials unnecessarily.
@@ -1629,9 +1715,10 @@ VM 107's October 30 backup task succeeded, but independent snapshot-integrity ve
 |---|---|
 |Proxmox MCP — read-only|Implemented and verified|
 |ChatGPT Homelab Proxmox plugin|Implemented and verified|
-|OpenAI Secure MCP Tunnel|Implemented and verified|
-|Unraid MCP|Planned|
-|Docker MCP|Planned|
+|ChatGPT Homelab Unraid plugin|Implemented, 26 read tools verified|
+|OpenAI Secure MCP Tunnels (Proxmox + Unraid)|Both implemented and verified|
+|Unraid MCP|Implemented, connected, 26 tools, end-to-end query verified|
+|Other-host Docker MCP|Planned|
 |Proxmox write operations|Deferred|
 |Automated maintenance actions|Deferred|
 |Codex access through tunnel|Not yet verified|
@@ -1646,13 +1733,13 @@ A routine service check is complete when:
 
 - Observer VM is available.
     
-- MCP container is healthy.
+- Both MCP containers are healthy.
     
-- Tunnel client is healthy.
+- Both tunnel services are healthy and report ready.
     
-- Proxmox API connectivity succeeds.
+- Proxmox and Unraid API connectivity succeeds with the intended read-only permissions.
     
-- A live ChatGPT MCP tool call succeeds.
+- A live read-only ChatGPT MCP tool call succeeds through each plugin.
     
 - No unexpected security or permission changes are identified.
     
@@ -1689,11 +1776,129 @@ A disaster recovery exercise is complete only when:
 
 ---
 
+## 21. Unraid MCP — Operations, Security, Expansion, and Recovery
+
+This section governs the **implemented** Unraid Rust MCP v0.6.3 integration. Detailed architecture and the complete 26-enabled / 35-additional-read / 83-write-disabled action inventories live in `services/infra/ai-observer.md`, with links to the upstream Rust source. Do not duplicate or manually reclassify tool lists here.
+
+### Deployment Identity
+
+| Item | Implemented value |
+|---|---|
+| MCP stack | `/opt/stacks/unraid-mcp` (`compose.yaml`, protected `.env`) |
+| Image | `ghcr.io/dinglebear-ai/unraid-rmcp:latest` |
+| Binary version tested | `unraid-rmcp 0.6.3` |
+| MCP HTTP endpoint | `http://127.0.0.1:8082/mcp` (localhost only) |
+| Upstream API | `https://nas-prod-01.local/graphql` via `192.168.30.16:443` |
+| Trusted CA bundle | `/etc/unraid-mcp/unraid.crt` -> `/certs/unraid.crt` |
+| MCP projection / tools | `atomic`, exactly 26 allowlisted read-only actions |
+| Tunnel ID | `tunnel_6ae54db66f7c8191a73960ac6eb77981` |
+| Tunnel systemd unit | `tunnel-client-unraid.service` |
+| Tunnel config directory | `/etc/tunnel-client-unraid/` |
+| Tunnel health endpoint | `http://127.0.0.1:8083/readyz` |
+| Linux service account | `tunnel-client` (shared with Proxmox tunnel) |
+| ChatGPT plugin | `Homelab Unraid` (connected; 26 read tools and zero write tools) |
+
+### Routine Read-Only Verification
+
+```bash
+cd /opt/stacks/unraid-mcp || exit 1
+sudo docker compose ps
+sudo docker compose config --quiet
+sudo docker compose logs --tail 50 --no-color unraid-mcp
+
+systemctl is-active tunnel-client-unraid.service
+systemctl is-enabled tunnel-client-unraid.service
+curl -fsS --max-time 10 http://127.0.0.1:8083/readyz
+
+cd /opt/tunnel-client
+sudo -u tunnel-client /opt/tunnel-client/tunnel-client doctor \
+  --config /etc/tunnel-client-unraid/config.yaml
+```
+
+Expect a healthy Docker container; log entry showing one trusted extra CA certificate; `active`, `enabled`, and `ready`; `RESULT ok` from the tunnel diagnostic. The diagnostic may report MCP target HTTP 401 without bearer auth; this is expected reachability feedback, not an authenticated GraphQL test. Conclude with a read-only `unraid_info` query from ChatGPT.
+
+### Checking Exposed Tools Without Printing Secrets
+
+The container's `.env` contains a private bearer token. Do not print it, dump `docker compose config`, use shell tracing (`set -x`), or paste secrets in support requests. To list current tools, a local administrator may run:
+
+```bash
+cd /opt/stacks/unraid-mcp || exit 1
+MCP_TOKEN="$(sed -n 's/^UNRAID_RMCP_TOKEN=//p' .env)"
+
+printf 'header = "Authorization: Bearer %s"\n' "$MCP_TOKEN" | \
+  curl --config - -fsS --max-time 20 \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json, text/event-stream' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
+    http://127.0.0.1:8082/mcp | \
+  python3 -c 'import json,sys; d=json.load(sys.stdin); t=d["result"]["tools"]; print("Exposed:",len(t)); print("\n".join(x["name"] for x in t))'
+
+unset MCP_TOKEN
+```
+
+Expected: exactly the 26 tools documented in `services/infra/ai-observer.md`, no management/write actions. Treat this as a diagnostic; do not use a tool discovery count to claim all 26 upstream queries were tested.
+
+### Expand Read-Only Monitoring Deliberately
+
+1. Identify the requested use case and canonical action name in the [Rust README](https://github.com/dinglebear-ai/unraid/blob/main/unraid-rs/README.md#mcp-tool-reference) and [scope classification](https://github.com/dinglebear-ai/unraid/blob/main/unraid-rs/src/mcp/schemas.rs). Review the deployed release, not just a potentially newer `main` branch.
+2. Confirm whether returned metadata could expose secrets or sensitive authentication, network, or configuration information. A `Scope::Read` action is not necessarily safe to publish broadly.
+3. Confirm the dedicated Unraid API key provides the required read permission. Prefer retaining the 14-category `READ_ANY` model, and don't add API privileges merely because a tool exists.
+4. Review `/opt/stacks/unraid-mcp/compose.yaml` and append only specifically approved canonical action names to `UNRAID_RMCP_ENABLED_TOOLS`. Never replace the allowlist with `*`; do not expose any write/admin action in the read-only deployment.
+5. Validate the Compose config (`sudo docker compose config --quiet`); review the expected tool count and changes **before** recreation. After approval, recreate only the Unraid container (`sudo docker compose up -d --force-recreate unraid-mcp`).
+6. Verify container health, CA certificate loading, exact `tools/list` inventory, and a real read-only tool call. Check the plugin's newly discovered inventory and repeat a live ChatGPT invocation. Tool refresh or reconnect may be required for client-side discovery.
+7. Update the canonical enabled/disabled inventory in `services/infra/ai-observer.md`, plus operations documentation as needed, only after verification.
+
+Some read-only actions excluded by design could expose API keys, identity configuration, remote access settings, or detailed environment variables. All write/admin actions remain out of scope under the current policy. A future write integration would require a separately approved security design and new credentials, not just an allowlist edit.
+
+### Updating the Unraid Rust Image
+
+`latest` is a deliberate manually updated Docker tag. Do not assume it updates itself. Follow standard change/review practice, and check the upstream release notes for renamed tools or behavior changes.
+
+```bash
+cd /opt/stacks/unraid-mcp || exit 1
+sudo docker compose config --quiet
+sudo docker compose pull unraid-mcp
+sudo docker run --rm --network none \
+  --entrypoint /usr/local/bin/runraid \
+  ghcr.io/dinglebear-ai/unraid-rmcp:latest --version
+```
+
+The `docker compose pull` changes the local image cache but does **not** restart the running service. After confirming the version and impact, obtain authorization before `sudo docker compose up -d --force-recreate unraid-mcp`. Then verify TLS, health, all enabled tool names, and an end-to-end ChatGPT read. Preserve the currently working image for rollback where feasible. Do not switch back to the old `ghcr.io/dinglebear-ai/runraid` image.
+
+### Tunnel Runtime and Credential Files
+
+Two tunnel services use the same `/opt/tunnel-client/tunnel-client` binary and the same Linux account, but separate unit files, tunnel IDs, health ports, OpenAI runtime keys, and MCP bearer tokens. Restarting `tunnel-client-unraid.service` does not intentionally restart `tunnel-client.service`; upgrading the shared binary may affect both after their next restart.
+
+| Protected path | Purpose | Expected ownership/mode |
+|---|---|---|
+| `/etc/tunnel-client-unraid/` | Credential/config directory | `root:tunnel-client` `0750` |
+| `/etc/tunnel-client-unraid/config.yaml` | Unraid tunnel configuration | `root:tunnel-client` `0640` |
+| `/etc/tunnel-client-unraid/openai-runtime.key` | OpenAI runtime secret | `root:tunnel-client` `0640` |
+| `/etc/tunnel-client-unraid/mcp-authorization` | `Bearer <token>` for local MCP | `root:tunnel-client` `0640` |
+| `/opt/stacks/unraid-mcp/.env` | Unraid API key and MCP bearer secret | `gio` `0600` (verified at creation) |
+
+The Unraid runtime API key and upstream Unraid API key were saved in Bitwarden. **Separate Bitwarden retention of `UNRAID_RMCP_TOKEN` remains to be verified**; do not mark credential recovery complete until confirmed. Never put the actual secret values into these Markdown files or Git.
+
+### Known Unraid Storage Issue (Separate Incident)
+
+The October 30 read-only `unraid_array` call discovered that the first 14 TB Seagate parity drive is `DISK_DSBL` / red X. Parity 2, both array data disks, and both ZFS mirror members appeared healthy. The operator saved Unraid diagnostics and plans to investigate a suspected SAS-to-SATA breakout cable in a **separate conversation**. No cable replacement, parity rebuild, disk reassignment, or array repair has been verified. Do **not** treat this storage issue as an MCP service failure. See `architecture/storage/nas-prod-01.md` for the live observation and unresolved status.
+
+### Recovery and Completion
+
+If Unraid MCP fails, inspect its Compose stack, local localhost binding, TLS bundle, the read-only GraphQL credentials, and `tunnel-client-unraid.service` one layer at a time. Avoid restarting Proxmox MCP as a troubleshooting shortcut.
+
+For observer VM recovery, restore both tunnel configuration directories, **both** MCP Compose stacks and protected `.env` files, trusted Unraid certificate, both systemd units, and the shared tunnel binaries. Ensure the isolated restore does not duplicate production IP or tunnel identities. No full restore procedure has been tested; use Section 17's isolation safeguards.
+
+Service readiness is demonstrated by healthy containers, ready tunnels, correct read-only tool inventory, and live ChatGPT tool execution. **Full disaster recovery readiness is still unverified.**
+
+---
+
 ## Related Documentation
 
 ### Architecture and Service
 
-- `services/infra/ai-observer.md` — AI Observer architecture, deployment, networking, authentication, and security.
+- `services/infra/ai-observer.md` — AI Observer architecture, deployment, networking, authentication, security, and the complete Unraid MCP enabled/disabled tool inventory.
+- `architecture/storage/nas-prod-01.md` — Unraid storage architecture and unresolved primary-parity fault.
     
 - `architecture/compute/pve-prod-01.md` — Proxmox host and VM inventory.
     
@@ -1734,8 +1939,8 @@ AI Observer is intentionally a read-only monitoring and diagnostic integration.
 
 Its purpose is to provide useful live infrastructure visibility while minimizing the risk of unintended changes.
 
-The documented deployment successfully connects ChatGPT to the Homelab v3 Proxmox cluster through a dedicated VM, a local MCP service, and an outbound OpenAI Secure MCP Tunnel.
+The documented deployment connects ChatGPT to the Homelab v3 Proxmox cluster and `nas-prod-01` through separate local MCP services and outbound OpenAI Secure MCP Tunnels on a shared observer VM.
 
-**The integration is operational; backup and disaster recovery readiness remain unverified.**
+**Both integrations are operational; full backup and disaster recovery readiness remain unverified.**
 
 All consequential service changes, credential rotations, and restoration procedures should follow the established one-step-at-a-time workflow with explicit authorization and post-change verification.

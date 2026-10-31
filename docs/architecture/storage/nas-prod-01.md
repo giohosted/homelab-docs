@@ -1,7 +1,7 @@
 # nas-prod-01 — Storage Architecture
 
 **Host:** nas-prod-01  
-**OS:** Unraid 7.2.4  
+**OS:** Unraid 7.3.2 (verified by live MCP October 30, 2026)  
 **Chassis:** Rosewill RSV-L4412U (4U, 12-bay)  
 **Last Updated:** 2026-10-30
 
@@ -12,7 +12,7 @@
 | Interface | Type | IP | VLAN | Purpose |
 |---|---|---|---|---|
 | eth0 (onboard 2.5GbE) | br0 bridge | 192.168.10.10/24 | 10 — Management | Unraid web UI only |
-| eth1 (X710 Port 2, 10GbE) | Direct | 192.168.30.16/24 | 30 — Services | NFS exports, Plex traffic |
+| eth1 (X710 Port 2, 10GbE) | Direct | 192.168.30.16/24 | 30 — Services | NFS exports, Plex traffic, verified Unraid GraphQL HTTPS access from AI Observer |
 | eth2 (X710 Port 1, 10GbE) | Unconfigured | 10.0.0.x/30 (Phase 3) | None | Point-to-point DAC to pve-prod-01 |
 
 ---
@@ -21,15 +21,31 @@
 
 | Role | Drive | Size |
 |---|---|---|
-| Parity 1 | WD Red Pro (WD121KFBX) | 12TB |
-| Parity 2 | WD Red Pro (WD121KFBX) | 12TB |
-| Disk 1 | Seagate IronWolf (ST6000VN0033) | 6TB |
-| Disk 2 | Seagate IronWolf (ST6000VN0033) | 6TB |
+| Parity 1 | Seagate IronWolf Pro (ST14000NT001) | 14TB — **DISABLED** (`DISK_DSBL`, red X) |
+| Parity 2 | WD Red Pro (WD121KFBX) | 12TB — `DISK_OK` |
+| Disk 1 | Seagate IronWolf (ST6000VN0033) | 6TB — `DISK_OK` |
+| Disk 2 | Seagate IronWolf (ST6000VN0033) | 6TB — `DISK_OK` |
 
 - **Usable:** ~12TB
 - **Filesystem:** XFS per disk (Unraid default)
-- **Parity sync completed:** 2026-03-11, 19h 28m, 0 errors
-- **Planned expansion:** 3rd WD Red Pro 12TB data drive to be added after TrueNAS migration completes
+- **Historical parity sync completed:** 2026-03-11, 19h 28m, 0 errors. This predates the parity-drive change and is **not** proof of current parity health.
+- **Planned expansion (historical, not implemented):** 3rd WD Red Pro 12TB data drive to be added after TrueNAS migration completes. Unraid Main shows `Disk 3 — Not installed` as of October 30, 2026.
+
+---
+
+### Disabled Parity 1 — Unresolved (October 30, 2026)
+
+A read-only `unraid_array` query through the newly implemented Homelab Unraid MCP, followed by direct verification in Unraid **Main → Array Devices**, confirmed that the first parity slot contains a 14 TB Seagate `ST14000NT001` and has a red X / API status `DISK_DSBL` (disabled). The array reports `STARTED` and last parity check status `COMPLETED`, but this does **not** mean parity 1 is healthy. Its displayed error counter is zero; that does not rule out previous failed writes or connection problems.
+
+- **Other array devices:** `parity2` 12 TB WD Red Pro, `disk1`, and `disk2` reported `DISK_OK`. This should not be interpreted as verified dual-parity protection while parity 1 is disabled.
+- **History:** Original parity 1 was a 12 TB WD Red Pro. The operator previously replaced it with the 14 TB Seagate after encountering a similar Unraid disabled-disk problem. The replacement operated for a period before the same symptom recurred. The earlier parity-1 entry in this document was outdated.
+- **Suspected cause:** SAS-to-SATA breakout cable or another shared connection/power/backplane/controller path. **Not diagnosed or confirmed**; disk hardware failure has not been excluded.
+- **Unassigned Devices:** A 12 TB WD Red Pro appears in the Unassigned Devices area. Its role as the former parity disk is consistent with the replacement history, but its physical identity and health have not been independently verified.
+- **Evidence:** The operator downloaded Unraid diagnostics before any further action; archive retained locally by the operator, not added to documentation.
+- **Actions performed:** **None** toward parity repair. No cable swap, disk reassignment, rebuild, parity sync, NAS shutdown, or other storage change was performed during MCP integration.
+- **Next action:** Address in a **separate controlled troubleshooting conversation**. Review saved diagnostics, inspect connections and SMART data, verify actual drive health, and follow an appropriate Unraid recovery procedure only after the cause is understood. Do not reboot, reassign, or initiate parity rebuilding casually; coordinate clean NAS shutdown with PBS/Immich/NFS dependencies before any physical cabling work.
+
+The ZFS mirror is a separate storage pool; its last independently verified `ONLINE` state is recorded below. The disabled parity issue does not by itself establish a ZFS pool failure. The current state of parity protection should be rechecked before any consequential array operation.
 
 ---
 
@@ -159,6 +175,17 @@ Key location on each host: `/root/.ssh/backup_rsa`
 Target IP used by rsync scripts: `192.168.30.16` (VLAN 30 data interface — not the management IP)
 
 > **Note:** SSH to nas-prod-01 must use `192.168.30.16` from VLAN 30 hosts. The management IP `192.168.10.10` is blocked by firewall Rule 6 (Services → Management DENY).
+
+---
+
+## AI Observer — Unraid Monitoring Integration
+
+`observer-prod-01` at `192.168.30.17` runs the [dinglebear-ai Rust Unraid MCP](https://github.com/dinglebear-ai/unraid/tree/main/unraid-rs), which queries `nas-prod-01` over verified HTTPS using its Services VLAN address `192.168.30.16:443` and the GraphQL endpoint `https://nas-prod-01.local/graphql`. The self-signed certificate is trusted explicitly, and the API key has 14 `READ_ANY` permission families with no write grants.
+
+The Homelab Unraid ChatGPT plugin connects through its own outbound OpenAI Secure MCP Tunnel. The MCP publishes 26 read-only atomic tools and zero write tools. On October 30, 2026, authenticated calls retrieved Unraid version 7.3.2 and array state; a direct ChatGPT `unraid_info` invocation subsequently succeeded. Tool discovery was verified, but not every one of the 26 tool operations has been individually tested.
+
+**Full deployment configuration, exposed tool list, unexposed capabilities, credentials model, and extension policy:** `services/infra/ai-observer.md`.  
+**Operational procedures:** `runbooks/ai-observer-operations.md`.
 
 ---
 
