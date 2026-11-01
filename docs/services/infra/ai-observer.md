@@ -5,7 +5,7 @@
 **Proxmox Host:** pve-prod-01 (192.168.10.11)  
 **Proxmox VMID:** 107  
 **Status:** Active — Proxmox and Unraid integrations verified end-to-end  
-**Last Updated:** 2026-10-30
+**Last Updated:** 2026-10-31
 
 ---
 
@@ -531,7 +531,7 @@ Documentation-first troubleshooting still applies: consult the relevant Markdown
 | Unraid container | Healthy; `127.0.0.1:8082->40010/tcp` |
 | CA bundle initialization | `trusting extra CA certificates from bundle count=1` |
 | Local bearer-authenticated `unraid_info` | Passed; Unraid OS 7.3.2 |
-| Local bearer-authenticated `unraid_array` | Passed; surfaced disabled first parity disk |
+| Local bearer-authenticated `unraid_array` | Passed; surfaced disabled first parity disk on October 30 (historical observation; storage incident resolved October 31) |
 | Exact local MCP tool inventory | 26 expected, 26 exposed, none missing/unexpected |
 | Unraid tunnel `doctor` | `RESULT ok` |
 | Unraid tunnel `/readyz` | Returned `ready` |
@@ -738,7 +738,7 @@ No elevated management privileges should be introduced merely for convenience.
     
 - `runbooks/ai-observer-operations.md` — Operations, maintenance, troubleshooting, and recovery procedures.
 
-- `architecture/storage/nas-prod-01.md` — Unraid NAS configuration, storage inventory, and unresolved disabled primary-parity incident.
+- `architecture/storage/nas-prod-01.md` — Unraid NAS configuration, current array inventory, and resolved October 2026 parity/Disk 3 connection incident.
     
 - `runbooks/git-workflow.md` — Version control and credentials workflow.
     

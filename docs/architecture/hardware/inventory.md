@@ -1,6 +1,6 @@
 # Hardware Inventory
 
-**Last Updated:** 2026-07-14
+**Last Updated:** 2026-10-31 (NAS drive inventory verified; other sections retain their prior verification dates)
 
 ---
 
@@ -228,12 +228,12 @@
 
 ## Drives
 
-_See `architecture/storage/nas-prod-01.md` for full pool layout, assignment, and rationale. Summary below._
+_See `architecture/storage/nas-prod-01.md` and `architecture/storage/drives.md` for complete disk identities, current pool layout, and the resolved October 31, 2026 cable incident. The table below distinguishes live-confirmed installed disks from historical spare-inventory entries._
 
-| Drive | Count | Type | Role |
-|-------|-------|------|------|
-| WD Red Pro 12TB | 5 | CMR NAS | 2x parity + 3x data (parity array) |
-| WD Red Plus 4TB | 5 | CMR NAS | 2x ZFS mirror pool + 2x future array expansion + 1x cold spare |
-| Seagate IronWolf 6TB | 2 | CMR NAS | Hot spares / future array expansion |
-| Seagate SkyHawk 6TB | 4 | Surveillance CMR | Cold backup storage in Synology only — not in Unraid array |
-| Seagate Barracuda 4TB | 1 | Desktop | Retired — not suitable for always-on NAS duty |
+| Drive | Installed count | Type | Current NAS role |
+|-------|-------:|------|------|
+| WD Red Pro 12TB | 3 | CMR NAS | Parity 1 (`AAHKXP9H`), Parity 2 (`2AH2JSWY`), Disk 3 (`5PK7HDXF`) |
+| Seagate IronWolf 6TB | 2 | CMR NAS | Data Disk 1 (`ZAD97T6M`) and Data Disk 2 (`ZAD97RT0`) |
+| WD Red Plus 4TB | 2 | CMR NAS | Two-member `zfs-mirror` pool |
+
+**Other-drive inventory (historical, not freshly verified):** The March 2026 `drives.md` recorded additional WD Red Pro 12 TB, WD Red Plus 4 TB, and IronWolf 6 TB drives as spares, in TrueNAS v2, or for sale. Their present quantities and locations were not audited during the October 31 recovery. Four Seagate SkyHawk 6 TB drives were documented in Synology for cold backups, and a Seagate Barracuda 4 TB was retired; those assignments were also not rechecked. The 14 TB Seagate formerly assigned to Parity 1 is no longer in the NAS array; its physical storage location was not verified.

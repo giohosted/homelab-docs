@@ -3,7 +3,7 @@
 **Host:** nas-prod-01  
 **OS:** Unraid 7.3.2 (verified by live MCP October 30, 2026)  
 **Chassis:** Rosewill RSV-L4412U (4U, 12-bay)  
-**Last Updated:** 2026-10-30
+**Last Updated:** 2026-10-31
 
 ---
 
@@ -19,33 +19,58 @@
 
 ## Array — Parity Array (XFS)
 
-| Role | Drive | Size |
-|---|---|---|
-| Parity 1 | Seagate IronWolf Pro (ST14000NT001) | 14TB — **DISABLED** (`DISK_DSBL`, red X) |
-| Parity 2 | WD Red Pro (WD121KFBX) | 12TB — `DISK_OK` |
-| Disk 1 | Seagate IronWolf (ST6000VN0033) | 6TB — `DISK_OK` |
-| Disk 2 | Seagate IronWolf (ST6000VN0033) | 6TB — `DISK_OK` |
+**Current status (verified October 31, 2026):** Array `STARTED`; dual parity valid after completed reconstruction. All five array devices report `DISK_OK` with 0 Unraid disk errors via the read-only Homelab Unraid MCP. This incident is **resolved**; the replaced SAS-to-SATA breakout cable is the probable, not conclusively proven, root cause.
 
-- **Usable:** ~12TB
-- **Filesystem:** XFS per disk (Unraid default)
-- **Historical parity sync completed:** 2026-03-11, 19h 28m, 0 errors. This predates the parity-drive change and is **not** proof of current parity health.
-- **Planned expansion (historical, not implemented):** 3rd WD Red Pro 12TB data drive to be added after TrueNAS migration completes. Unraid Main shows `Disk 3 — Not installed` as of October 30, 2026.
+| Role | Drive | Size | Serial | Verified status |
+|---|---|---|---|---|
+| Parity 1 | WD Red Pro (WD121KFBX-68EF5N0) | 12TB | `AAHKXP9H` | `DISK_OK` |
+| Parity 2 | WD Red Pro (WD121KFBX-68EF5N0) | 12TB | `2AH2JSWY` | `DISK_OK` |
+| Disk 1 | Seagate IronWolf (ST6000VN0033) | 6TB | `ZAD97T6M` | `DISK_OK` |
+| Disk 2 | Seagate IronWolf (ST6000VN0033) | 6TB | `ZAD97RT0` | `DISK_OK` |
+| Disk 3 | WD Red Pro (WD121KFBX-68EF5N0) | 12TB | `5PK7HDXF` | `DISK_OK` |
+
+- **Configuration:** 2 parity + 3 XFS data disks. The third data disk is **installed and in service**, not a planned expansion.
+- **Usable data capacity:** approximately 24 TB decimal (about 22 TiB), before filesystem overhead; parity disks do not contribute to share capacity.
+- **Filesystem:** XFS on each array data disk; parity devices do not contain mounted data filesystems.
+- **Historical parity sync:** March 11, 2026, 19h 28m, 0 errors; this describes the earlier configuration, not the current recovery.
+- **Current recovery:** Simultaneous Parity 1 and Disk 3 reconstruction completed October 31, 2026, in approximately 20h 18m (73,119 seconds), with 0 reported errors. After completion, Unraid displayed valid parity and green status for both disks. MCP subsequently reported `DISK_OK` for all five array drives.
 
 ---
 
-### Disabled Parity 1 — Unresolved (October 30, 2026)
+### Parity 1 and Disk 3 Connection Incident — Resolved (October 31, 2026)
 
-A read-only `unraid_array` query through the newly implemented Homelab Unraid MCP, followed by direct verification in Unraid **Main → Array Devices**, confirmed that the first parity slot contains a 14 TB Seagate `ST14000NT001` and has a red X / API status `DISK_DSBL` (disabled). The array reports `STARTED` and last parity check status `COMPLETED`, but this does **not** mean parity 1 is healthy. Its displayed error counter is zero; that does not rule out previous failed writes or connection problems.
+**Incident history:** Parity 1 was disabled (`DISK_DSBL`, red X) while occupied by a 14 TB Seagate IronWolf Pro (`ST14000NT001`). The earlier 12 TB WD Red Pro in that slot had previously exhibited similar problems and had been swapped out, but the Seagate later developed the same symptom. Disk 3, a separate 12 TB WD Red Pro, also disappeared from the active array. The operator confirmed that **Parity 1 and Disk 3 shared one SAS-to-SATA breakout cable**. The exact original fault mechanism was not captured; the shared breakout cable or connector path is the leading explanation, with HBA, backplane, connector, and power-path alternatives not individually excluded.
 
-- **Other array devices:** `parity2` 12 TB WD Red Pro, `disk1`, and `disk2` reported `DISK_OK`. This should not be interpreted as verified dual-parity protection while parity 1 is disabled.
-- **History:** Original parity 1 was a 12 TB WD Red Pro. The operator previously replaced it with the 14 TB Seagate after encountering a similar Unraid disabled-disk problem. The replacement operated for a period before the same symptom recurred. The earlier parity-1 entry in this document was outdated.
-- **Suspected cause:** SAS-to-SATA breakout cable or another shared connection/power/backplane/controller path. **Not diagnosed or confirmed**; disk hardware failure has not been excluded.
-- **Unassigned Devices:** A 12 TB WD Red Pro appears in the Unassigned Devices area. Its role as the former parity disk is consistent with the replacement history, but its physical identity and health have not been independently verified.
-- **Evidence:** The operator downloaded Unraid diagnostics before any further action; archive retained locally by the operator, not added to documentation.
-- **Actions performed:** **None** toward parity repair. No cable swap, disk reassignment, rebuild, parity sync, NAS shutdown, or other storage change was performed during MCP integration.
-- **Next action:** Address in a **separate controlled troubleshooting conversation**. Review saved diagnostics, inspect connections and SMART data, verify actual drive health, and follow an appropriate Unraid recovery procedure only after the cause is understood. Do not reboot, reassign, or initiate parity rebuilding casually; coordinate clean NAS shutdown with PBS/Immich/NFS dependencies before any physical cabling work.
+**Recovery performed:**
 
-The ZFS mirror is a separate storage pool; its last independently verified `ONLINE` state is recorded below. The disabled parity issue does not by itself establish a ZFS pool failure. The current state of parity protection should be rechecked before any consequential array operation.
+1. Shut down `nas-prod-01` and physically replaced the suspected SAS-to-SATA breakout cable.
+2. Removed the 14 TB Seagate from Parity 1 and reinstalled the original 12 TB WD Red Pro, serial `AAHKXP9H`.
+3. Reassigned the existing 12 TB WD Red Pro, serial `5PK7HDXF`, to Disk 3. The user confirmed this was an established data-disk role, not a newly commissioned empty disk.
+4. Started the array and accepted Unraid's recovery operation for both assignments. The syslog recorded `md: recovery thread: recon P D3 ...`, confirming simultaneous reconstruction of Parity 1 and Disk 3.
+5. Reconstruction completed with 0 reported errors, restoring valid parity and `DISK_OK` status for both slots.
+
+**Post-recovery verification (October 31):**
+
+| Check | Result |
+|---|---|
+| Unraid array / parity | Array `STARTED`; valid parity; Parity 1, Parity 2, Disk 1, Disk 2 and Disk 3 all `DISK_OK`, 0 reported disk errors |
+| Disk 3 mount | `/dev/md3p1` mounted as XFS at `/mnt/disk3` read/write; approximately 2.2 TB used; `appdata`, `data`, and `isos` directories visible |
+| Directory traversal | `find /mnt/disk3 -xdev -print > /dev/null` returned exit code `0` |
+| Parity 1 SMART | Overall-health `PASSED`; fresh short self-test completed without error; 0 reallocated, pending, or offline-uncorrectable sectors |
+| Disk 3 SMART | Overall-health `PASSED`; fresh short self-test completed without error; 0 reallocated, pending, or offline-uncorrectable sectors |
+| Parity 1 SATA CRC history | Attribute 199 = **454**, unchanged in post-recovery check |
+| Disk 3 SATA CRC history | Attribute 199 = **29**, unchanged in post-recovery check |
+| New connection errors | No matching new SATA reset, `ICRC`, or block-I/O communication errors observed in the reviewed post-replacement syslog |
+
+**Filesystem context:** Before the reassignment, a direct Unassigned Devices mount of physical Disk 3 (`/dev/sdf1`) failed at 23:31 CDT on October 30 with XFS metadata corruption messages. Unraid's emulated `/dev/md3p1` filesystem had mounted cleanly. After Disk 3 reconstruction, `/dev/md3p1` again mounted normally and its directory tree traversed without reported errors. The earlier physical-mount warning is historical evidence, **not an active unresolved array incident**.
+
+**Root cause assessment:** **Probable shared breakout-cable/connection fault.** Both affected drives had historical interface CRC errors, and the substituted Parity 1 Seagate had developed the same disabling symptom. Both drives completed a sustained reconstruction and short SMART testing after the cable replacement with no new CRC counts or disk errors. A cable-specific electrical test was not performed, so this is a well-supported inference rather than definitive component isolation.
+
+**Verification boundaries:** No full XFS metadata check, full-file-content verification, extended SMART surface test, or separate non-correcting parity check was performed. These are optional additional assurance measures and do **not** represent an ongoing known failure. Continue ordinary SMART, parity, and error-counter monitoring as routine NAS operations.
+
+**Historical documentation discrepancy:** The earlier storage document described `Disk 3 — Not installed` on October 30, whereas the operator confirmed Disk 3 had been an established third data disk and the active XFS/emulated contents were consistent with that. This record now reflects the serial-number-verified five-disk array. The original Phase 2 commissioning record separately describes the early build with two data disks; the exact date Disk 3 first entered service was not established here.
+
+**ZFS impact:** The independent `zfs-mirror` pool was not part of this parity reconstruction. Its existing `zpool status -v` check and subsequent Unraid pool-device status were healthy; no ZFS reconfiguration was required by this repair.
 
 ---
 

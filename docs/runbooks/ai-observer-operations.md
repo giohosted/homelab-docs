@@ -5,7 +5,7 @@
 **Proxmox VMID:** 107  
 **Proxmox Node:** pve-prod-01  
 **Environment:** Homelab v3  
-**Last Updated:** 2026-10-30  
+**Last Updated:** 2026-10-31  
 **Service Status:** Proxmox and Unraid MCP integrations implemented and end-to-end verified  
 **Backup Status:** October 30 scheduled backup successful; integrity and restore testing pending
 
@@ -804,7 +804,7 @@ Use Section 21 for detailed Unraid MCP and tunnel commands. Diagnose independent
 - HTTP 401 from local MCP without the bearer token is expected; an authenticated tool call or ChatGPT query is the functional test.
 - Upstream `forbidden` / permission errors for an **individual tool** may mean the dedicated 14-category `READ_ANY` key does not grant that GraphQL field. Investigate before expanding permissions.
 - Tool missing from ChatGPT: compare the actual 26-name tool inventory with the `UNRAID_RMCP_ENABLED_TOOLS` policy and check plugin tool refresh. Never remove the allowlist as a diagnostic shortcut.
-- The Unraid array currently has a disabled first parity drive. This is a **NAS hardware/storage incident**, not an MCP fault; it is deliberately unresolved pending a separate controlled repair workflow in `architecture/storage/nas-prod-01.md`.
+- **Historical NAS storage incident (resolved October 31, 2026):** The October 30 `DISK_DSBL` first-parity fault was not caused by the MCP integration. After breakout-cable replacement and simultaneous Parity 1/Disk 3 reconstruction, all array drives were verified `DISK_OK`. See `architecture/storage/nas-prod-01.md` for the completed recovery.
 
 ---
 
@@ -1879,9 +1879,11 @@ Two tunnel services use the same `/opt/tunnel-client/tunnel-client` binary and t
 
 The Unraid runtime API key and upstream Unraid API key were saved in Bitwarden. **Separate Bitwarden retention of `UNRAID_RMCP_TOKEN` remains to be verified**; do not mark credential recovery complete until confirmed. Never put the actual secret values into these Markdown files or Git.
 
-### Known Unraid Storage Issue (Separate Incident)
+### Resolved Unraid Storage Incident (October 31, 2026)
 
-The October 30 read-only `unraid_array` call discovered that the first 14 TB Seagate parity drive is `DISK_DSBL` / red X. Parity 2, both array data disks, and both ZFS mirror members appeared healthy. The operator saved Unraid diagnostics and plans to investigate a suspected SAS-to-SATA breakout cable in a **separate conversation**. No cable replacement, parity rebuild, disk reassignment, or array repair has been verified. Do **not** treat this storage issue as an MCP service failure. See `architecture/storage/nas-prod-01.md` for the live observation and unresolved status.
+The October 30 read-only `unraid_array` call correctly surfaced an **at-that-time** `DISK_DSBL` / red X on the first parity slot (then a 14 TB Seagate). Subsequent independent storage troubleshooting established that Parity 1 and Disk 3 shared a suspected faulty SAS-to-SATA breakout cable. The cable was replaced, original 12 TB WD Red Pro Parity 1 (`AAHKXP9H`) reinstalled, and existing WD Red Pro Disk 3 (`5PK7HDXF`) reassigned. A simultaneous Parity 1/Disk 3 reconstruction completed October 31 with 0 reported errors; all five array disks returned `DISK_OK`. Both affected disks passed fresh SMART short tests, CRC counters stayed unchanged, and Disk 3's XFS filesystem mounted and traversed successfully.
+
+**Storage incident status: Resolved.** The replaced shared cable/connection path is the probable, not conclusively isolated, cause. This was a NAS storage incident and **not** an MCP failure. Keep the detailed incident evidence and verification limits in `architecture/storage/nas-prod-01.md` rather than duplicating the recovery runbook here.
 
 ### Recovery and Completion
 
@@ -1898,7 +1900,7 @@ Service readiness is demonstrated by healthy containers, ready tunnels, correct 
 ### Architecture and Service
 
 - `services/infra/ai-observer.md` — AI Observer architecture, deployment, networking, authentication, security, and the complete Unraid MCP enabled/disabled tool inventory.
-- `architecture/storage/nas-prod-01.md` — Unraid storage architecture and unresolved primary-parity fault.
+- `architecture/storage/nas-prod-01.md` — Unraid storage architecture, current five-disk array, and resolved October 2026 parity/Disk 3 incident.
     
 - `architecture/compute/pve-prod-01.md` — Proxmox host and VM inventory.
     
