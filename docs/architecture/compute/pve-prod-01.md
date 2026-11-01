@@ -2,7 +2,7 @@
 
 **Role:** Primary Proxmox node — runs all primary VMs and LXCs  
 **Status:** Active  
-**Last Updated:** 2026-10-30
+**Last Updated:** 2026-11-01
 
 ---
 
@@ -121,7 +121,7 @@ The following guest inventory was verified through the live Homelab Proxmox MCP 
 
 VM 107 hosts the Homelab v3 AI Observer infrastructure.
 
-Its initial implementation provides read-only Proxmox monitoring and diagnostics through MCP, accessible to ChatGPT using OpenAI Secure MCP Tunnel.
+Its initial read-only Proxmox MCP implementation has since been expanded to **three separately verified integrations**: Proxmox, Unraid and Komodo (Docker on `docker-prod-01`), each accessed from ChatGPT through its own OpenAI Secure MCP Tunnel.
 
 **Verified VM configuration:**
 
@@ -145,22 +145,22 @@ Its initial implementation provides read-only Proxmox monitoring and diagnostics
 
 The AI Observer includes:
 
-- A dedicated Docker-hosted Proxmox MCP server.
+- Three Docker-hosted read-only MCP servers on the observer: Proxmox (`0.5.1`, 84 read tools), Unraid (`0.6.3`, 26 read tools), and Komodo (`1.5.0`, 40 read tools).
     
-- A native systemd-managed OpenAI Secure MCP Tunnel client.
+- Three independent native systemd-managed OpenAI Secure MCP Tunnel clients, sharing one installed binary.
     
 - A dedicated Proxmox API identity with read-only permissions.
     
 - A targeted firewall exception permitting access to the Proxmox API on TCP 8006.
     
-- A localhost-only MCP HTTP listener.
+- Three localhost-only MCP listeners (TCP 8080, 8082, 8084) and three localhost tunnel readiness listeners (TCP 8081, 8083, 8085).
     
 - Protected credentials stored outside the Git repository.
     
 
-The Proxmox MCP server and OpenAI tunnel were verified through successful live tool invocation from ChatGPT.
+All three MCP services and their independent OpenAI tunnels were verified through successful live tool invocation from ChatGPT by November 1, 2026. The Komodo upstream account is read-only with scoped Logs access; its local MCP is intentionally unauthenticated but loopback-bound, and eight sensitive tools are excluded.
 
-The observer does not currently have write permissions to Proxmox, and its planned Docker and Unraid integrations have not yet been implemented.
+The observer does not currently expose write operations through Proxmox, Unraid or Komodo. A full November 1 backup and isolated restore test have **not** been verified; see the AI Observer operations runbook.
 
 **Full service documentation:** `services/infra/ai-observer.md`
 

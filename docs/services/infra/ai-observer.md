@@ -1,86 +1,78 @@
-# AI Observer — Proxmox & Unraid MCP with OpenAI Secure MCP Tunnels
+# AI Observer — Proxmox, Unraid & Komodo MCP with OpenAI Secure MCP Tunnels
 
 **Role:** AI-assisted, read-only infrastructure monitoring and diagnostics  
 **Host:** observer-prod-01 (192.168.30.17)  
 **Proxmox Host:** pve-prod-01 (192.168.10.11)  
 **Proxmox VMID:** 107  
-**Status:** Active — Proxmox and Unraid integrations verified end-to-end  
-**Last Updated:** 2026-10-31
+**Status:** Active — Proxmox, Unraid, and Komodo integrations verified end-to-end  
+**Last Updated:** 2026-11-01
 
 ---
 
 ## Overview
-
 AI Observer provides controlled access to Homelab v3 infrastructure from AI assistants, initially ChatGPT, through Model Context Protocol (MCP).
 
 The observer runs on a dedicated Ubuntu virtual machine rather than sharing a Docker host with production applications. This separates AI integration services from existing infrastructure workloads and provides an independent security boundary.
 
-The implemented integrations are:
+**Implemented and end-to-end verified integrations:**
 
-- **Proxmox MCP:** Read-only monitoring of the Homelab v3 Proxmox cluster.
-- **Unraid MCP:** Read-only monitoring of `nas-prod-01` over the Unraid GraphQL API.
-- **OpenAI Secure MCP Tunnels:** Two independent outbound tunnel-client systemd services, one per MCP server.
-- **ChatGPT plugins:** `Homelab Proxmox` and `Homelab Unraid`, each separately connected and tested with a live tool call.
+- **Proxmox MCP:** Read-only monitoring of the Homelab v3 Proxmox cluster; deployed server version `0.5.1`, **84 read tools**.
+- **Unraid MCP:** Read-only monitoring of `nas-prod-01` over the Unraid GraphQL API; Rust MCP `0.6.3`, **26 read tools**.
+- **Komodo MCP:** Read-only monitoring of Docker infrastructure on `docker-prod-01` via Komodo Core; MCP `1.5.0`, Komodo `2.3.4`, **40 read tools** with eight explicit exclusions.
+- **OpenAI Secure MCP Tunnels:** Three separate outbound native systemd services, each with its own tunnel ID, restricted runtime credential, configuration, and health port.
+- **ChatGPT plugins:** `Homelab Proxmox`, `Homelab Unraid`, and `Homelab Komodo`; all three connected and exercised using a live tool call. **Total discovered: 150 read tools, zero write tools.**
 
-The Proxmox integration was verified October 29–30, 2026. The Unraid Rust MCP 0.6.3 integration was deployed and verified October 30, 2026 (local CDT; the source NAS returned October 31 UTC timestamps).
-
-A separate Docker-host MCP integration remains **planned**. The Unraid plugin can inspect Docker containers managed by Unraid, but it is not a replacement for the proposed Docker MCP integration covering the homelab's other Docker hosts.
-
----
+The Proxmox integration was verified October 29–30 and its compiled version/tool inventory rechecked November 1, 2026. The Unraid integration was deployed and verified October 30, 2026. Komodo integration and its third tunnel were verified end-to-end November 1, 2026. **Docker-host MCP is implemented, not merely planned.** Additional Docker hosts are not automatically enrolled: the verified Komodo server is `docker-prod-01`.
 
 ## Architecture
-
 ### Request Flow
 
-```
+```text
 ChatGPT
-   |                                     |
-   | Homelab Proxmox plugin             | Homelab Unraid plugin
-   v                                     v
-OpenAI Secure MCP Tunnel              OpenAI Secure MCP Tunnel
-   |                                     |
-   | outbound HTTPS                       | outbound HTTPS
-   v                                     v
-observer-prod-01 (192.168.30.17, VLAN 30)
-   |
-   +-- tunnel-client.service            -> 127.0.0.1:8080/mcp (Proxmox MCP)
-   |                                      -> HTTPS 192.168.10.11:8006
-   |                                      -> Proxmox homelab-v3 cluster
-   |
-   +-- tunnel-client-unraid.service     -> 127.0.0.1:8082/mcp (Unraid MCP)
-                                          -> verified HTTPS, nas-prod-01.local:443
-                                             resolved to 192.168.30.16
-                                          -> nas-prod-01 Unraid GraphQL API
+  |-- Homelab Proxmox plugin -- OpenAI outbound tunnel: homelab-proxmox
+  |     tunnel-client.service -> 127.0.0.1:8080/mcp
+  |     Proxmox MCP -> HTTPS 192.168.10.11:8006 -> homelab-v3 cluster
+  |
+  |-- Homelab Unraid plugin -- OpenAI outbound tunnel: homelab-unraid
+  |     tunnel-client-unraid.service -> 127.0.0.1:8082/mcp
+  |     Unraid MCP -> verified HTTPS nas-prod-01.local:443 (192.168.30.16)
+  |     -> nas-prod-01 GraphQL API
+  |
+  `-- Homelab Komodo plugin -- OpenAI outbound tunnel: homelab-komodo
+        tunnel-client-komodo.service -> 127.0.0.1:8084/mcp
+        Komodo MCP -> HTTPS komodo.giohosted.com (192.168.30.11)
+        -> Komodo Core/Periphery -> Docker on docker-prod-01
+
+All three MCP services and tunnel clients run on:
+observer-prod-01 (192.168.30.17, VLAN 30, Proxmox VMID 107)
 ```
 
+All three MCP HTTP listeners are published **only to loopback on the observer host**. Within the Docker network, the containerized MCP services bind to container interfaces. Each tunnel uses its own localhost health endpoint, protected OpenAI runtime key, and independent systemd unit. All tunnel processes run as the restricted `tunnel-client` Linux account using one installed binary.
 
-Both MCP HTTP listeners are published exclusively to localhost on the observer VM. Inside their Docker networks, the services bind to container interfaces, not exclusively to loopback. Each tunnel has its own configuration, health port, protected credentials, and independently enabled systemd unit. Both tunnel processes run as the existing `tunnel-client` Linux account.
-
-No publicly accessible MCP hostname, Traefik route, port forward, or inbound internet firewall rule is required.
+No public MCP hostname, Traefik route, port forwarding, or inbound internet firewall rule is required. The dedicated Komodo MCP talks to the existing Komodo Core HTTPS endpoint; it does not require a second Docker socket or privileged observer access.
 
 ### Component Inventory
 
-|Component|Technology|Location|
+| Component | Technology | Location / endpoint |
 |---|---|---|
-|Observer VM|Ubuntu Server 26.04.1 LTS|pve-prod-01, VM 107|
-|Proxmox MCP|mattoddie/proxmox-mcp|Docker on observer-prod-01|
-|MCP transport|Streamable HTTP|127.0.0.1:8080/mcp|
-|MCP health endpoint|HTTP|127.0.0.1:8080/health|
-|Secure tunnel client|OpenAI tunnel-client v0.0.18|Native systemd service|
-|Tunnel health endpoint|HTTP|127.0.0.1:8081/readyz|
-|Tunnel configuration|YAML and protected credential files|/etc/tunnel-client|
-|Proxmox ChatGPT plugin|Homelab Proxmox|ChatGPT Plugins|
-|Unraid MCP|dinglebear-ai/unraid-rmcp 0.6.3|Docker on observer-prod-01|
-|Unraid MCP transport|Streamable HTTP|127.0.0.1:8082/mcp|
-|Unraid MCP container|`unraid-mcp`|`/opt/stacks/unraid-mcp/`|
-|Unraid tunnel service|OpenAI tunnel-client v0.0.18|`tunnel-client-unraid.service`|
-|Unraid tunnel health endpoint|HTTP|127.0.0.1:8083/readyz|
-|Unraid tunnel configuration|YAML and protected credential files|`/etc/tunnel-client-unraid/`|
-|Unraid ChatGPT plugin|Homelab Unraid|ChatGPT Plugins|
+| Observer VM | Ubuntu Server 26.04.1 LTS | `observer-prod-01`, VM 107 on `pve-prod-01` |
+| Proxmox MCP | mattoddie/proxmox-mcp **0.5.1** | `/opt/stacks/proxmox-mcp/`, `127.0.0.1:8080/mcp` |
+| Proxmox MCP health | HTTP | `127.0.0.1:8080/health` |
+| Proxmox tunnel | OpenAI tunnel-client 0.0.18 | `tunnel-client.service`, `127.0.0.1:8081/readyz` |
+| Proxmox tunnel configuration | YAML + key + bearer file | `/etc/tunnel-client/` |
+| Proxmox ChatGPT plugin | Homelab Proxmox | 84 read tools |
+| Unraid MCP | dinglebear-ai/unraid-rmcp **0.6.3** | `/opt/stacks/unraid-mcp/`, `127.0.0.1:8082/mcp` |
+| Unraid tunnel | OpenAI tunnel-client 0.0.18 | `tunnel-client-unraid.service`, `127.0.0.1:8083/readyz` |
+| Unraid tunnel configuration | YAML + key + bearer file | `/etc/tunnel-client-unraid/` |
+| Unraid ChatGPT plugin | Homelab Unraid | 26 read tools |
+| Komodo MCP | MP-Tool/komodo-mcp-server **1.5.0** | `/opt/stacks/komodo-mcp/`, `127.0.0.1:8084/mcp` |
+| Komodo MCP readiness | HTTP | `127.0.0.1:8084/ready` |
+| Komodo tunnel | OpenAI tunnel-client 0.0.18 | `tunnel-client-komodo.service`, `127.0.0.1:8085/readyz` |
+| Komodo tunnel configuration | YAML + runtime key, no MCP bearer | `/etc/tunnel-client-komodo/` |
+| Komodo ChatGPT plugin | Homelab Komodo | 40 read tools |
+| Komodo Core | Komodo **2.3.4** | `docker-prod-01`, `https://komodo.giohosted.com` |
 
-**Important distinction:** OpenAI Secure MCP Tunnel is separate from the homelab's existing Cloudflare Tunnel deployment on docker-prod-01. It does not provide a general-purpose public reverse proxy.
-
----
+**Important distinction:** OpenAI Secure MCP Tunnel is separate from the homelab's application-oriented Cloudflare Tunnel deployment on `docker-prod-01`; it is not a general-purpose public reverse proxy.
 
 ## Observer VM
 
@@ -137,6 +129,7 @@ Docker is administered separately with elevated privileges when needed.
 
 **Project:** [https://github.com/mattoddie/proxmox-mcp](https://github.com/mattoddie/proxmox-mcp)  
 **Docker image:** `ghcr.io/mattoddie/proxmox-mcp:latest`  
+**Compiled running server version:** `0.5.1` (verified November 1, 2026 with `/proxmox-mcp version`)  
 **Container:** `proxmox-mcp`  
 **Compose:** `/opt/stacks/proxmox-mcp/compose.yaml`  
 **Environment:** `/opt/stacks/proxmox-mcp/.env`
@@ -221,6 +214,148 @@ The MCP server connects to the Proxmox API using HTTPS and a pinned SHA-256 cert
 The fingerprint was obtained from the Proxmox node certificate interface.
 
 TLS certificate verification remains enabled through fingerprint validation rather than being globally disabled.
+
+---
+
+### Verified Proxmox MCP Tool Inventory — 84 Read Tools
+The running container reported **`proxmox-mcp 0.5.1`** from `sudo docker exec proxmox-mcp /proxmox-mcp version` on November 1, 2026. The installed ChatGPT Homelab Proxmox plugin exposes **84 tools, all classified Read**, with no write, delete, or execution tools. The nine toolsets below match `PROXMOX_TOOLSETS=cluster,nodes,vms,containers,agent,snapshots,storage,backup,tasks` in the documented configuration. These are **discovered capabilities**, not proof that all 84 upstream API calls have individually succeeded.
+
+| Toolset | Read tools | Purpose |
+|---|---:|---|
+| `cluster` | 11 | Cluster, version, quorum, nodes, guests, metric configuration, logs, schedule simulation |
+| `nodes` | 25 | Node status, journals, network, services, package updates, ACME/certificates, time |
+| `vms` | 7 | QEMU VM identity, configuration, status, metrics and feature/migration checks |
+| `containers` | 7 | LXC inventory, configurations, interfaces, stats and feature/migration checks |
+| `agent` | 5 | Read-only QEMU guest-agent information, networking, users, storage and memory |
+| `snapshots` | 3 | List and inspect guest snapshots, including cluster-wide snapshot inventory |
+| `storage` | 14 | Storage inventories, disk/SMART, volumes, ZFS, LVM and available templates |
+| `backup` | 8 | Jobs, backup listings, defaults, coverage, and read-only prune preview |
+| `tasks` | 4 | Task inventory, task details, logs and read-only waiting on task status |
+| **Total** | **84** | **Currently exposed through ChatGPT** |
+
+**Exact exposed names (as discovered November 1, 2026):**
+
+**`cluster` (11):**
+- `proxmox_get_cluster_config`
+- `proxmox_get_cluster_log`
+- `proxmox_get_cluster_options`
+- `proxmox_get_cluster_status`
+- `proxmox_get_next_vmid`
+- `proxmox_get_version`
+- `proxmox_list_guests`
+- `proxmox_list_metric_servers`
+- `proxmox_list_nodes`
+- `proxmox_list_resources`
+- `proxmox_simulate_schedule`
+
+**`nodes` (25):**
+- `proxmox_get_acme_account`
+- `proxmox_get_acme_challenge_schema`
+- `proxmox_get_acme_plugin`
+- `proxmox_get_node_certificates`
+- `proxmox_get_node_config`
+- `proxmox_get_node_dns`
+- `proxmox_get_node_hosts`
+- `proxmox_get_node_journal`
+- `proxmox_get_node_netstat`
+- `proxmox_get_node_network_interface`
+- `proxmox_get_node_package_versions`
+- `proxmox_get_node_report`
+- `proxmox_get_node_stats`
+- `proxmox_get_node_status`
+- `proxmox_get_node_subscription`
+- `proxmox_get_node_syslog`
+- `proxmox_get_node_time`
+- `proxmox_get_package_changelog`
+- `proxmox_list_acme_accounts`
+- `proxmox_list_acme_directories`
+- `proxmox_list_acme_plugins`
+- `proxmox_list_node_network`
+- `proxmox_list_node_repositories`
+- `proxmox_list_node_services`
+- `proxmox_list_node_updates`
+
+**`vms` (7):**
+- `proxmox_check_vm_feature`
+- `proxmox_check_vm_migration`
+- `proxmox_get_vm`
+- `proxmox_get_vm_cloudinit`
+- `proxmox_get_vm_config`
+- `proxmox_get_vm_stats`
+- `proxmox_list_vms`
+
+**`containers` (7):**
+- `proxmox_check_container_feature`
+- `proxmox_check_container_migration`
+- `proxmox_get_container`
+- `proxmox_get_container_config`
+- `proxmox_get_container_interfaces`
+- `proxmox_get_container_stats`
+- `proxmox_list_containers`
+
+**`agent` (5):**
+- `proxmox_get_guest_filesystems`
+- `proxmox_get_guest_info`
+- `proxmox_get_guest_memory_blocks`
+- `proxmox_get_guest_network`
+- `proxmox_get_guest_users`
+
+**`snapshots` (3):**
+- `proxmox_get_snapshot`
+- `proxmox_list_all_snapshots`
+- `proxmox_list_snapshots`
+
+**`storage` (14):**
+- `proxmox_get_disk_smart`
+- `proxmox_get_storage`
+- `proxmox_get_storage_stats`
+- `proxmox_get_volume`
+- `proxmox_get_zfs_pool`
+- `proxmox_list_appliance_templates`
+- `proxmox_list_directory_mounts`
+- `proxmox_list_disks`
+- `proxmox_list_lvm`
+- `proxmox_list_lvm_thin`
+- `proxmox_list_storage`
+- `proxmox_list_storage_content`
+- `proxmox_list_zfs_pools`
+- `proxmox_scan_storage`
+
+**`backup` (8):**
+- `proxmox_get_backup_config`
+- `proxmox_get_backup_job`
+- `proxmox_get_vzdump_defaults`
+- `proxmox_list_backup_files`
+- `proxmox_list_backup_jobs`
+- `proxmox_list_backups`
+- `proxmox_list_unbacked_guests`
+- `proxmox_preview_backup_prune`
+
+**`tasks` (4):**
+- `proxmox_get_task`
+- `proxmox_get_task_log`
+- `proxmox_list_tasks`
+- `proxmox_wait_for_task`
+
+### Proxmox MCP Exclusions and Read-Only Policy
+The [deployed-version tool reference](https://github.com/mattoddie/proxmox-mcp/blob/v0.5.1/docs/tools.md) and [v0.5.1 configuration reference](https://github.com/mattoddie/proxmox-mcp/blob/v0.5.1/docs/configuration.md) describe 19 upstream toolsets and 300+ potential tools across capability levels. **Do not conflate upstream availability with deployed registration.** This deployment enables only the nine groups listed above. The remaining **ten entire toolsets** are not registered:
+
+| Disabled toolset | Scope of withheld capabilities / reason |
+|---|---|
+| `access` | Users, roles, tokens, ACLs, realms and MFA; sensitive identity metadata and unnecessary for operational monitoring |
+| `firewall` | Datacenter/node/guest firewall rules and management; privileged security configuration and unnecessary detailed disclosure |
+| `ha` | HA configuration and resource management; not included in current observer monitoring scope |
+| `sdn` | SDN zones, VNets, IPAM, routing/management metadata; unnecessary detailed network configuration |
+| `ceph` | Ceph topology and management; not required for deployed storage observability |
+| `pools` | Proxmox resource pool listings and changes; not part of current monitoring scope |
+| `replication` | Replication jobs, logs and operations; not part of current monitoring scope |
+| `notifications` | Notification targets, matchers, and management; endpoints can contain sensitive configuration |
+| `hardware` | Host PCI/USB/device mappings; out of current scope |
+| `raw` | General Proxmox API request escape hatch; explicitly excluded to prevent bypassing curated tool safety boundaries |
+
+Within the **nine enabled toolsets**, tools marked write/delete/exec in upstream v0.5.1 are **also not registered** because `PROXMOX_ALLOW_WRITES=false`, `PROXMOX_ALLOW_DELETES=false`, and `PROXMOX_ALLOW_EXEC=false`. Consequently, start/stop/reconfigure/clone/migrate guests, create/delete snapshots or backups, run guest commands, edit networking/storage, and other changes are unavailable. The underlying `observer@pve!proxmox-mcp` identity retains `PVEAuditor` privileges, providing an independent upstream read-only boundary.
+
+With v0.5.1 the upstream default `all` would expose more tools than this deployment; the existing explicit toolset policy intentionally limits information disclosure, prompt/tool complexity and blast radius. **No inference of 300+ locally deployed tools is valid.** A new upstream release or change to `PROXMOX_TOOLSETS` requires an exact `tools/list` audit, not only a version check. Read operations may still disclose sensitive infrastructure metadata (for example node reports, certificates, network details, VM configurations or logs); do not paste raw outputs into untrusted services.
 
 ---
 
@@ -330,77 +465,134 @@ Some are potentially useful for future observability (`registration`, `flash`, `
 
 ---
 
-## OpenAI Secure MCP Tunnel
+## Komodo MCP
 
+### Deployment and Verified Connectivity
+
+**Project:** [MP-Tool/komodo-mcp-server](https://github.com/MP-Tool/komodo-mcp-server)  
+**Image:** `ghcr.io/mp-tool/komodo-mcp-server:latest`  
+**Deployed MCP version:** `1.5.0` (verified via `/ready` and live `komodo_health_check`)  
+**Komodo Core version:** `2.3.4`  
+**Container:** `komodo-mcp`  
+**Compose:** `/opt/stacks/komodo-mcp/compose.yaml`  
+**Protected environment:** `/opt/stacks/komodo-mcp/.env`, owned by `gio:gio` with mode `0600` at deployment  
+**Local MCP endpoint:** `http://127.0.0.1:8084/mcp`, Docker published only on loopback (`127.0.0.1:8084:8000/tcp`)  
+**Readiness:** `http://127.0.0.1:8084/ready`  
+**Komodo API:** `https://komodo.giohosted.com` (resolved to `192.168.30.11` from observer at verification)
+
+The image uses a manually managed mutable `latest` tag; it does not automatically update. The Compose security settings are `restart: unless-stopped`, `no-new-privileges:true`, `cap_drop: [ALL]`, `pids_limit: 100`, `mem_limit: 384m`, and bounded JSON logs (10 MiB × 3). No Docker socket is mounted into the observer MCP container. **Komodo Core and Periphery remain on `docker-prod-01`, not the observer.**
+
+A dedicated Komodo user, `ai-observer-komodo`, holds Read permissions for monitored resources and Logs permissions for Server, Stack and Deployment. It is not an administrator and has no Inspect, Terminal, Attach, Processes, or create privileges. Its dedicated API key named `ai-observer-mcp` and secret are stored in the observer's protected `.env`; **do not publish them**. The local MCP queries Komodo Core over HTTPS with these credentials; the ChatGPT tool calls do not contact Docker directly.
+
+### Komodo MCP Authentication and Security
+
+| Setting | Implemented value / purpose |
+|---|---|
+| `MCP_TRANSPORT` | `http` |
+| `MCP_PORT` | `8000` (in container) |
+| `MCP_BIND_HOST` | `0.0.0.0` inside the container; host publication is loopback only |
+| `MCP_AUTH_ENABLED` | `false` — intentional for this deployment; no separate bearer header on local MCP |
+| `MCP_SECRET_SCRUB_ENABLED` | `true`; best-effort output scrubbing only |
+| `MCP_TOOLS_EXCLUDED_TOOLS` | Eight explicitly withheld tools listed below |
+| `LOG_LEVEL` | `info` |
+| OpenAI tunnel MCP Authorization header | **Not configured**, unlike Proxmox and Unraid |
+
+In the deployed upstream implementation, anonymous HTTP MCP clients are restricted to its read-only tool scope; write/manage/operate tools were not discovered. This **does not authenticate local MCP callers**: any process/user able to access observer loopback port `8084` may invoke exposed read tools. Localhost binding, the dedicated non-admin upstream account, disabled writes, selected tool exclusions, the observer OS boundary, and private OpenAI tunnel are distinct protections. A tool being labelled **Read** does not mean its output cannot include private information. Retained `*_info` tools can return whole resource configurations; operators deliberately chose to retain them for troubleshooting. Logs, scripts, network configuration, variables and metadata should always be reviewed before external sharing. Upstream scrubbing is defense-in-depth, **not** a guarantee that every secret will be removed.
+
+### Current Resource Inventory and ChatGPT Verification
+
+On November 1, 2026, local MCP health and server/container list calls passed. The dedicated account retrieved one Komodo server (`docker-prod-01`, state `Ok`) and **26 Docker containers**. A local resource-count audit found **9 stacks, 3 procedures, 1 builder**, and zero deployments, builds, repos, actions, alerters, resource syncs, swarms or variables at the time of checking. These are time-specific observations, not guaranteed current counts. The OpenAI tunnel and ChatGPT plugin then discovered **exactly 40 tools, all Read, zero Write**, and `komodo_health_check` plus `komodo_container_list` were successfully invoked live from ChatGPT.
+
+### Exposed Komodo MCP Tools — 40
+
+The exact ChatGPT-discovered tool inventory is grouped below. All entries are **tool names**, not guarantees of success for every resource or permission.
+
+| Group | Count | Tool names |
+|---|---:|---|
+| Connectivity / server | 4 | `komodo_health_check`, `komodo_server_list`, `komodo_server_info`, `komodo_server_stats` |
+| Containers and logs | 3 | `komodo_container_list`, `komodo_container_logs`, `komodo_container_search_logs` |
+| Stacks and deployments | 3 | `komodo_stack_list`, `komodo_deployment_list`, `komodo_deployment_info` |
+| Builds, repositories and builders | 7 | `komodo_build_list`, `komodo_build_info`, `komodo_build_logs`, `komodo_repo_list`, `komodo_repo_info`, `komodo_builder_list`, `komodo_builder_info` |
+| Procedures and actions | 4 | `komodo_procedure_list`, `komodo_procedure_info`, `komodo_action_list`, `komodo_action_info` |
+| Alerts / updates / resource sync | 6 | `komodo_alerter_list`, `komodo_alerter_info`, `komodo_update_list`, `komodo_update_info`, `komodo_resource_sync_list`, `komodo_resource_sync_info` |
+| Docker objects and Swarm | 8 | `komodo_docker_image_list`, `komodo_docker_network_list`, `komodo_docker_network_inspect`, `komodo_docker_volume_list`, `komodo_swarm_list`, `komodo_swarm_info`, `komodo_swarm_nodes_list`, `komodo_swarm_services_list` |
+| Identities, variables and tags | 5 | `komodo_user_list_api_keys`, `komodo_variable_list`, `komodo_variable_info`, `komodo_tag_list`, `komodo_tag_info` |
+| **Total** | **40** | **All exposed as Read in ChatGPT; zero write tools** |
+
+`komodo_container_logs` and `komodo_container_search_logs` remain intentionally enabled for useful diagnostics. `komodo_server_info`, `komodo_procedure_info`, and `komodo_builder_info` also remain enabled following the operator's explicit decision; these could reveal detailed connection or procedure configuration. `komodo_user_list_api_keys` returns key metadata, not a verified secret dump; review actual outputs carefully.
+
+### Explicitly Excluded Komodo Tools — 8
+
+| Excluded tool | Reason |
+|---|---|
+| `komodo_container_inspect` | Full Docker Inspect may return plaintext `Config.Env`, including Cloudflare and WireGuard secrets; confirmed in local audit. |
+| `komodo_exec` | Arbitrary commands / execution path; outside the approved read-only model. |
+| `komodo_docker_image_inspect` | Image configuration and labels could contain credentials. |
+| `komodo_docker_volume_inspect` | Volume driver options could contain credential or endpoint information. |
+| `komodo_docker_image_history` | Image build-step history may contain embedded secrets. |
+| `komodo_stack_info` | Full stack/Compose configuration; local audit showed redaction, but operator elected not to rely on best-effort scrub for full Compose details. |
+| `komodo_toml_export_all` | Bulk export of Komodo configuration; excessive disclosure surface. |
+| `komodo_toml_export_resources` | Resource configuration export; excessive disclosure surface. |
+
+Additionally, the upstream MCP's anonymous-HTTP read-only policy and dedicated non-admin Komodo account prevent exposure/use of management, deployment, destructive, and execution tools. The eight exclusions are **read-surface restrictions**, not the complete list of upstream write tools. Re-check all 40 names, exclusions, and upstream account permissions after updating the MCP image or changing configuration.
+
+---
+
+## OpenAI Secure MCP Tunnel
 ### Deployment
 
 **Project:** [https://github.com/openai/tunnel-client](https://github.com/openai/tunnel-client)  
-**Installed version:** 0.0.18  
-**Installation directory:** `/opt/tunnel-client`  
+**Installed binary version:** `0.0.18` (verified during initial deployment)  
+**Installation directory:** `/opt/tunnel-client/`  
 **Binary:** `/opt/tunnel-client/tunnel-client`  
-**Existing Proxmox service:** `tunnel-client.service`  
-**Proxmox configuration:** `/etc/tunnel-client/config.yaml`  
-**Unraid service:** `tunnel-client-unraid.service`  
-**Unraid configuration:** `/etc/tunnel-client-unraid/config.yaml`
+**Service account:** `tunnel-client` (noninteractive; not a member of the Docker group)
 
-The official Linux AMD64 release was downloaded and its SHA-256 checksum successfully verified before installation.
-
-The matching bundled `cloudflared` binary and manifest were installed alongside the tunnel client.
+The original official Linux AMD64 release and its SHA-256 checksum were verified at installation; the matching `cloudflared` companion and manifest were installed with it. All three native services reuse that one installed binary. A binary update can affect **all three** integrations.
 
 ### Tunnel Identities
 
-|Field|Value|
-|---|---|
-|Proxmox tunnel name / ID|homelab-proxmox — `tunnel_6aded6df36348191b926a1b2fed52974`|
-|Unraid tunnel name / ID|homelab-unraid — `tunnel_6ae54db66f7c8191a73960ac6eb77981`|
-|Control plane|OpenAI Platform|
-|Proxmox MCP target / health|`http://127.0.0.1:8080/mcp` / `127.0.0.1:8081`|
-|Unraid MCP target / health|`http://127.0.0.1:8082/mcp` / `127.0.0.1:8083`|
-|Authentication to OpenAI|Restricted runtime API key|
-|Authentication to MCP|Static bearer token|
+| Integration | Tunnel name | Tunnel ID | Local MCP target | Readiness endpoint |
+|---|---|---|---|---|
+| Proxmox | `homelab-proxmox` | `tunnel_6aded6df36348191b926a1b2fed52974` | `127.0.0.1:8080/mcp` | `127.0.0.1:8081/readyz` |
+| Unraid | `homelab-unraid` | `tunnel_6ae54db66f7c8191a73960ac6eb77981` | `127.0.0.1:8082/mcp` | `127.0.0.1:8083/readyz` |
+| Komodo | `homelab-komodo` | `tunnel_6ae6e984758881919f5c308207bab3d3` | `127.0.0.1:8084/mcp` | `127.0.0.1:8085/readyz` |
 
-Each tunnel uses a dedicated OpenAI runtime API key with restricted Tunnel Read and Use permissions. The Unraid runtime key was saved to Bitwarden and installed on the observer in a protected file. The Unraid API key is also stored in Bitwarden. Confirm that the separately generated `UNRAID_RMCP_TOKEN` is retained in Bitwarden before relying on it for recovery; its separate storage was not verified during deployment.
-
-Administrative tunnel-management credentials are not required by the long-running daemon.
+Each tunnel uses its own restricted OpenAI runtime API key with **Tunnels Read + Use**, not management privileges. The Komodo runtime key is named `homelab-komodo-tunnel` and was saved in Bitwarden. The Unraid runtime key and Unraid API key were saved in Bitwarden; separately retained Bitwarden storage of `UNRAID_RMCP_TOKEN` is **not yet verified**. Each tunnel has its own OpenAI identity, distinct from local MCP authentication.
 
 ### Service Configuration
 
-Both tunnel clients run as separate native systemd services using the same `tunnel-client` service account and binary.
+All three tunnel processes are independent native systemd services. The **Komodo unit was inspected/verified** and follows the existing Unraid unit settings:
 
-**Systemd units:** `/etc/systemd/system/tunnel-client.service` and `/etc/systemd/system/tunnel-client-unraid.service`
-
-Important service settings:
-
-|Setting|Value|
+| Setting | Value |
 |---|---|
-|User / Group|tunnel-client|
-|Working directory|/opt/tunnel-client|
-|Startup|Enabled|
-|Restart policy|always|
-|Restart delay|5 seconds|
-|NoNewPrivileges|true|
-|UMask|0077|
+| Service unit files | `/etc/systemd/system/tunnel-client.service`, `/etc/systemd/system/tunnel-client-unraid.service`, `/etc/systemd/system/tunnel-client-komodo.service` |
+| `User` / `Group` | `tunnel-client:tunnel-client` |
+| `WorkingDirectory` | `/opt/tunnel-client` |
+| `ExecStart` | `/opt/tunnel-client/tunnel-client run --config /etc/<respective-tunnel-directory>/config.yaml` |
+| `Restart` / `RestartSec` | `always` / `5` seconds |
+| `NoNewPrivileges` | `true` |
+| `UMask` | `0077` |
+| `WantedBy` | `multi-user.target` |
 
-Both tunnel services were verified `active` and `enabled`. Their unit files include `Restart=always` with a 5-second delay and `WantedBy=multi-user.target`; a full VM reboot/startup test has not been performed. Neither service depends on an interactive SSH session.
+On November 1, 2026, `tunnel-client-komodo.service` returned `active` and `enabled`, and `/readyz` returned HTTP 200 `ready`. The prior Proxmox/Unraid tunnels were previously verified operational. A complete observer VM reboot and automatic three-tunnel recovery test remains outstanding.
 
 ### Protected Configuration Files
 
-|Path|Purpose|Ownership|Permissions|
+| Path | Purpose | Ownership | Mode |
 |---|---|---|---|
-|`/etc/tunnel-client/config.yaml`|Proxmox tunnel configuration|root:tunnel-client|0640|
-|`/etc/tunnel-client/openai-runtime.key`|Proxmox OpenAI runtime API key|root:tunnel-client|0640|
-|`/etc/tunnel-client/mcp-authorization`|Proxmox MCP bearer Authorization header|root:tunnel-client|0640|
-|`/etc/tunnel-client/`|Proxmox protected directory|root:tunnel-client|0750|
-|`/etc/tunnel-client-unraid/config.yaml`|Unraid tunnel configuration|root:tunnel-client|0640|
-|`/etc/tunnel-client-unraid/openai-runtime.key`|Unraid OpenAI runtime API key|root:tunnel-client|0640|
-|`/etc/tunnel-client-unraid/mcp-authorization`|Unraid MCP bearer Authorization header|root:tunnel-client|0640|
-|`/etc/tunnel-client-unraid/`|Unraid protected directory|root:tunnel-client|0750|
+| `/etc/tunnel-client/` | Proxmox tunnel directory | `root:tunnel-client` | `0750` |
+| `/etc/tunnel-client/config.yaml` | Proxmox tunnel YAML | `root:tunnel-client` | `0640` |
+| `/etc/tunnel-client/openai-runtime.key` | Restricted OpenAI key | `root:tunnel-client` | `0640` |
+| `/etc/tunnel-client/mcp-authorization` | Proxmox MCP `Bearer` Authorization value | `root:tunnel-client` | `0640` |
+| `/etc/tunnel-client-unraid/` | Unraid tunnel directory | `root:tunnel-client` | `0750` |
+| `/etc/tunnel-client-unraid/config.yaml` | Unraid tunnel YAML | `root:tunnel-client` | `0640` |
+| `/etc/tunnel-client-unraid/openai-runtime.key` | Restricted OpenAI key | `root:tunnel-client` | `0640` |
+| `/etc/tunnel-client-unraid/mcp-authorization` | Unraid MCP `Bearer` Authorization value | `root:tunnel-client` | `0640` |
+| `/etc/tunnel-client-komodo/` | Komodo tunnel directory | `root:tunnel-client` | `0750` |
+| `/etc/tunnel-client-komodo/config.yaml` | Komodo tunnel YAML | `root:tunnel-client` | `0640` |
+| `/etc/tunnel-client-komodo/openai-runtime.key` | Restricted OpenAI key (`homelab-komodo-tunnel`) | `root:tunnel-client` | `0640` |
 
-Each MCP authorization file contains the complete `Bearer` header value for its own server. The corresponding tunnel client reads the file and sends it to the local MCP server.
-
-Secrets are not embedded directly into the systemd unit or committed to Git.
-
----
+Komodo's key file and YAML permissions were **verified directly with `stat`**, and its key file was verified nonempty without displaying the value. **There is intentionally no `/etc/tunnel-client-komodo/mcp-authorization` file**: `MCP_AUTH_ENABLED=false` on the local Komodo MCP, unlike the bearer-protected Proxmox and Unraid MCP servers. The ChatGPT plugin's *No authentication* setting describes the lack of separate ChatGPT OAuth; it does not impose local MCP authentication. Credentials are not embedded in unit files or committed to Git.
 
 ## Network and Firewall
 
@@ -435,75 +627,50 @@ The observer reaches Unraid over the Services VLAN at `192.168.30.16:443`, using
 No additional inter-VLAN management firewall exception or public listener was introduced for Unraid. Read-only requests were authenticated successfully over this route. Do not broaden the observer's access to Management VLAN as part of Unraid troubleshooting.
 
 
+### Komodo Core HTTPS API Access
+
+The Komodo MCP container reaches existing Komodo Core at `https://komodo.giohosted.com`, resolving to `192.168.30.11` from the observer during setup. A local request completed with HTTP 200 and successful TLS verification. This is separate from the OpenAI control-plane outbound connection. The target server remains `docker-prod-01` on the Services VLAN; no direct Docker socket or privileged Docker API listener was added on the observer.
+
 ### OpenAI Connectivity
+All three tunnel clients initiate outbound HTTPS traffic to OpenAI; none accepts inbound internet connections.
 
-Both tunnel clients initiate outbound HTTPS traffic to OpenAI.
-
-|Traffic|Purpose|
+| Traffic | Purpose |
 |---|---|
-|Observer → api.openai.com:443|Secure MCP Tunnel control plane|
-|Tunnel client → 127.0.0.1:8080|Local Proxmox MCP requests|
-|Tunnel client → 127.0.0.1:8082|Local Unraid MCP requests|
-|Unraid MCP → 192.168.30.16:443|Verified HTTPS to Unraid GraphQL API|
-|Proxmox MCP → 192.168.10.11:8006|Proxmox API access|
+| Observer → `api.openai.com:443` | Outbound Secure MCP Tunnel control plane |
+| Tunnel client → `127.0.0.1:8080` | Local Proxmox MCP requests |
+| Tunnel client → `127.0.0.1:8082` | Local Unraid MCP requests |
+| Tunnel client → `127.0.0.1:8084` | Local Komodo MCP requests |
+| Proxmox MCP → `192.168.10.11:8006` | Proxmox HTTPS API via targeted UniFi firewall rule |
+| Unraid MCP → `192.168.30.16:443` | Verified TLS to Unraid GraphQL API |
+| Komodo MCP → `komodo.giohosted.com:443` (`192.168.30.11` at verification) | Komodo Core HTTPS API |
 
-No public listener, inbound port forwarding, or general inter-VLAN management access was introduced.
-
----
+No inbound port forward, public MCP reverse proxy, or broad Services-to-Management firewall exception was introduced for these integrations.
 
 ## ChatGPT Integration
-
 ### Plugins
 
-**Name:** Homelab Proxmox  
-**Description:** Read-only monitoring and diagnostics for Homelab v3 Proxmox infrastructure.  
-**Connection:** Tunnel  
-**Tunnel:** homelab-proxmox  
-**ChatGPT authentication option:** No authentication  
-**Status:** Connected and end-to-end verified
+| Plugin | Tunnel | ChatGPT tool discovery | MCP authentication to local target | Live verification |
+|---|---|---:|---|---|
+| `Homelab Proxmox` | `homelab-proxmox` | **84 Read / 0 Write** | Tunnel injects protected MCP bearer header | `proxmox_get_cluster_status` succeeded |
+| `Homelab Unraid` | `homelab-unraid` | **26 Read / 0 Write** | Tunnel injects protected MCP bearer header | `unraid_info` succeeded |
+| `Homelab Komodo` | `homelab-komodo` | **40 Read / 0 Write** | **No local MCP bearer**; upstream anonymous HTTP MCP read scope plus dedicated non-admin Komodo API key | `komodo_health_check` and `komodo_container_list` succeeded |
+| **Total** | **3 outbound tunnels** | **150 Read / 0 Write** | Per-integration controls | **All three integrations end-to-end verified** |
 
-The ChatGPT plugin's _No authentication_ option refers to the absence of a separate OAuth login flow in ChatGPT. It does not disable the MCP server's bearer-token requirement.
-
-Authentication to the local MCP endpoint is supplied by the protected tunnel-client configuration.
-
-**Name:** Homelab Unraid  
-**Description:** Read-only monitoring and diagnostics for Homelab v3 Unraid NAS infrastructure.  
-**Connection:** Tunnel  
-**Tunnel:** homelab-unraid (`tunnel_6ae54db66f7c8191a73960ac6eb77981`)  
-**ChatGPT authentication option:** No authentication  
-**Status:** Connected; 26 read tools/zero write tools discovered; `unraid_info` called successfully directly from ChatGPT.
-
-For both plugins, ChatGPT's *No authentication* choice means no separate user OAuth flow. Local MCP HTTP requests still require a bearer token supplied by each tunnel's protected credential file.
-
+All three private ChatGPT plugins use **Connection: Tunnel** and **ChatGPT authentication option: No authentication** (no separate end-user OAuth flow). For Proxmox and Unraid, their MCP servers nevertheless demand their own bearer tokens. For Komodo, the local MCP is deliberately unauthenticated (`MCP_AUTH_ENABLED=false`); it remains loopback-bound and is restricted by upstream anonymous-read scope and the dedicated non-admin Komodo user. These controls are **not equivalent**: local processes may be able to query the Komodo MCP without a separate header.
 
 ### Usage
 
-ChatGPT can automatically select the Homelab Proxmox or Homelab Unraid plugin when the relevant live infrastructure information is needed.
+ChatGPT can select the relevant Homelab Proxmox, Homelab Unraid, or Homelab Komodo plugin automatically when live infrastructure context is useful. The corresponding plugins may also be invoked explicitly.
 
-Each integration can also be selected explicitly using `@Homelab Proxmox` or `@Homelab Unraid`.
+Representative read-only uses:
 
-Typical supported requests include:
+- Proxmox: inspect quorum and cluster status, guest and node health, storage capacity, backup job coverage, snapshots and task logs.
+- Unraid: inspect array/parity/disk state, storage, shares, server status, metrics, container inventory and logs permitted by the 26-tool allowlist.
+- Komodo: inspect `docker-prod-01` container inventory and states, search/read logs, read Komodo stacks, server statistics, and non-destructive resource metadata within the exposed 40-tool scope.
 
-- Check Proxmox cluster health and quorum.
-    
-- Inspect nodes, VMs, and LXCs.
-    
-- Review resource utilization.
-    
-- Investigate task failures.
-    
-- Inspect guest configurations.
-    
-- Review Proxmox backup coverage.
-    
-- Check available package-update information.
-    
+**Security:** A Read label means the tool is classified as non-mutating; it is **not a promise of non-sensitive output**. Container logs, node reports, resources, procedure scripts, webhook configuration, API-key metadata and host or guest configurations may reveal operational or private information. Review data before sending it to additional services. No write/management tool is currently exposed through these three plugins.
 
-Neither plugin currently exposes write operations. For Unraid, the MCP exposes exactly 26 allowlisted read tools and uses a separate read-only upstream API key. Do not assume that an *individual* read action returns nothing sensitive (for example logs or configuration variables).
-
-Documentation-first troubleshooting still applies: consult the relevant Markdown documentation in Google Drive and verify infrastructure state through the live MCP integration when appropriate.
-
----
+Documentation-first troubleshooting remains mandatory: consult the Markdown documentation in Google Drive and corroborate current state through the relevant live MCP integration.
 
 ## Implementation Verification
 
@@ -521,6 +688,19 @@ Documentation-first troubleshooting still applies: consult the relevant Markdown
 |Tunnel `/readyz`|HTTP 200, `ready`|
 |ChatGPT custom plugin connection|Connected|
 |Live tool call directly from ChatGPT|Passed|
+
+### Proxmox MCP Audit — November 1, 2026
+
+| Verification | Result |
+|---|---|
+| Container binary version | `0.5.1` verified with `sudo docker exec proxmox-mcp /proxmox-mcp version` |
+| Live ChatGPT tool discovery | **84 Read**, **0 Write** |
+| Configured toolsets | `cluster,nodes,vms,containers,agent,snapshots,storage,backup,tasks` (nine) |
+| Excluded upstream toolsets | Ten: `access`, `firewall`, `ha`, `sdn`, `ceph`, `pools`, `replication`, `notifications`, `hardware`, `raw` |
+| Write, delete, execution gates | All disabled in documented config |
+| Reference version | [upstream v0.5.1 tools](https://github.com/mattoddie/proxmox-mcp/blob/v0.5.1/docs/tools.md), not future main branch |
+
+The full 84-name inventory is recorded under **Proxmox MCP** above; tool discovery does not prove all 84 operations are authorized against Proxmox.
 
 ### Unraid MCP Verification — October 30, 2026 (CDT)
 
@@ -541,6 +721,27 @@ Documentation-first troubleshooting still applies: consult the relevant Markdown
 
 A healthy container, a ready tunnel, and connected-plugin discovery each check different layers. End-to-end verification was achieved through the live ChatGPT invocation. Full per-tool testing, automatic startup through an actual observer reboot, and recovery/restore testing remain outstanding.
 
+
+### Komodo MCP Verification — November 1, 2026 (CST)
+
+| Verification | Result |
+|---|---|
+| Container and MCP readiness | Healthy `komodo-mcp`; `/ready` returned `ready:true` |
+| MCP and Komodo versions | `1.5.0` / Core `2.3.4` |
+| Local MCP calls | `komodo_health_check`, `komodo_server_list`, `komodo_container_list` succeeded |
+| Server inventory | `docker-prod-01` state `Ok` |
+| Docker inventory | 26 containers returned |
+| Resource inventories | 9 stacks; 3 procedures; 1 builder; none of other queried types |
+| Tool audit | **40 Read**, zero Write; eight explicit exclusions |
+| Tunnel ID | `tunnel_6ae6e984758881919f5c308207bab3d3` |
+| OpenAI runtime key | Restricted `homelab-komodo-tunnel`, saved in Bitwarden; file verified nonempty |
+| Local tunnel diagnostic | `doctor --config /etc/tunnel-client-komodo/config.yaml` -> `RESULT ok` |
+| Systemd service | `tunnel-client-komodo.service` active and enabled |
+| Tunnel readiness | `127.0.0.1:8085/readyz` HTTP 200 `ready` |
+| ChatGPT plugin discovery | `Homelab Komodo`: 40 Read tools |
+| Live ChatGPT tool calls | `komodo_health_check` returned configured/healthy; `komodo_container_list` returned 26 containers |
+
+The `doctor` result included an HTTP 400 reachability response from `/mcp`, accepted by the diagnostic as a valid reachability result; it was **not** used as proof of authenticated JSON-RPC. Successful MCP tool calls provide that proof. Full per-tool testing, cold-reboot recovery and isolated restore remain unverified.
 
 ### Verified Live Query
 
@@ -583,148 +784,92 @@ The **October 30, 2026 scheduled VM 107 backup completed successfully** on `pve-
 The earlier read-only Proxmox archive query returned zero visible snapshots even when PBS showed older backup groups; it is not definitive evidence of archive absence. Check PBS datastore Content directly for the new observer snapshot before claiming it is independently visible and verified.
 
 ### Configuration and Credential Recovery
+The VM's configuration and credentials are spread across these locations:
 
-The VM's configuration and credentials are spread across several locations:
+- `/opt/stacks/proxmox-mcp/compose.yaml`, `/opt/stacks/proxmox-mcp/.env` — Proxmox Compose and protected credentials.
+- `/opt/stacks/unraid-mcp/compose.yaml`, `/opt/stacks/unraid-mcp/.env` — Unraid Compose and protected credentials; repository commit status remains unverified.
+- `/etc/unraid-mcp/unraid.crt` — Trusted Unraid certificate bundle.
+- `/opt/stacks/komodo-mcp/compose.yaml`, `/opt/stacks/komodo-mcp/.env` — Komodo MCP Compose and dedicated Komodo API key/secret. **A repository commit or independent file backup for the new stack has not been verified.**
+- `/etc/tunnel-client/` — Proxmox tunnel YAML, restricted runtime key, protected MCP bearer Authorization header.
+- `/etc/tunnel-client-unraid/` — Unraid tunnel YAML, restricted runtime key, protected MCP bearer Authorization header.
+- `/etc/tunnel-client-komodo/` — Komodo tunnel YAML and restricted OpenAI runtime key (no local MCP bearer header).
+- `/etc/systemd/system/tunnel-client.service`, `tunnel-client-unraid.service`, `tunnel-client-komodo.service` — Three independent native systemd units.
+- `/opt/tunnel-client/` — Shared tunnel-client binary, bundled cloudflared and release support files.
 
-- `/opt/stacks/proxmox-mcp/compose.yaml` — version-controlled in `homelab-infra`.
-- `/opt/stacks/proxmox-mcp/.env` — Git-excluded Proxmox MCP credentials and configuration.
-- `/opt/stacks/unraid-mcp/compose.yaml` — Unraid MCP Compose configuration; should be tracked in `homelab-infra` once reviewed/committed (commit not verified).
-- `/opt/stacks/unraid-mcp/.env` — Git-excluded Unraid MCP API key and bearer token.
-- `/etc/unraid-mcp/unraid.crt` — Pinned trusted Unraid certificate bundle.
-- `/etc/tunnel-client/config.yaml` — Git-excluded tunnel configuration.
-- `/etc/tunnel-client/openai-runtime.key` — Git-excluded OpenAI credential.
-- `/etc/tunnel-client/mcp-authorization` — Git-excluded MCP bearer credential.
-- `/etc/tunnel-client-unraid/config.yaml` — Git-excluded Unraid tunnel configuration.
-- `/etc/tunnel-client-unraid/openai-runtime.key` — Git-excluded Unraid tunnel runtime credential.
-- `/etc/tunnel-client-unraid/mcp-authorization` — Git-excluded Unraid MCP bearer credential.
-- `/etc/systemd/system/tunnel-client.service` — Native Proxmox tunnel systemd unit.
-- `/etc/systemd/system/tunnel-client-unraid.service` — Native Unraid tunnel systemd unit.
-- `/opt/tunnel-client/` — Installed tunnel-client binaries.
+Existing Docker-host rsync backup jobs must **not** be assumed to protect observer VM host configuration or credentials. The historical October 30 successful VM 107 PBS backup task does not establish that the **November 1 Komodo additions** are in an intact, restorable backup. A fresh VM 107 snapshot, independent integrity check, secure credential recovery, and safe isolated restore still need verification.
 
-Existing Docker-host rsync backup jobs must **not** be assumed to protect the observer VM or its `/etc/tunnel-client` configuration.
-
-A complete backup and restoration procedure for the observer has not yet been verified. A successful VM backup task reduces exposure but does not replace an integrity check, secure credential recovery, or an isolated restoration test.
-
-Credentials remain separately retained in Bitwarden according to the established workflow. Avoid copying plaintext credentials into Git repositories or ordinary documentation.
-
-See `runbooks/backup-schedule.md` for the October 2026 PBS incident and `runbooks/ai-observer-operations.md` for the recovery plan.
-
----
+Keep credentials in approved secure storage (Bitwarden where verified), not in Git or Obsidian. The separately retained Unraid MCP bearer token remains an identified recovery-check item. See `runbooks/backup-schedule.md` for PBS and `runbooks/ai-observer-operations.md` for recovery.
 
 ## Operations and Maintenance
-
 ### Management Approach
 
-The observer is managed manually through SSH and the CLI.
+The observer is managed manually through SSH and the CLI. No Dockman instance is installed on `observer-prod-01`; the Dockman instance on `docker-prod-01` does not manage this observer's Docker engine. Docker Compose changes and service restarts require the operator's explicit authorization.
 
-No Dockman instance is installed on observer-prod-01.
+### MCP Stacks
 
-The Dockman instance on docker-prod-01 does not manage this observer's Docker engine.
+| Integration | Compose directory | Expected container | Update approach |
+|---|---|---|---|
+| Proxmox | `/opt/stacks/proxmox-mcp/` | `proxmox-mcp` | Operator-controlled pull and recreate, then verify version and all 84 tools |
+| Unraid | `/opt/stacks/unraid-mcp/` | `unraid-mcp` | Operator-controlled pull and recreate, then verify TLS and all 26 tools |
+| Komodo | `/opt/stacks/komodo-mcp/` | `komodo-mcp` | Operator-controlled pull and recreate, then verify upstream permissions and all 40 tools |
 
-### Proxmox MCP
-
-The MCP server is managed through Docker Compose:
-
-`/opt/stacks/proxmox-mcp`
-
-The image currently uses the `latest` tag. Updates must be deliberately performed through the CLI, with container status, health, and live API access verified afterward.
-
-### Unraid MCP
-
-The Unraid MCP container is managed independently with Docker Compose under `/opt/stacks/unraid-mcp`. Its Docker image uses the `latest` tag, with operator-controlled updates and post-update version/tool-inventory verification. The existing Unraid NAS is **not** a Docker management target of this stack; it is queried remotely through GraphQL.
-
+All three images currently use mutable `latest` tags, which **do not automatically pull new releases**. Keep the existing local image available for rollback when feasible. The Komodo MCP talks to existing Komodo Core over HTTPS rather than mounting a Docker socket or managing the host directly.
 
 ### Tunnel Client
 
-The tunnel client is managed through systemd:
-
-`tunnel-client.service` and `tunnel-client-unraid.service`
-
-Updates are performed through an explicitly verified official release rather than Docker Compose.
-
-The tunnel services and both MCP containers are separate processes; check the affected component before taking action. Both tunnels reuse the same installed binary, so a tunnel-client binary upgrade affects both integrations.
+The tunnel-client is managed by **three independent systemd units**: `tunnel-client.service`, `tunnel-client-unraid.service`, and `tunnel-client-komodo.service`. They share one installed `/opt/tunnel-client/tunnel-client` binary, so an approved binary upgrade affects all three after restart. Review all three on upgrade and ensure each uses its respective restricted key and config.
 
 ### Basic Read-Only Health Checks
 
-```
-# Check the MCP container
-cd /opt/stacks/proxmox-mcp
-sudo docker compose ps
+```bash
+# Run on observer-prod-01
+for dir in proxmox-mcp unraid-mcp komodo-mcp; do
+  (cd "/opt/stacks/$dir" && sudo docker compose ps)
+done
 
-# Check the MCP HTTP health endpoint
-curl -fsS http://127.0.0.1:8080/health
+curl -fsS --max-time 5 http://127.0.0.1:8080/health
+curl -fsS --max-time 5 http://127.0.0.1:8084/ready
 
-# Check the tunnel service
-sudo systemctl status tunnel-client --no-pager
+for unit in tunnel-client.service tunnel-client-unraid.service tunnel-client-komodo.service; do
+  systemctl is-active "$unit"
+  systemctl is-enabled "$unit"
+done
 
-# Check tunnel readiness
-curl -fsS http://127.0.0.1:8081/readyz
-
-# Inspect recent tunnel logs
-sudo journalctl -u tunnel-client -n 50 --no-pager
-
-# Check Unraid MCP and its independent tunnel
-cd /opt/stacks/unraid-mcp
-sudo docker compose ps
-sudo docker compose logs --tail 50 unraid-mcp
-curl -fsS http://127.0.0.1:8083/readyz
-systemctl is-enabled tunnel-client-unraid
-systemctl is-active tunnel-client-unraid
+for port in 8081 8083 8085; do
+  curl -fsS --max-time 10 "http://127.0.0.1:$port/readyz"
+done
 ```
 
-Passing health checks confirms component availability, but a live MCP tool call remains the definitive end-to-end verification.
-
-Full update, troubleshooting, service recovery, and credential-rotation procedures belong in `runbooks/ai-observer-operations.md`.
-
----
+Then perform a live read-only call to each plugin. Passing container and tunnel health alone does **not** verify upstream API credentials, permissions, or end-to-end ChatGPT access. Full troubleshooting, credential-rotation, and recovery steps are in `runbooks/ai-observer-operations.md`.
 
 ## Security Boundaries
+The implemented defense-in-depth model has **separate upstream identities, separate MCP surfaces, and separate outbound tunnels**:
 
-The initial implementation deliberately minimizes privileges.
+1. **Upstream least privilege:** Proxmox's `observer@pve` account uses `PVEAuditor`; Unraid uses 14 `READ_ANY` families and no write grants; Komodo uses dedicated non-admin `ai-observer-komodo` with Read and scoped Logs permissions, excluding Inspect/Terminal/Attach/Processes and creation.
+2. **MCP tools:** Proxmox exposes 84 read tools from nine enabled toolsets, with write/delete/exec switches false; Unraid exposes an exact 26-tool read allowlist; Komodo exposes 40 read tools with eight sensitive tools explicitly excluded and upstream anonymous-HTTP read scope. **Zero write tools** exposed across all three plugins at verification.
+3. **Network:** All MCP endpoints are bound to observer loopback only, with no public MCP endpoint. The only targeted observer-to-Management firewall exception remains `192.168.30.17 → 192.168.10.11 TCP 8006` for Proxmox.
+4. **Tunnel:** Three independent outbound OpenAI tunnels, each with a restricted Tunnels Read+Use runtime API key. All run as non-root `tunnel-client` with no Docker group membership.
+5. **MCP authentication difference:** Proxmox and Unraid use local MCP bearer authentication supplied by protected tunnel headers. Komodo intentionally runs `MCP_AUTH_ENABLED=false`: **local clients on observer loopback are not individually authenticated**. Restrict observer access and preserve the dedicated upstream read-only account and tool exclusions.
+6. **Secrets:** MCP `.env`, runtime key, and authorization files are excluded from Git. The third tunnel has **no** local MCP bearer-header file by design. No plaintext secrets are reproduced here.
+7. **Information exposure:** Even non-mutating tools may return sensitive logs, host/network configuration, scripts, API-key metadata, or potentially secrets. Komodo's secret-scrubbing mechanism is best-effort; full Docker Inspect and Compose/TOML exports remain excluded. For retained detailed `*_info` tools, review actual output before sharing.
+8. **Operational separation:** No Docker socket is mounted into any observer MCP container; the observer's Docker daemon is not remotely administered by Dockman or the Komodo MCP.
 
-1. The Proxmox API account has audit-only permissions; the Unraid GraphQL API key has only the documented 14 `READ_ANY` permission families.
-    
-2. Proxmox MCP write, delete, and execution capabilities are disabled. Unraid MCP exposes an explicit 26-action read-only allowlist with no write/admin actions.
-    
-3. Both MCP endpoints are published to localhost only.
-    
-4. The observer-to-Proxmox firewall exception is restricted to one source, one destination, and TCP 8006.
-    
-5. The OpenAI tunnel is outbound-only.
-    
-6. OpenAI runtime credentials are restricted to tunnel Read and Use.
-    
-7. The tunnel service runs without root or Docker-group privileges.
-    
-8. Secrets are kept outside Git and are not reproduced in documentation. Each tunnel has its own restricted runtime key and protected MCP bearer header file.
-    
-9. Existing Docker administration and management services remain isolated.
-    
-
-These controls reduce the impact of a compromised or misused integration, but do not eliminate risks associated with granting an external AI service visibility into infrastructure metadata.
-
-Changes to permissions, toolsets, authentication, or network exposure require deliberate review and verification.
-
----
+Any change to upstream privileges, toolsets, local authentication, excluded tools, secret storage, or network exposure requires explicit review and post-change tool-inventory and end-to-end verification. No write automation is implemented.
 
 ## Planned Extensions
-
-|Integration|Status|
+| Integration / capability | Status |
 |---|---|
-|Proxmox MCP — read-only|Implemented and verified|
-|ChatGPT custom plugin|Implemented and verified|
-|OpenAI Secure MCP Tunnel|Implemented and verified|
-|Codex usage through the tunnel|Not yet verified|
-|Unraid MCP — read-only local and ChatGPT access|Implemented and end-to-end verified (26 tools)|
-|Docker-host MCP outside Unraid|Planned|
-|Proxmox write operations|Deferred|
-|Automated maintenance actions|Deferred|
+| Proxmox MCP 0.5.1 / 84 read tools | **Implemented and verified** |
+| Unraid MCP 0.6.3 / 26 read tools | **Implemented and verified** |
+| Komodo MCP 1.5.0 / 40 read tools / eight exclusions | **Implemented and verified** on `docker-prod-01` |
+| Three private ChatGPT plugins / three outbound secure tunnels | **Implemented and end-to-end verified** |
+| Extend Komodo monitoring to further Docker hosts | **Not implemented/verified**; separate scope approval needed |
+| Codex usage through these tunnels | Not yet verified |
+| Proxmox, Unraid, or Komodo write operations | Deferred, not authorized |
+| Automated maintenance and remediation | Deferred |
+| Fresh observer backup/credential recovery and isolated restore test | **Pending verification** |
 
-Write access should be considered only after the read-only integration has demonstrated reliable behavior and a separate authorization and approval model has been designed.
-
-No elevated management privileges should be introduced merely for convenience.
-
----
+No elevated permissions should be introduced for convenience. Revisit information disclosure whenever enabling additional ostensibly read-only tools.
 
 ## Related Documentation
 
@@ -759,15 +904,11 @@ No elevated management privileges should be introduced merely for convenience.
 ---
 
 ## Notes
+- AI Observer runs independently on VM 107 and is **not** a general-purpose production Docker host.
+- OpenAI Secure MCP Tunnel does not replace existing homelab Cloudflare Tunnel or Traefik.
+- The three installed integrations are intentionally **read-only**: Proxmox **84** tools, Unraid **26** tools and Komodo **40** tools, all discovered in ChatGPT. Tool discovery is not proof of every individual upstream query's success.
+- Proxmox compiled binary `0.5.1` was verified November 1, 2026, and upstream tool classifications were checked against the **v0.5.1** reference, not just current `main`.
+- Komodo intentionally has an unauthenticated **local** MCP endpoint (read-only scope, localhost only); its dedicated non-admin upstream API credentials and eight tool exclusions are critical security controls. No credential output should be assumed safe solely because secret scrubbing is enabled.
+- The October 30 observer VM backup task succeeded historically. A backup containing the **November 1 changes**, integrity validation, credential-recovery checks and isolated restoration test remain unverified.
+- Update authoritative docs after verified implementations; preserve explicit distinction between implemented, planned and unresolved work.
 
-- The AI Observer is an independently managed infrastructure service, not a general-purpose production Docker host.
-    
-- The secure tunnel does not replace the existing homelab Cloudflare Tunnel or Traefik configuration.
-    
-- Both Proxmox and Unraid MCP integrations are intentionally read-only. The Unraid MCP has 26 enabled actions with 118 other canonical actions withheld; see its inventory above.
-    
-- Unraid MCP is implemented and verified end-to-end. A separate Docker-host MCP remains planned.
-    
-- The October 30 observer VM backup task succeeded; independent snapshot verification, credential-recovery checks, and an isolated restoration test remain outstanding.
-    
-- Documentation should be updated when implementations change, but planned integrations must not be recorded as completed until tested.
