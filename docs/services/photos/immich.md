@@ -2,11 +2,11 @@
 
 **Role:** Photo and video library — backup, organization, ML-powered search and face detection  
 **Host:** immich-prod-01 (192.168.30.14)  
-**Version:** v3.0.2  
+**Version:** v3.3.5 (confirmed in live `immich_server` startup logs)  
 **Compose:** `/opt/stacks/immich/compose.yaml`  
 **Appdata:** `/opt/appdata/immich/`  
 **URL:** `https://photos.giohosted.com`  
-**Last Updated:** 2026-10-31
+**Last Updated:** 2026-11-01
 
 ---
 
@@ -22,7 +22,7 @@ Photo files live on the NAS (`/mnt/user/photos`) and are NFS-mounted into the VM
 
 |Component|Detail|
 |---|---|
-|**VM ID**|106|
+|**VM ID**|105|
 |**Host**|pve-prod-02|
 |**OS**|Ubuntu Server 24.04 LTS|
 |**CPU**|2 cores (x86-64-v2-AES)|
@@ -58,6 +58,33 @@ ssh gio@192.168.30.14
 |immich_machine_learning|ghcr.io/immich-app/immich-machine-learning:release|Face detection, CLIP indexing, smart search|
 |immich_postgres|ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0|Database|
 |immich_redis|docker.io/valkey/valkey:9|Cache / job queue|
+
+---
+
+## Komodo Periphery and AI Observer — Phase 3 (Verified November 1, 2026 CST)
+
+`immich-prod-01` is enrolled as an additional Docker server in Komodo Core on `docker-prod-01` (`https://komodo.giohosted.com`). The existing **Homelab Komodo MCP** integration on `observer-prod-01` sees the server, containers, registered stack and logs with **read-only permissions**; authorized Komodo administrators retain terminal/container-terminal operations through the Komodo UI. No additional MCP service or OpenAI tunnel was installed.
+
+| Item | Verified configuration |
+|---|---|
+| Registered server | `immich-prod-01` (`192.168.30.14`), state `Ok` |
+| Periphery version / image | `2.3.4`; `ghcr.io/moghtech/komodo-periphery:2` |
+| Periphery Compose | `/opt/stacks/komodo-periphery/compose.yaml` (independent of Immich Compose) |
+| Periphery persistent identity keys | `/opt/appdata/komodo/periphery/keys/` (`core.pub`, `periphery.pub`, `periphery.key`), root-owned/private |
+| Connection to Core | Outbound `wss://komodo.giohosted.com`, with verified TLS |
+| Periphery identity | `PERIPHERY_CONNECT_AS=immich-prod-01` |
+| Inbound Periphery server / published TCP 8120 | Disabled (`PERIPHERY_SERVER_ENABLED=false`); no host port published |
+| Compose access | `/opt/stacks` mounted; root directory `/opt` |
+| Terminal behavior | Host and container terminals enabled for authorized Komodo administrators |
+| Registered application stack | `immich` — **Files on Server**, run directory `/opt/stacks/immich`, file `compose.yaml`, project name `immich` |
+
+The `immich` stack was registered against its **existing** Compose project labels; no Komodo Deploy action was used to import or recreate the application containers. The new Periphery container has privileged local Docker socket access. This does **not** grant terminal/exec/write privileges to the restricted read-only ChatGPT integration.
+
+Onboarding used a temporary non-privileged key. It was deleted from Periphery Compose after successful registration; the agent then reconnected with `onboarding_key: None`, the temporary host secret was removed and the Komodo onboarding key was revoked. Do not put keys in the `homelab-infra` repository, Obsidian or chat. Permanent Periphery identity keys must be retained and protected by host backup procedures; coverage is not independently verified.
+
+**Live validation:** The Komodo MCP listed this server `Ok`, Periphery `2.3.4`, and all four Immich containers running at the final check. The `immich` stack was reported running. A separate incident during rollout briefly left `immich_server` in `created` state and the stack unhealthy; that incident was addressed in a different troubleshooting conversation. The current running state was verified, but this document does not assert an unverified cause or repair sequence. `immich_server` startup logs identify application version **3.3.5** and show a successful API startup.
+
+See `services/infra/ai-observer.md` and `runbooks/ai-observer-operations.md` for architecture, MCP security boundaries and Periphery operational checks.
 
 ---
 
@@ -375,4 +402,4 @@ For upload timeout settings, see the separate **static** Traefik Compose flags d
 - NUT client not yet configured — to be done in Phase 5 Wave 7
 - `gio` user added to `service` group (GID 2000) on immich-prod-01 for file permission consistency
 - git identity configured: `delgadogiovanny@gmail.com` / `giohosted`
-- Last documented Immich version is v3.0.2; this documentation update verified the Traefik timeout and large video upload behavior, not a newer I
+- The previous v3.0.2 version note was superseded by a live `immich_server` startup log confirming v3.3.5 on November 1, 2026 (CST). The source/method of the intervening upgrade was not independently documented here.

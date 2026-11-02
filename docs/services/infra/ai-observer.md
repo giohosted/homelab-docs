@@ -18,11 +18,11 @@ The observer runs on a dedicated Ubuntu virtual machine rather than sharing a Do
 
 - **Proxmox MCP:** Read-only monitoring of the Homelab v3 Proxmox cluster; deployed server version `0.5.1`, **84 read tools**.
 - **Unraid MCP:** Read-only monitoring of `nas-prod-01` over the Unraid GraphQL API; Rust MCP `0.6.3`, **26 read tools**.
-- **Komodo MCP:** Read-only monitoring of Docker infrastructure on `docker-prod-01` via Komodo Core; MCP `1.5.0`, Komodo `2.3.4`, **40 read tools** with eight explicit exclusions.
+- **Komodo MCP:** Read-only monitoring of Docker on `docker-prod-01`, `immich-prod-01`, and `auth-prod-01` through the same Komodo Core; MCP `1.5.0`, Komodo Core/Periphery `2.3.4`, **40 read tools** with eight explicit exclusions.
 - **OpenAI Secure MCP Tunnels:** Three separate outbound native systemd services, each with its own tunnel ID, restricted runtime credential, configuration, and health port.
 - **ChatGPT plugins:** `Homelab Proxmox`, `Homelab Unraid`, and `Homelab Komodo`; all three connected and exercised using a live tool call. **Total discovered: 150 read tools, zero write tools.**
 
-The Proxmox integration was verified October 29–30 and its compiled version/tool inventory rechecked November 1, 2026. The Unraid integration was deployed and verified October 30, 2026. Komodo integration and its third tunnel were verified end-to-end November 1, 2026. **Docker-host MCP is implemented, not merely planned.** Additional Docker hosts are not automatically enrolled: the verified Komodo server is `docker-prod-01`.
+The Proxmox integration was verified October 29–30 and its compiled version/tool inventory rechecked November 1, 2026. The Unraid integration was deployed and verified October 30, 2026. Komodo integration and its third tunnel were verified end-to-end November 1, 2026. **AI Observer Phase 3 multi-host extension was also implemented and verified November 1, 2026 (CST):** Periphery on `immich-prod-01` and `auth-prod-01`, three Komodo servers reporting `Ok`, both existing application stacks recognized, and live read-only MCP queries across hosts. No extra MCP instance or OpenAI tunnel was required.
 
 ## Architecture
 ### Request Flow
@@ -41,7 +41,10 @@ ChatGPT
   `-- Homelab Komodo plugin -- OpenAI outbound tunnel: homelab-komodo
         tunnel-client-komodo.service -> 127.0.0.1:8084/mcp
         Komodo MCP -> HTTPS komodo.giohosted.com (192.168.30.11)
-        -> Komodo Core/Periphery -> Docker on docker-prod-01
+        -> Komodo Core on docker-prod-01
+           |-- local Periphery -> Docker on docker-prod-01
+           |-- outbound WSS from Periphery on immich-prod-01 (192.168.30.14)
+           `-- outbound WSS from Periphery on auth-prod-01 (192.168.30.13)
 
 All three MCP services and tunnel clients run on:
 observer-prod-01 (192.168.30.17, VLAN 30, Proxmox VMID 107)
@@ -71,6 +74,9 @@ No public MCP hostname, Traefik route, port forwarding, or inbound internet fire
 | Komodo tunnel configuration | YAML + runtime key, no MCP bearer | `/etc/tunnel-client-komodo/` |
 | Komodo ChatGPT plugin | Homelab Komodo | 40 read tools |
 | Komodo Core | Komodo **2.3.4** | `docker-prod-01`, `https://komodo.giohosted.com` |
+| Local Periphery | Komodo **2.3.4** | `docker-prod-01`, internal `komodo-backend` network |
+| Immich Periphery | Komodo **2.3.4** | `immich-prod-01` (`192.168.30.14`), outbound WSS; no published agent port |
+| Authentik Periphery | Komodo **2.3.4** | `auth-prod-01` (`192.168.30.13`), outbound WSS; no published agent port |
 
 **Important distinction:** OpenAI Secure MCP Tunnel is separate from the homelab's application-oriented Cloudflare Tunnel deployment on `docker-prod-01`; it is not a general-purpose public reverse proxy.
 
@@ -480,7 +486,7 @@ Some are potentially useful for future observability (`registration`, `flash`, `
 **Readiness:** `http://127.0.0.1:8084/ready`  
 **Komodo API:** `https://komodo.giohosted.com` (resolved to `192.168.30.11` from observer at verification)
 
-The image uses a manually managed mutable `latest` tag; it does not automatically update. The Compose security settings are `restart: unless-stopped`, `no-new-privileges:true`, `cap_drop: [ALL]`, `pids_limit: 100`, `mem_limit: 384m`, and bounded JSON logs (10 MiB × 3). No Docker socket is mounted into the observer MCP container. **Komodo Core and Periphery remain on `docker-prod-01`, not the observer.**
+The image uses a manually managed mutable `latest` tag; it does not automatically update. The Compose security settings are `restart: unless-stopped`, `no-new-privileges:true`, `cap_drop: [ALL]`, `pids_limit: 100`, `mem_limit: 384m`, and bounded JSON logs (10 MiB × 3). No Docker socket is mounted into the observer MCP container. **Komodo Core and its local Periphery remain on `docker-prod-01`, not the observer; additional Periphery agents run on `immich-prod-01` and `auth-prod-01`.**
 
 A dedicated Komodo user, `ai-observer-komodo`, holds Read permissions for monitored resources and Logs permissions for Server, Stack and Deployment. It is not an administrator and has no Inspect, Terminal, Attach, Processes, or create privileges. Its dedicated API key named `ai-observer-mcp` and secret are stored in the observer's protected `.env`; **do not publish them**. The local MCP queries Komodo Core over HTTPS with these credentials; the ChatGPT tool calls do not contact Docker directly.
 
@@ -501,7 +507,45 @@ In the deployed upstream implementation, anonymous HTTP MCP clients are restrict
 
 ### Current Resource Inventory and ChatGPT Verification
 
-On November 1, 2026, local MCP health and server/container list calls passed. The dedicated account retrieved one Komodo server (`docker-prod-01`, state `Ok`) and **26 Docker containers**. A local resource-count audit found **9 stacks, 3 procedures, 1 builder**, and zero deployments, builds, repos, actions, alerters, resource syncs, swarms or variables at the time of checking. These are time-specific observations, not guaranteed current counts. The OpenAI tunnel and ChatGPT plugin then discovered **exactly 40 tools, all Read, zero Write**, and `komodo_health_check` plus `komodo_container_list` were successfully invoked live from ChatGPT.
+At the **initial November 1 verification**, the dedicated account retrieved one server (`docker-prod-01`, `Ok`) and **26 Docker containers**; a resource-count audit found **9 stacks, 3 procedures, 1 builder** and none of the other queried resource types. These were historical checkpoints. **After Phase 3 extension**, a live ChatGPT check returned **three servers** (`docker-prod-01`, `immich-prod-01`, `auth-prod-01`), all `Ok` on Periphery `2.3.4`, and **11 registered stacks** in aggregate, including `immich` and `authentik`, both running. Host container listings and the Immich server logs were also accessible through the existing `Homelab Komodo` plugin. The tool inventory remains **exactly 40 Read / zero Write** with eight deliberate exclusions; counts are observations, not permanent targets.
+
+### Multi-host Periphery Deployment — AI Observer Phase 3 (Verified November 1, 2026 CST)
+
+**Scope:** Existing Komodo Core on `docker-prod-01` now manages three independent Docker hosts; the one `komodo-mcp` container and one `homelab-komodo` OpenAI tunnel on `observer-prod-01` remain unchanged. An administrator can manage hosts through the Komodo web UI with appropriate Komodo permissions. **ChatGPT remains read-only** through the restricted `ai-observer-komodo` identity and the MCP tool exclusions.
+
+| Komodo server | Host IP | Periphery / connectivity | Komodo stack registered | Observed state |
+|---|---|---|---|---|
+| `docker-prod-01` | `192.168.30.11` | Existing local Periphery `2.3.4`, internal Docker network | Existing stacks | `Ok` |
+| `immich-prod-01` | `192.168.30.14` | Periphery `2.3.4`, outbound `wss://komodo.giohosted.com` | `immich` | `Ok`; stack running after separate Immich incident recovery |
+| `auth-prod-01` | `192.168.30.13` | Periphery `2.3.4`, outbound `wss://komodo.giohosted.com` | `authentik` | `Ok`; stack running |
+
+On **both remote hosts**, the implemented deployment is a dedicated Docker Compose service, `komodo-periphery`, using `ghcr.io/moghtech/komodo-periphery:2`, `init: true` and `restart: unless-stopped`, with bounded JSON logging. The configuration is at `/opt/stacks/komodo-periphery/compose.yaml`; its permanent identity material is under `/opt/appdata/komodo/periphery/keys/` (`periphery.key`, `periphery.pub`, `core.pub`; root-owned, private). Periphery binds the Docker socket, read-only `/proc` and `/opt/stacks` into its own container; `PERIPHERY_ROOT_DIRECTORY=/opt`. The `:2` tag retains the Komodo v2 major line, but is not an immutable patch version.
+
+| Agent setting | Verified value on both remote hosts |
+|---|---|
+| `PERIPHERY_CORE_ADDRESS` | `wss://komodo.giohosted.com` (Traefik on `192.168.30.11`) |
+| `PERIPHERY_CONNECT_AS` | The host's exact name (`immich-prod-01` / `auth-prod-01`) |
+| `PERIPHERY_SERVER_ENABLED` | `false` — outbound-only mode |
+| Published host TCP port 8120 | **None** (`8120/tcp` in Docker output is an exposed container port, not a published host mapping) |
+| TLS certificate verification | Enabled (`core_tls_insecure_skip_verify=false`) |
+| `PERIPHERY_CORE_PUBLIC_KEYS` | `file:/config/keys/core.pub` |
+| `PERIPHERY_DISABLE_TERMINALS` | `false` — authorized Komodo admins can use server terminals |
+| `PERIPHERY_DISABLE_CONTAINER_TERMINALS` | `false` — authorized Komodo admins can use container terminals |
+
+Registration used a **separate, non-privileged onboarding key per new host**, entered through a temporary root-owned mode `0600` file outside Git. After successful enrollment, the `PERIPHERY_ONBOARDING_KEY_FILE` environment entry and temporary bind mount were removed, each Periphery container was recreated and **reconnected with `onboarding_key: None`**, the temporary file/directory were deleted, and the onboarding keys were revoked in Komodo Settings. **Never remove the permanent keys folder casually**, and never place an onboarding key, private key or Docker `.env` in Obsidian, Git or chat.
+
+The existing application Compose projects were imported using Komodo **Files on Server**, with no application redeployment:
+
+| Stack | Server | Run Directory | File Paths | Project Name |
+|---|---|---|---|---|
+| `immich` | `immich-prod-01` | `/opt/stacks/immich` | `compose.yaml` | `immich` |
+| `authentik` | `auth-prod-01` | `/opt/stacks/authentik` | `compose.yaml` | `authentik` |
+
+Both project names, run directories and file paths were checked against running containers' `com.docker.compose.project*` labels **before** registration. No Komodo Deploy/Update action was needed. The new Periphery agents have highly privileged Docker-socket access on their *own* hosts, so restrict Komodo administrator accounts, keys, Core exposure and upstream permissions. The read-only ChatGPT integration does **not** gain admin, terminal, exec or write rights by adding hosts.
+
+**Verification:** From `immich-prod-01` and `auth-prod-01`, HTTPS returned HTTP `200` with verified TLS and a WebSocket upgrade probe to `/ws/periphery?server=<hostname>` returned `101`. Agent logs showed successful onboarding and subsequent normal logins without the onboarding keys. Live `komodo_server_list`, `komodo_stack_list`, `komodo_container_list` and `komodo_container_logs` through ChatGPT confirmed the resulting inventory. The separate Immich main-server incident was reported fixed and live checks showed `immich_server` running; this record does **not** attribute an unverified root cause or recovery procedure to that incident.
+
+See `runbooks/ai-observer-operations.md` for remote agent checks and lifecycle management, and the existing `immich.md` / `authentik.md` service documents for local Compose paths.
 
 ### Exposed Komodo MCP Tools — 40
 
@@ -666,7 +710,7 @@ Representative read-only uses:
 
 - Proxmox: inspect quorum and cluster status, guest and node health, storage capacity, backup job coverage, snapshots and task logs.
 - Unraid: inspect array/parity/disk state, storage, shares, server status, metrics, container inventory and logs permitted by the 26-tool allowlist.
-- Komodo: inspect `docker-prod-01` container inventory and states, search/read logs, read Komodo stacks, server statistics, and non-destructive resource metadata within the exposed 40-tool scope.
+- Komodo: inspect containers, logs, stacks, and non-destructive resource metadata across `docker-prod-01`, `immich-prod-01` and `auth-prod-01` using the same exposed 40 read tools.
 
 **Security:** A Read label means the tool is classified as non-mutating; it is **not a promise of non-sensitive output**. Container logs, node reports, resources, procedure scripts, webhook configuration, API-key metadata and host or guest configurations may reveal operational or private information. Review data before sending it to additional services. No write/management tool is currently exposed through these three plugins.
 
@@ -729,7 +773,7 @@ A healthy container, a ready tunnel, and connected-plugin discovery each check d
 | Container and MCP readiness | Healthy `komodo-mcp`; `/ready` returned `ready:true` |
 | MCP and Komodo versions | `1.5.0` / Core `2.3.4` |
 | Local MCP calls | `komodo_health_check`, `komodo_server_list`, `komodo_container_list` succeeded |
-| Server inventory | `docker-prod-01` state `Ok` |
+| Server inventory (initial check) | `docker-prod-01` state `Ok`; later expanded to three `Ok` servers (see multi-host verification below) |
 | Docker inventory | 26 containers returned |
 | Resource inventories | 9 stacks; 3 procedures; 1 builder; none of other queried types |
 | Tool audit | **40 Read**, zero Write; eight explicit exclusions |
@@ -742,6 +786,18 @@ A healthy container, a ready tunnel, and connected-plugin discovery each check d
 | Live ChatGPT tool calls | `komodo_health_check` returned configured/healthy; `komodo_container_list` returned 26 containers |
 
 The `doctor` result included an HTTP 400 reachability response from `/mcp`, accepted by the diagnostic as a valid reachability result; it was **not** used as proof of authenticated JSON-RPC. Successful MCP tool calls provide that proof. Full per-tool testing, cold-reboot recovery and isolated restore remain unverified.
+
+### Multi-host Komodo Verification — November 1, 2026 (CST)
+
+| Read-only verification | Result |
+|---|---|
+| `komodo_server_list` | Three registered servers, each state `Ok`, Periphery `2.3.4` |
+| `komodo_stack_list` | `immich` on `immich-prod-01` and `authentik` on `auth-prod-01`, both running at final check; total 11 registered stacks at that point |
+| `komodo_container_list` | Six containers visible on each of the new hosts (four application containers, `beszel-agent`, `komodo-periphery`); running at final check |
+| `komodo_container_logs` | Remote Immich server logs retrievable through the existing read-only plugin |
+| Security | MCP remains 40 Read / 0 Write; no extra MCP/tunnel or Docker socket on observer; no Periphery agent port published on new hosts |
+
+**Qualification:** During rollout, Komodo briefly showed the `immich` stack unhealthy and `immich_server` in Docker state `created`. Recovery was handled in a separate troubleshooting conversation. Subsequent live MCP calls confirmed `immich_server` running and the `immich` stack running. The exact incident cause and repair sequence were not established in this document and must not be inferred.
 
 ### Verified Live Query
 
@@ -796,7 +852,7 @@ The VM's configuration and credentials are spread across these locations:
 - `/etc/systemd/system/tunnel-client.service`, `tunnel-client-unraid.service`, `tunnel-client-komodo.service` — Three independent native systemd units.
 - `/opt/tunnel-client/` — Shared tunnel-client binary, bundled cloudflared and release support files.
 
-Existing Docker-host rsync backup jobs must **not** be assumed to protect observer VM host configuration or credentials. The historical October 30 successful VM 107 PBS backup task does not establish that the **November 1 Komodo additions** are in an intact, restorable backup. A fresh VM 107 snapshot, independent integrity check, secure credential recovery, and safe isolated restore still need verification.
+Existing Docker-host rsync backup jobs must **not** be assumed to protect observer VM host configuration or credentials. The historical October 30 successful VM 107 PBS backup task does not establish that the **November 1 Komodo additions** are in an intact, restorable backup. A fresh VM 107 backup, independent integrity check, secure credential recovery, and observer reboot/tunnel-recovery verification remain pending until explicitly checked. The operator excluded an isolated restore exercise from this Phase 3 scope; it remains untested and is **not** evidence of recovery readiness. The two remote Periphery key directories also require protection by the hosts' applicable backup procedures; their backup coverage is not independently verified here.
 
 Keep credentials in approved secure storage (Bitwarden where verified), not in Git or Obsidian. The separately retained Unraid MCP bearer token remains an identified recovery-check item. See `runbooks/backup-schedule.md` for PBS and `runbooks/ai-observer-operations.md` for recovery.
 
@@ -861,13 +917,15 @@ Any change to upstream privileges, toolsets, local authentication, excluded tool
 |---|---|
 | Proxmox MCP 0.5.1 / 84 read tools | **Implemented and verified** |
 | Unraid MCP 0.6.3 / 26 read tools | **Implemented and verified** |
-| Komodo MCP 1.5.0 / 40 read tools / eight exclusions | **Implemented and verified** on `docker-prod-01` |
+| Komodo MCP 1.5.0 / 40 read tools / eight exclusions | **Implemented and verified** across all three Komodo servers |
 | Three private ChatGPT plugins / three outbound secure tunnels | **Implemented and end-to-end verified** |
-| Extend Komodo monitoring to further Docker hosts | **Not implemented/verified**; separate scope approval needed |
+| Periphery on `immich-prod-01` and `auth-prod-01`, with stacks adopted | **Implemented and live verified**; outbound WSS, no public agent listener |
 | Codex usage through these tunnels | Not yet verified |
 | Proxmox, Unraid, or Komodo write operations | Deferred, not authorized |
 | Automated maintenance and remediation | Deferred |
-| Fresh observer backup/credential recovery and isolated restore test | **Pending verification** |
+| Fresh observer backup including Nov 1 additions; credential recovery | **Pending verification** |
+| Observer reboot/tunnel startup recovery | **Pending verification** |
+| Isolated observer restore exercise | **Not performed; excluded from this Phase 3 scope**; recovery readiness remains unproven |
 
 No elevated permissions should be introduced for convenience. Revisit information disclosure whenever enabling additional ostensibly read-only tools.
 
@@ -892,6 +950,8 @@ No elevated permissions should be introduced for convenience. Revisit informatio
 - `runbooks/backup-schedule.md` — Backup coverage and verification.
     
 - `services/infra/dockman.md` — Local Docker management separation.
+- `services/media/immich.md` — Remote Periphery deployment and adopted Immich Compose stack.
+- `services/infra/authentik.md` — Remote Periphery deployment and adopted Authentik Compose stack.
     
 
 **Source repositories:**
@@ -908,7 +968,7 @@ No elevated permissions should be introduced for convenience. Revisit informatio
 - OpenAI Secure MCP Tunnel does not replace existing homelab Cloudflare Tunnel or Traefik.
 - The three installed integrations are intentionally **read-only**: Proxmox **84** tools, Unraid **26** tools and Komodo **40** tools, all discovered in ChatGPT. Tool discovery is not proof of every individual upstream query's success.
 - Proxmox compiled binary `0.5.1` was verified November 1, 2026, and upstream tool classifications were checked against the **v0.5.1** reference, not just current `main`.
-- Komodo intentionally has an unauthenticated **local** MCP endpoint (read-only scope, localhost only); its dedicated non-admin upstream API credentials and eight tool exclusions are critical security controls. No credential output should be assumed safe solely because secret scrubbing is enabled.
-- The October 30 observer VM backup task succeeded historically. A backup containing the **November 1 changes**, integrity validation, credential-recovery checks and isolated restoration test remain unverified.
+- Komodo intentionally has an unauthenticated **local** MCP endpoint (read-only scope, localhost only); its dedicated non-admin upstream API credentials and eight tool exclusions are critical security controls. No credential output should be assumed safe solely because secret scrubbing is enabled. Remote Periphery Docker socket access belongs to Komodo administration, **not** ChatGPT.
+- The October 30 observer VM backup task succeeded historically. A protected backup containing the **November 1 changes**, integrity validation, credential-recovery checks, and observer reboot/recovery testing remain unverified. An isolated restoration exercise was intentionally excluded from this Phase 3 documentation scope, not completed.
 - Update authoritative docs after verified implementations; preserve explicit distinction between implemented, planned and unresolved work.
 

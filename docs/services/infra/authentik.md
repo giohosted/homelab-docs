@@ -6,7 +6,7 @@
 **Compose:** `/opt/stacks/authentik/compose.yaml`  
 **Appdata:** `/opt/appdata/authentik/`  
 **URL:** https://auth.giohosted.com  
-**Last Updated:** 2026-07-13
+**Last Updated:** 2026-11-01
 
 ---
 
@@ -26,7 +26,7 @@ Authentik runs on a dedicated VM (`auth-prod-01`) rather than as containers on d
 | **Host** | pve-prod-01 |
 | **OS** | Ubuntu Server 24.04 LTS |
 | **CPU** | 2 cores (x86-64-v3) |
-| **RAM** | 4GB |
+| **RAM** | 5 GiB (reported by live Proxmox VM inventory on November 1, 2026; formerly documented as 4 GB) |
 | **Disk** | 32GB (local-zfs, no cache) |
 | **System** | q35, OVMF UEFI, VirtIO SCSI |
 | **IP** | 192.168.30.13/24 |
@@ -57,7 +57,34 @@ ssh gio@192.168.30.13
 | authentik-postgres | postgres:16-alpine                  | Database                |
 | authentik-redis    | redis:alpine                        | Cache / session store   |
 
-All containers are on an internal Docker network (`authentik-internal`) — not exposed to the proxy network. Only the server exposes port 9000 to the host.
+All **Authentik application** containers use the internal `authentik-internal` Docker network — not the proxy network. Only the Authentik server publishes port 9000 to the host. The independently deployed Komodo Periphery agent is not an Authentik application service and publishes no host port.
+
+---
+
+## Komodo Periphery and AI Observer — Phase 3 (Verified November 1, 2026 CST)
+
+`auth-prod-01` is enrolled as an additional Docker server in Komodo Core on `docker-prod-01` (`https://komodo.giohosted.com`). The existing **Homelab Komodo MCP** connection on `observer-prod-01` can list the host, Authentik containers and stack through its **read-only** API identity; authorized Komodo administrators can use the Komodo UI to manage containers and open terminals. No extra MCP container or OpenAI tunnel is necessary.
+
+| Item | Verified configuration |
+|---|---|
+| Registered server | `auth-prod-01` (`192.168.30.13`), state `Ok` |
+| Periphery image / version | `ghcr.io/moghtech/komodo-periphery:2`, running `2.3.4` |
+| Periphery Compose | `/opt/stacks/komodo-periphery/compose.yaml`, independent of `/opt/stacks/authentik/compose.yaml` |
+| Permanent agent keys | `/opt/appdata/komodo/periphery/keys/` (`core.pub`, `periphery.pub`, `periphery.key`), root-owned/private |
+| Core connection | Outbound `wss://komodo.giohosted.com`, verified TLS |
+| Identity | `PERIPHERY_CONNECT_AS=auth-prod-01` |
+| Periphery listener | Disabled (`PERIPHERY_SERVER_ENABLED=false`); no TCP 8120 published on host |
+| Host access | Docker socket mounted locally and `/opt/stacks` available through root directory `/opt` |
+| Terminal policy | Host and container terminals enabled for authorized Komodo administrators |
+| Adopted Compose stack | `authentik`: **Files on Server**, run directory `/opt/stacks/authentik`, file `compose.yaml`, project name `authentik` |
+
+The application stack was adopted by matching its Docker Compose project labels. Registration did **not** entail a new Komodo deployment, a recreation of Authentik/PostgreSQL or a change to the identity-provider configuration. The Periphery Docker-socket mount is privileged and must be protected through Komodo administrative access controls; it does **not** change the read-only capabilities of the ChatGPT MCP identity.
+
+The separate non-privileged onboarding key used for initial registration was removed from the Compose file, the Periphery agent recreated and verified logged in with `onboarding_key: None`, the root-only temporary credential file removed and the onboarding key revoked in Komodo Settings. Retain and securely back up the persistent key directory. Host backup coverage of these new keys has not yet been independently verified.
+
+**Live verification:** All three Komodo hosts returned state `Ok` at Periphery `2.3.4`; `authentik` stack was `running` and the four Authentik application containers were listed as running through read-only MCP. The server and worker were also shown healthy by the local Docker CLI before enrollment. The live Proxmox VM inventory showed VM 104 running with **5 GiB** assigned memory, differing from the older 4 GB documentation; no RAM change was made as part of Komodo onboarding.
+
+See `services/infra/ai-observer.md` and `runbooks/ai-observer-operations.md` for full security and operational procedures.
 
 ---
 
@@ -158,5 +185,5 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 - Authentik worker mounts the Docker socket (`/var/run/docker.sock`) — required for embedded outpost functionality
 - "No providers assigned to this outpost" warning in logs is normal — embedded outpost present but not configured for any providers
 - Bootstrap email/password only apply on very first boot with empty database — ignored on subsequent starts
-- RAM verified sufficient via `free -h` — 4GB allocation, ~1.6GB active usage, minimal swap. No bump needed at Phase 4 close
+- Historical Phase 4 sizing check: 4 GB allocation, approximately 1.6 GB active usage, minimal swap; no bump needed **at that time**. Live Proxmox inventory on November 1, 2026 reported 5 GiB provisioned. Date/reason for the intervening adjustment was not established in this documentation update.
 - Synology SSO well-known URL must point at the app-specific path (`/application/o/synology/.well-known/openid-configuration`) — the generic path (`/application/o/.well-known/openid-configuration`) causes "Unable to get the URL for SSO authentication" error
