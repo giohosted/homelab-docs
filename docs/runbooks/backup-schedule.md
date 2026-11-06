@@ -1,7 +1,7 @@
 # Backup Schedule
 
-**Last Updated:** 2026-10-30  
-**Status:** PBS backup execution restored; recurrence prevention and recovery validation remain open
+**Last Updated:** 2026-11-05  
+**Status:** PBS Docker deployment active; November 5 scheduled backups succeeded on both nodes, targeted verification and file-level restore passed; full-guest restore and long-term reliability remain unverified
 
 Reference document for backup jobs across Homelab v3. Lists what is configured, when jobs run, where backups are stored, and how their success is verified.
 
@@ -13,17 +13,17 @@ Reference document for backup jobs across Homelab v3. Lists what is configured, 
 
 |Time|Job|Source|Destination|Host|Status|
 |---|---|---|---|---|---|
-|02:00 daily|PBS — VM & CT backup|Proxmox VMs and LXCs, excluding VM 103|nas-prod-01 `/mnt/user/backups/pbs`|pve-prod-01 and pve-prod-02|**Last scheduled run successful — 2026-10-30; recurrence risk open**|
+|02:00 daily|PBS — VM & CT backup|Proxmox VMs and LXCs, excluding retired VM 103|nas-prod-01 `/mnt/zfs-mirror/backups/pbs` (direct ZFS bind mount)|pve-prod-01 and pve-prod-02|**Verified successful 2026-11-05 on both nodes**|
 |03:00 daily|rsync — stacks + appdata|`/opt/stacks` + `/opt/appdata`|nas-prod-01 `/mnt/user/backups/`|docker-prod-01|Documented operational; latest execution not reverified|
 |03:00 daily|rsync — stacks + appdata|`/opt/stacks` + `/opt/appdata`|nas-prod-01 `/mnt/user/backups/`|auth-prod-01|Documented operational; latest execution not reverified|
 |03:00 daily|rsync — stacks + appdata|`/opt/stacks` + `/opt/appdata`|nas-prod-01 `/mnt/user/backups/`|immich-prod-01|Documented operational; latest execution not reverified|
 |Every 3 days, ~04:03|Plex built-in DB backup|Plex library and blobs databases|`/mnt/user/appdata/plex`|nas-prod-01|Last verified 2026-10-26|
-|04:00 Saturday|PBS — Garbage Collection|nas-backups datastore|—|pbs-prod-01|Configured historically; latest execution not reverified|
-|05:00 Saturday|PBS — Verify|nas-backups datastore|—|pbs-prod-01|Configured historically; latest execution not reverified|
+|04:00 Saturday|PBS — Garbage Collection|nas-backups datastore|—|nas-prod-01 (PBS Docker)|Configured on new PBS; execution not yet verified|
+|05:00 Saturday|PBS — Verify|nas-backups datastore|—|nas-prod-01 (PBS Docker)|Configured on new PBS; scheduled execution not yet verified|
 |TBD — Wave 8|Dedicated Plex full-appdata backup|`/mnt/user/appdata/plex`|NAS `backups` share — final path TBD|nas-prod-01|Not implemented|
 |TBD — Wave 8|Synology ABB|nas-prod-01 `backups` share|Synology NAS|Synology|Not implemented|
 
-**AI Observer:** `observer-prod-01` (VM 107) completed its scheduled PBS backup on October 30, 2026 (confirmed by the Proxmox task log). Per-snapshot PBS integrity verification and safe restoration have not been completed. No separate observer rsync backup has been verified.
+**AI Observer:** `observer-prod-01` (VM 107) remained included in the November 5 successful cluster backup job on pve-prod-01. Its individual snapshot integrity and isolated full-VM recovery have not been independently verified. No separate observer rsync backup has been verified.
 
 The dedicated Plex full-appdata backup and Synology ABB remain planned work, not confirmed operational backup systems.
 
@@ -50,29 +50,58 @@ Jobs are sequenced intentionally:
 
 Scheduling alone does not guarantee that jobs finish before the next job begins.
 
-Backup execution was restored on October 30, 2026, but ongoing success, integrity verification for all guests, and restoration testing must still be confirmed.
+Following failure recurrence on October 31–November 2, PBS was migrated to Docker on Unraid. The November 5 scheduled backups succeeded on both nodes, and a separate CT 100 file-level restoration was verified. Continued reliability and full-guest recovery remain to be tested.
 
 ---
 
 ## PBS Backup
 
 **Backup configuration:** Proxmox VE Datacenter → Backup  
-**Backup destination:** Proxmox Backup Server on pbs-prod-01  
-**PBS host:** pbs-prod-01 (192.168.30.12)  
-**PBS version:** 4.1.4 (last documented)  
-**UI:** `https://192.168.30.12:8007`  
-**Proxmox storage ID:** `pbs-prod-01`  
+**PBS deployment:** `proxmox-backup-server` container on `nas-prod-01` (Unraid)  
+**Image:** `ayufan/proxmox-backup-server:latest` (unofficial; installed PBS UI version 4.2.0)  
+**PBS endpoint:** `192.168.30.16:8007` (Services VLAN; Host networking may also expose 8007 on the NAS management IP)  
+**UI:** `https://192.168.30.16:8007`  
+**Proxmox storage ID:** `pbs-prod-01` (existing ID preserved)  
 **PBS datastore:** `nas-backups`  
-**PBS datastore mount:** `/mnt/backups/pbs`  
-**NAS destination:** `/mnt/user/backups/pbs`
+**Container datastore path:** `/backups`  
+**NAS datastore path:** `/mnt/zfs-mirror/backups/pbs`  
+**Storage:** `zfs-mirror/backups` ZFS dataset, not a separate PBS-specific dataset  
+**Old PBS:** VM 103 on pve-prod-02 (`192.168.30.12`), shut down and retained as a temporary rollback artifact; **must not run concurrently against this datastore**.
 
-The Proxmox backup job executes on the Proxmox nodes and sends VM/LXC backup data to PBS.
+Proxmox guests back up to the existing `pbs-prod-01` storage definition on both cluster nodes. The cluster-wide storage definition now points to the Docker-based PBS endpoint, uses a dedicated API token, and still targets `nas-backups`. The datastore is bind-mounted from the physical ZFS path; PBS no longer reads its datastore through the old VM's NFSv3 → Unraid `shfs`/FUSE path. The NAS's other NFS exports and share configuration were not changed.
 
-PBS stores the resulting archives in its configured datastore. The current NFSv3 mount on PBS is `/mnt/backups` from `192.168.30.16:/mnt/user/backups` (with `soft,timeo=30,retrans=3`), and the datastore is `/mnt/backups/pbs`. On Unraid, `/mnt/user` is backed by `fuse.shfs`; the physical ZFS dataset path is `/mnt/zfs-mirror/backups/pbs`. This configuration was **not changed** during the incident recovery.
+### Container configuration and safeguards
+
+- **Docker image:** `ayufan/proxmox-backup-server:latest` (unofficial third-party build, described by its maintainer as unmaintained; do not assume it follows official Proxmox releases).
+- **Networking:** Host; PBS accessed by the PVE nodes at `192.168.30.16:8007`. Confirm intended access restrictions because the process may also bind to `192.168.10.10:8007`.
+- **Privileges:** Unraid Docker template `Privileged` disabled.
+- **Persistent mappings:** `/mnt/user/appdata/pbs/etc` → `/etc/proxmox-backup`, `/mnt/user/appdata/pbs/logs` → `/var/log/proxmox-backup`, `/mnt/user/appdata/pbs/lib` → `/var/lib/proxmox-backup`.
+- **Datastore mapping:** `/mnt/zfs-mirror/backups/pbs` → `/backups` (read/write); `pbs` root owned by `34:34` with mode `755`, `.chunks` owned by `34:34` with mode `750` following the reuse permission check.
+- **Timezone:** `America/Chicago`.
+- **Extra Docker parameters:** `--restart unless-stopped --memory=2g --mount type=tmpfs,destination=/run --stop-signal=SIGHUP`.
+- **Auto-start:** Enabled; actual start-after-ZFS-mount ordering has not been independently validated.
+- **Backup data:** Existing groups/snapshots reused; 7 groups / 91 snapshots visible immediately after registration (point-in-time migration observation, not a current count).
+- **Update management:** Via Unraid's container image update/recreation workflow, not an in-container `apt upgrade`. The November 5 live integration reported no image update available, but latest image is older than official PBS 4.2.8 documentation. Monitor image maintenance and security fixes.
+- **Subscription:** No subscription is required for core PBS features. The GUI no-subscription warning is expected; do not modify distributed application code merely to remove it.
+
+### Authentication
+
+- Local emergency administrator: `admin@pbs`, default password changed and stored privately.
+- Human SSO administrator: `gio@authentik`, Admin permission on `/`. The existing `OIDC - Proxmox` Authentik provider is still shared with both PVE nodes; the redirect URI was updated to `https://192.168.30.16:8007`. Shared OIDC client secret was rotated and fresh interactive SSO logins passed on PBS and both PVE nodes.
+- Scheduled PVE backups: `pve-backup@pbs!pve-cluster` API token. Parent `pve-backup@pbs` and token both have `DatastoreBackup` permission for `/datastore/nas-backups`; all seven existing backup groups were reassigned to the token identity.
+- Secrets, webhook URLs, password values, and OIDC client secret are intentionally excluded from documentation; store them in Bitwarden or the appropriate protected configuration.
+
+### Maintenance and alerts
+
+- **Prune:** daily; keep-last 3, keep-daily 7, keep-weekly 4, keep-monthly 3; hourly/yearly unset.
+- **Garbage collection:** Saturday `04:00`.
+- **Verification:** Saturday `05:00`, skip previously verified snapshots unless older than 30 days; UI showed 1 read thread and 4 verification threads.
+- **Discord:** `Discord` webhook target test delivered to `#homelab-alerts` on November 5; `default-matcher` was edited to select warning/error severities. The matcher was not independently read back via CLI after that edit, and a real failure-event delivery test was not performed.
+- **Capacity planning:** Operator preference ~500 GB soft PBS budget, not a quota. Avoid equating total ZFS dataset usage with PBS-exclusive storage.
 
 ### Verified Backup Job Configuration
 
-The following settings were verified through the live Homelab Proxmox integration on October 30, 2026 UTC.
+The job settings were verified through live Proxmox inspection during the October incident and retained through the November 5 migration; the new storage endpoint and successful scheduled execution on both nodes were independently verified November 5.
 
 |Setting|Value|
 |---|---|
@@ -88,7 +117,7 @@ The following settings were verified through the live Homelab Proxmox integratio
 
 The job is configured to run on both Proxmox nodes, with each node processing its applicable guests.
 
-**VM 103 exclusion:** The PBS VM is explicitly excluded from this job. Its recovery strategy must be evaluated separately; it is not protected by this scheduled job.
+**VM 103 exclusion:** The retired PBS VM remains explicitly excluded from this job. It is stopped and preserved temporarily for fallback, but must not be started while Docker PBS is using the same datastore. The Docker configuration and ZFS datastore are not protected by this VM backup job.
 
 ### Verified Guest Selection
 
@@ -103,46 +132,51 @@ The job is configured to run on both Proxmox nodes, with each node processing it
 |106|dragonwilds-server|pve-prod-01|Yes|
 |107|observer-prod-01|pve-prod-01|Yes|
 
-The guest selection establishes intended coverage. In addition, the October 30 scheduled task logs confirmed successful completion for all seven selected guests. This does not independently verify every new archive’s integrity or restore behavior.
+The guest selection establishes intended coverage. The November 5 02:00 scheduled job on pve-prod-01 completed `OK` at 02:05:50 CST (347 seconds); the pve-prod-02 job completed `OK` at 02:04:30 CST (265 seconds). This confirms node-level backup jobs, not individually verified integrity or full restorability for every guest.
 
 The live job configuration inspection reported that VM 107's primary disk and EFI disk are selected for backup.
 
 ### Retention
 
-Previously documented PBS retention settings:
-
-- Keep Last: 3
-    
-- Keep Daily: 7
-    
-- Keep Weekly: 4
-    
-- Keep Monthly: 3
-    
-
-**Verification status:** These retention settings were preserved from the existing backup documentation and were not independently reconfirmed during this update.
-
-Confirm the effective retention policy in Proxmox/PBS before relying on the documented recovery window.
+**Configured and visually verified on the new PBS Docker instance, November 5:** daily prune with keep-last `3`, keep-daily `7`, keep-weekly `4`, keep-monthly `3`; keep-hourly and keep-yearly unset. The PVE storage definition retains `prune-backups keep-all=1` so PBS owns datastore retention. A successful scheduled prune/GC execution has not yet been checked on the new instance. The ~500 GB desired PBS storage budget is a soft planning threshold rather than an enforced quota.
 
 ### Monitoring
 
-**Proxmox notification system:** Enabled for the scheduled backup job.
+**PVE notification system:** Enabled for the scheduled job. On PBS, the new `Discord` webhook target delivered an explicit test notification into `#homelab-alerts`; its default matcher was manually configured for `warning` and `error` notifications. Actual warning/error job-event delivery remains untested, as does the exact saved matcher configuration via CLI.
 
-The October 29 task logs on both nodes reported notifications being sent through the `Discord` target. The operator confirmed that PBS alerts are configured for Discord and chose to monitor them for recurrence. Actual delivery and acknowledgment were not independently verified here.
-
-A successful backup task or a reported notification send must not substitute for confirming recovery points and checking that failure alerts arrive.
-
-**Healthchecks.io:** A dedicated PBS backup heartbeat was not configured according to the existing documentation.
-
-The latest monitoring configuration has not been independently rechecked.
+**Healthchecks.io:** A dedicated PBS heartbeat has not been independently confirmed as configured.
 
 ---
 
-## PBS Backup Incident — October 2026
+## PBS Docker Migration — November 3–5, 2026
 
-**Status:** Immediate operational failure cleared; permanent recurrence prevention and recovery validation open  
+**Status:** Migration implemented; initial backup, integrity, and file-level restore validation passed. Full-guest restore and continued reliability remain unverified.
+
+After the October 30 temporary proxy restart, scheduled backups failed again on October 31, November 1, and November 2 on both PVE nodes. The same PBS proxy process held a stale NFS `.lock` descriptor (`ESTALE`), proving recurrence of the immediate failure mechanism; the original invalidation trigger was not isolated.
+
+With the user's explicit decision to forgo a new protective ZFS snapshot and accept potential loss of historical archives, VM 103 was gracefully stopped on pve-prod-02. The PBS server was freshly configured using the Unraid Community Apps template with image `ayufan/proxmox-backup-server:latest`. The old VM remains stopped. The existing ZFS datastore was registered with **Reuse existing datastore**; its root directory mode was changed from `700` to `755` after PBS rejected the ownership/permission check. No recursive ownership change or datastore wipe was performed.
+
+The original `pbs-prod-01` PVE storage definition was preserved; the endpoint changed from `192.168.30.12` to `192.168.30.16`, and authentication changed from `root@pam` to the least-privilege token `pve-backup@pbs!pve-cluster`. Its TLS fingerprint was replaced with the new PBS certificate fingerprint; the token secret and certificate private material are not documented here. Proxmox's `server` field is fixed in the `pvesm set` API and was updated by editing the corresponding `server` line in cluster-wide `/etc/pve/storage.cfg`. Password/identity/fingerprint were updated through `pvesm set`. No duplicate storage ID was created.
+
+**Verified November 5:**
+
+- Manual CT 100 (`dns-prod-01`) snapshot at 00:36 CST: `TASK OK`, completed in approximately 4 seconds, reused approximately 79.7% of its file data against the previous manifest.
+- PBS integrity verification of the new CT 100 snapshot: passed (user-confirmed).
+- PVE 02:00 scheduled jobs: `OK` on both nodes, independently checked via live Proxmox task history.
+- File-level recovery: `/etc/hostname` downloaded from CT 100 backup and contents checked by the operator. **No full VM/CT recovery test was performed.**
+- Authentik SSO: fresh logins succeeded on Docker PBS and both PVE nodes after the shared provider secret was rotated.
+- Discord webhook target: explicit test delivered; matcher setup was reported complete.
+- Docker container remained `RUNNING` with auto-start enabled in subsequent live Unraid inspection.
+
+**Remaining operational checks:** monitor later scheduled backups, verify that prune/GC/weekly verify jobs run normally, consider an isolated full guest restore, examine host-networking exposure on port `8007`, and plan secure backup/recovery of the new PBS appdata plus datastore. The third-party container image's maintenance lag relative to official PBS should be reviewed periodically.
+
+---
+
+## PBS Backup Incident — October 2026 (historical)
+
+**Status as of October 30:** Immediate operational failure cleared temporarily; the same stale-handle problem recurred October 31–November 2 and the PBS deployment was replaced November 3–5.  
 **Identified:** 2026-10-29 local / 2026-10-30 UTC  
-**Last confirmed successful scheduled execution:** October 30, 2026 at 02:00 CDT, on both PVE nodes  
+**Last confirmed successful execution at time of this incident record:** October 30, 2026 at 02:00 CDT, on both PVE nodes  
 **Affected systems:** pve-prod-01, pve-prod-02, pbs-prod-01, and the Unraid NFS datastore
 
 ### Failure history and recovery-point exposure
@@ -161,6 +195,8 @@ The proxy was PID `594`, started on August 11, and held file descriptor `21` for
 This establishes a **stale, long-lived NFS file reference in the running PBS proxy** as the immediate mechanism behind the failed lock acquisition. It does **not** establish which upstream event invalidated that reference.
 
 ### NAS/NFS evidence and unresolved trigger
+
+*This section records the former VM-based PBS access path. It is not the current Docker deployment.*
 
 - Unraid pool `zfs-mirror` was `ONLINE`, with zero reported READ, WRITE, or CKSUM errors and no known data errors.
 - PBS mounted `192.168.30.16:/mnt/user/backups` at `/mnt/backups` using **NFSv3** and systemd automount. `/mnt/user` uses Unraid `fuse.shfs`; `/mnt/zfs-mirror/backups` is the direct ZFS dataset.
@@ -189,7 +225,9 @@ The proxy restarted at **00:55:42 CDT** with new PID `1372698`; the former proxy
 
 The two scheduled task results and guest completion messages were independently confirmed through the live Homelab Proxmox integration on October 30. The new backup snapshots for all guests have **not** all undergone separate integrity verification or restoration testing.
 
-### Operational decision and remaining work
+### Operational decision and remaining work (as of October 30; superseded)
+
+*The monitoring-only decision below predates the November Docker migration. It is preserved for incident history.*
 
 The operator chose to retain the existing NAS storage architecture and monitor the configured Discord backup alerts rather than introduce immediate NFS/FUSE changes. **Permit exclusive shares remains disabled**; no dedicated direct-ZFS NFS export was implemented. A FUSE-free PBS-specific export is an **unimplemented option for evaluation only**, not the current configuration or a guaranteed cure for NFS handle failures.
 
@@ -520,6 +558,8 @@ No observer-prod-01 rsync directories are shown because a separate observer rsyn
 
 ### PBS Datastore Safety
 
+The active Docker bind mount is `/mnt/zfs-mirror/backups/pbs` → `/backups`; the `/mnt/user/backups/pbs` alias is not used by the PBS container.
+
 The PBS datastore must remain isolated within its dedicated `pbs/` subdirectory.
 
 Do not manually place unrelated files inside the PBS datastore.
@@ -551,13 +591,13 @@ From Proxmox:
 6. Confirm that the expected guests were processed.
     
 
-**Latest verified state:** The October 30 02:00 scheduled jobs completed successfully on both nodes. Continue checking each subsequent run; task success is not the same as archive integrity or restorability.
+**Latest verified state:** The November 5 02:00 scheduled jobs completed successfully on both nodes using Docker PBS. Targeted CT 100 integrity verification and file-level retrieval passed; a full-guest restore test remains open.
 
 ### PBS Archives
 
 From PBS:
 
-1. Open `https://192.168.30.12:8007`.
+1. Open `https://192.168.30.16:8007`.
     
 2. Navigate to **Datastore → nas-backups → Content**.
     
@@ -630,13 +670,14 @@ Until these checks pass, observer recoverability remains unverified.
 
 ### High Priority — PBS Reliability and Recovery Validation
 
-- **Completed:** Identify and reproduce a stale datastore lock handle in the long-running PBS proxy.
-- **Completed:** Restart `proxmox-backup-proxy` with operator approval and confirm successful manual and scheduled backups on October 30.
-- **Completed:** Integrity-verify the October 30 manual CT 100 snapshot (zero reported errors).
-- **Open:** Determine or mitigate the original NFS file-handle invalidation trigger if the issue recurs; no persistent NAS/mount change has been made.
-- **Open:** Verify new backup snapshots for the remaining guests, especially VMs 106 and 107, and conduct a safe restore test.
-- **Open:** Confirm that Discord failure notifications actually arrive; user is monitoring.
-- **Open:** Review retention/prune, excluded PBS VM 103 recovery, and NFS `soft`/export `async` tradeoffs before making changes.
+- **Completed:** Diagnose the former PBS VM's stale NFS `.lock` descriptor and observe recurrence October 31–November 2 after a temporary October 30 proxy restart.
+- **Completed:** Migrate to Docker PBS with a direct-ZFS bind mount, retain the old VM stopped, register the existing datastore, and reconnect PVE without changing its storage ID.
+- **Completed:** CT 100 backup and integrity verification; November 5 02:00 scheduled backup jobs on both Proxmox hosts; file-level recovery of `/etc/hostname`.
+- **Completed:** Test shared Authentik SSO after provider-secret rotation on PBS and both PVE hosts; test Discord webhook target delivery.
+- **Open:** Monitor subsequent backup cycles; verify first actual prune, GC, and scheduled verify runs on the new deployment.
+- **Open:** Perform a safe isolated full VM/CT restore (and AI Observer-specific recovery testing when appropriate).
+- **Open:** Verify Docker Host-network port 8007 access policy and PBS start-after-ZFS-mount ordering. Review update strategy for the unofficial image.
+- **Open:** Define the desired protection/recovery approach for the PBS container's persisted config and the ZFS datastore; the operator intentionally declined a migration-time snapshot and accepts rebuilding a datastore if necessary.
 
 ---
 
@@ -676,7 +717,7 @@ Until these checks pass, observer recoverability remains unverified.
     
 - `architecture/compute/pve-prod-01.md` — Primary Proxmox node and observer VM.
     
-- `architecture/compute/pve-prod-02.md` — Secondary Proxmox node and PBS VM.
+- `architecture/compute/pve-prod-02.md` — Secondary Proxmox node; retired/stopped PBS VM 103.
     
 - `runbooks/git-workflow.md` — Version-controlled infrastructure configuration.
     
@@ -687,7 +728,7 @@ Until these checks pass, observer recoverability remains unverified.
 
 ---
 
-## Verification Summary — 2026-10-30
+## Verification Summary — 2026-10-30 (historical)
 
 |Item|Result|
 |---|---|
@@ -709,4 +750,22 @@ Until these checks pass, observer recoverability remains unverified.
 |Plex built-in database backups|Last verified 2026-10-26|
 |Dedicated Plex full-appdata backup / Synology ABB|Pending|
 
-**Operational backup execution has recovered. Permanent recurrence prevention and verified restoration remain open.**
+**Historical note:** This October 30 assessment was superseded after failure recurrence and the November Docker migration. See the new migration section above.
+
+### Verification Summary — 2026-11-05
+
+| Item | Result |
+|---|---|
+| New PBS Docker container | Running on nas-prod-01; image `ayufan/proxmox-backup-server:latest`, PBS UI 4.2.0 |
+| Old PBS VM 103 | Stopped; retained temporarily, not to run concurrently |
+| Datastore reuse | Existing 7 groups/91 snapshots visible immediately after registration |
+| Proxmox PBS storage | `pbs-prod-01` preserved and available from both nodes at `192.168.30.16` |
+| Manual CT 100 backup and targeted integrity check | Successful |
+| November 5 02:00 scheduled jobs on both nodes | `OK` |
+| CT 100 `/etc/hostname` file-level restore | Successful, contents inspected |
+| Full-guest isolated restore | Not performed |
+| Authentik OIDC secret rotation and SSO | Fresh PBS and both PVE logins successful |
+| Discord target | Test message delivered; actual warning/error routing not failure-tested |
+| New PBS prune, GC, and scheduled verify execution | Configured; first executions not yet confirmed |
+| NFS/FUSE stale-handle recurrence under Docker | Not observed in initial backup run; continued monitoring needed |
+

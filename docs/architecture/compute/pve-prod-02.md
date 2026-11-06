@@ -1,8 +1,8 @@
 # pve-prod-02 — Secondary Proxmox Node
 
-**Role:** Secondary Proxmox node — runs PBS VM, secondary AdGuard LXC, and immich-prod-01  
+**Role:** Secondary Proxmox node — runs secondary AdGuard LXC and immich-prod-01; former PBS VM 103 is retained powered off  
 **Status:** Active  
-**Last Updated:** 2026-10-30
+**Last Updated:** 2026-11-05
 
 ---
 
@@ -67,20 +67,22 @@
 | local | Directory | ISO images, CT templates |
 | local-lvm | LVM-thin | VM disks, LXC rootfs |
 | nas-isos-p2 | NFS | ISO images — `192.168.30.16:/mnt/user/isos`. Scoped to pve-prod-02 only. Added Phase 4 Wave 5. |
-| pbs-prod-01 | PBS | nas-backups datastore at 192.168.30.12 |
+| pbs-prod-01 | PBS | nas-backups datastore at Docker PBS on nas-prod-01, `192.168.30.16:8007` |
 
 > **nas-isos note:** The cluster-wide `nas-isos` storage entry uses `10.0.0.2` (DAC link) which is only reachable from pve-prod-01. A separate `nas-isos-p2` entry using `192.168.30.16` was added and scoped to pve-prod-02 only. The original `nas-isos` entry is scoped to pve-prod-01 only to prevent mount failures on pve-prod-02.
 
 > local-zfs ghost entry was present after install and removed via `pvesm remove local-zfs` — pve-prod-02 uses local-lvm for VM disks.  
 > local-lvm entry was also lost and re-added via: `pvesm add lvmthin local-lvm --vgname pve --thinpool data --content rootdir,images`
 
-### PBS Backup and VM 103 Operations — October 30, 2026
+### PBS Backup and VM 103 — November 5, 2026
 
-PBS runs as VM 103 at `192.168.30.12`. It is deliberately excluded from the daily 02:00 backup job `backup-54015f90-26e5` and needs a separate recovery strategy. Its datastore `nas-backups` is NFS-mounted from Unraid (`192.168.30.16:/mnt/user/backups`) under PBS `/mnt/backups/pbs`.
+**Current active PBS:** Docker `proxmox-backup-server` on Unraid `nas-prod-01`, accessed at `192.168.30.16:8007`, datastore `nas-backups`. The cluster-wide PVE storage ID `pbs-prod-01` is unchanged, and authentication uses `pve-backup@pbs!pve-cluster` API token. Direct datastore bind mount is `/mnt/zfs-mirror/backups/pbs` → `/backups`. The 02:00 cluster backup job `backup-54015f90-26e5` continues to exclude retired PBS VM 103.
 
-A stale NFS datastore `.lock` file descriptor in the running PBS proxy caused connection-reset failures on both Proxmox nodes during October 2026. The operator restarted only `proxmox-backup-proxy` at **00:55 CDT on October 30**, clearing the immediate failure without rebooting VM 103 or changing NAS mounts. The scheduled pve-prod-02 job ran **02:00–02:05 CDT** and completed `TASK OK` for CT 102 and VM 105. The pve-prod-01 job also succeeded.
+**Retired VM 103:** `pbs-prod-01` (previously `192.168.30.12`, PBS package 4.1.4-1) was gracefully shut down for the Docker migration and is retained as a temporary fallback. Its 16 GiB disk remains on `local-lvm`, with 2 vCPUs and 4 GiB RAM configured. It does not auto-start (`onboot` is not configured). **Do not start the VM while Docker PBS is using the same datastore.** A root-only PBS configuration archive was created and integrity-checked on the retired VM as a rollback safeguard; it was intentionally **not** imported into Docker.
 
-**Outstanding:** Ongoing monitoring for handle recurrence; independent integrity verification of new backups beyond manual CT 100; isolated restore test; separate recovery plan for VM 103. NFS/FUSE design remains unchanged. The historical VM 103 inventory recorded PBS 4.1.0 while `backup-schedule.md` recorded 4.1.4; the current PBS package version was not independently rechecked during this update.
+**Incident and migration chronology:** The old VM used an NFSv3 datastore mount from the Unraid `/mnt/user/backups` FUSE path. Repeated `ESTALE` errors were associated with a stale PBS proxy descriptor for `.lock`. Restarting the proxy on October 30 temporarily cleared the fault; the same error recurred October 31–November 2, motivating the Docker migration. The original invalidation trigger was never definitively established. The Docker deployment eliminates the former PBS datastore NFS/FUSE access path without altering Unraid exports or global exclusive-share settings.
+
+**Verified on pve-prod-02:** The November 5 02:00 backup job completed `OK` at 02:04:30 CST (265 seconds). Both cluster nodes' PBS storage entries were verified available at `192.168.30.16`. The shared Authentik OIDC provider's secret was rotated; fresh SSO login succeeded on pve-prod-02, pve-prod-01 and PBS. No full guest recovery test or post-migration weekly PBS maintenance run has been completed.
 
 See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architecture/storage/nas-prod-01.md`.
 
@@ -91,7 +93,7 @@ See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architectu
 | ID  | Name           | Type              | VLAN | IP            | Status                               |
 | --- | -------------- | ----------------- | ---- | ------------- | ------------------------------------ |
 | 102 | dns-prod-02    | LXC (Debian 12)   | 30   | 192.168.30.15 | Running                              |
-| 103 | pbs-prod-01    | VM (PBS; version recheck needed) | 30   | 192.168.30.12 | Running                              |
+| 103 | pbs-prod-01 (retired) | VM (PBS 4.1.4-1) | 30 | 192.168.30.12 (historical) | **Stopped**, retained temporarily for fallback |
 | 105 | immich-prod-01 | VM (Ubuntu 24.04) | 30   | 192.168.30.14 | Running — 2 vCPU, 6GB RAM, 32GB disk |
 
 > immich-prod-01 was moved here from pve-prod-01 due to RAM headroom — pve-prod-01 was already running docker-prod-01 (8GB) and auth-prod-01 (4GB). pve-prod-02 had ample capacity. See `architecture/decisions-log.md`.
@@ -101,13 +103,13 @@ See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architectu
 ## Design Decisions
 
 ### Single NVMe Boot — No Mirror
-Single NVMe boot is acceptable for pve-prod-02 given its secondary non-critical role. If this node goes down, services running on it (PBS, secondary AdGuard, Immich) are temporarily unavailable but the primary workload on pve-prod-01 is unaffected.
+Single NVMe boot is accepted for pve-prod-02 given its secondary role. If this node goes down, its secondary AdGuard and Immich guests are temporarily unavailable; PBS now runs on Unraid and is **not** hosted on pve-prod-02. The primary workloads on pve-prod-01 are unaffected by this node-specific outage.
 
 ### HA Not Enabled
 HA (High Availability) is deliberately not enabled on this cluster. The Optiplex cannot absorb pve-prod-01's workload — enabling HA without matched hardware provides false security. Clustering is for unified management UI only.
 
 ### RAM Not Upgraded Yet
-RAM left at 16GB for now — current workload (PBS VM + AdGuard LXC + Immich VM) fits comfortably. Upgrade to 32GB later if needed.
+RAM left at 16GB for now — active workload is secondary AdGuard LXC and Immich VM; retired PBS VM 103 is powered off. Upgrade to 32GB later if workload needs justify it.
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Role:** Primary Proxmox node — runs all primary VMs and LXCs  
 **Status:** Active  
-**Last Updated:** 2026-11-01
+**Last Updated:** 2026-11-05
 
 ---
 
@@ -84,18 +84,25 @@
 |local|Directory|/var/lib/vz|ISO images, CT templates|
 |local-zfs|ZFS|rpool/data|VM disks, LXC rootfs|
 |nas-isos|NFS|10.0.0.2:/mnt/user/isos|ISO images — via DAC link. Scoped to pve-prod-01 only.|
-|pbs-prod-01|PBS|nas-backups datastore|Proxmox Backup Server at 192.168.30.12|
+|pbs-prod-01|PBS|nas-backups datastore|Docker PBS on nas-prod-01 at 192.168.30.16:8007; shared PVE storage ID preserved|
 
 > local-lvm ghost entry was present after install and removed via `pvesm remove local-lvm` — pve-prod-01 uses local-zfs for VM disks.  
 > local-zfs entry was lost at one point and re-added via: `pvesm add zfspool local-zfs --pool rpool/data --content rootdir,images`
 
-### PBS Backup Status — October 30, 2026
+### PBS Backup Migration and Validation — November 5, 2026
 
-The daily 02:00 Proxmox job `backup-54015f90-26e5` targets `pbs-prod-01` (PBS datastore `nas-backups`) and includes CT 100 and VMs 101, 104, 106, and 107 on this node. PBS VM 103 is excluded at the cluster level.
+**Active:** PVE cluster-wide storage `pbs-prod-01` targets `nas-backups` on Docker PBS at `192.168.30.16:8007`, hosted by Unraid (`nas-prod-01`). The old PBS VM 103 at `192.168.30.12` on pve-prod-02 is shut down. Existing PVE storage ID and daily 02:00 cluster job `backup-54015f90-26e5` were preserved. Cluster storage now authenticates using dedicated `pve-backup@pbs!pve-cluster` token, whose permissions and backup-group ownership were migrated. No secret values are recorded here.
 
-Following repeated failures through October 29, the PBS proxy on VM 103 was found holding a stale NFS datastore `.lock` descriptor. The operator restarted only `proxmox-backup-proxy` at 00:55 CDT on October 30. The October 30 scheduled pve-prod-01 job ran **02:00–02:22 CDT** and finished `TASK OK`, with success messages for all five guests (including Dragonwilds VM 106 and AI Observer VM 107).
+The previous PBS VM connected to the Unraid datastore through NFSv3 and `shfs` FUSE. A stale proxy `.lock` file descriptor caused failed backups. A targeted proxy restart on October 30 temporarily restored backups, but errors recurred October 31–November 2 on both Proxmox nodes. The Docker replacement accesses the same ZFS datastore directly through `/mnt/zfs-mirror/backups/pbs` → `/backups`, bypassing the former PBS datastore NFS/FUSE path.
 
-The manual CT 100 backup at 00:57 CDT also succeeded, and its PBS integrity verification at 01:02 CDT reported zero errors. Independent integrity verification of all other new snapshots and an isolated restore test remain outstanding. No NAS/NFS/FUSE configuration changes were implemented; recurrence prevention remains open. See `runbooks/backup-schedule.md` and `runbooks/backup-restore.md`.
+**Verified on pve-prod-01:**
+
+- Manual CT 100 (`dns-prod-01`) backup at 00:36 CST on November 5: `TASK OK`, 4 seconds, approximately 79.7% reuse. Its new snapshot passed targeted PBS integrity verification.
+- 02:00 scheduled backup job on November 5 finished `OK` at 02:05:50 CST (347 seconds). Backup selection includes CT 100, VMs 101, 104, 106, and 107 (as configured; individual per-guest integrity not exhaustively verified).
+- A file-level restore of CT 100's `/etc/hostname` succeeded via the PVE backup browser. A full VM/CT restore has not been performed.
+- Shared Authentik OIDC secret was rotated; a fresh SSO login passed on this PVE node and on pve-prod-02 and PBS.
+
+**To monitor:** Continued 02:00 backups, PBS scheduled prune/GC/verification, actual warning/error notification delivery if desired, and a later isolated full guest recovery test. Direct Docker Host networking may expose PBS TCP 8007 on both NAS interfaces; access restrictions were not independently validated. See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architecture/storage/nas-prod-01.md`.
 
 ---
 

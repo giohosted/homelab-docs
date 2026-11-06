@@ -6,7 +6,7 @@
 **Compose:** `/opt/stacks/authentik/compose.yaml`  
 **Appdata:** `/opt/appdata/authentik/`  
 **URL:** https://auth.giohosted.com  
-**Last Updated:** 2026-11-01
+**Last Updated:** 2026-11-05
 
 ---
 
@@ -149,8 +149,8 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 
 | Service                             | Method | Provider Slug | Notes                                                                                                                                                   |
 | ----------------------------------- | ------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Proxmox (pve-prod-01 + pve-prod-02) | OIDC   | `proxmox`     | Realm: `authentik`. Username claim: `username`. Redirect URIs: `192.168.10.11:8006`, `192.168.10.12:8006`. Shared provider with PBS.                    |
-| PBS (pbs-prod-01)                   | OIDC   | `proxmox`     | Shares provider/app with Proxmox. Redirect URI: `192.168.30.12:8007`.                                                                                   |
+| Proxmox (pve-prod-01 + pve-prod-02) | OIDC | `proxmox` | Realm: `authentik`. Username claim: `username`. Strict redirect URIs: `https://192.168.10.11:8006`, `https://192.168.10.12:8006`. Shared provider with PBS. |
+| PBS Docker on nas-prod-01 | OIDC | `proxmox` | Shares `OIDC - Proxmox` provider and `App - Proxmox` with PVE. Strict redirect URI: `https://192.168.30.16:8007`. Former VM 103 URI retired. |
 | Beszel                              | OIDC   | `beszel`      | Redirect URI: `http://192.168.10.20:8090/api/oauth2-redirect`.                                                                                          |
 | Synology DSM                        | OIDC   | `synology`    | Well-known URL must use app-specific path: `https://auth.giohosted.com/application/o/synology/.well-known/openid-configuration` — NOT the generic path. |
 | Audiobookshelf                      | OIDC   | —             | Carried forward from v2 backup                                                                                                                          |
@@ -162,7 +162,22 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 
 > **OIDC admin group:** Shelfmark and ABS use the existing `admins` group for admin authorization. No service-specific admin groups were created — reusing `admins` keeps Authentik group management simple.
 
-> **Proxmox/PBS shared provider:** Both Proxmox nodes and PBS use the same Authentik provider (`OIDC - Proxmox`) and application (`App - Proxmox`). All three redirect URIs are registered on the same provider. Permissions are configured separately on each service — `gio@authentik` with Administrator role on Proxmox, Admin role on PBS.
+> **Proxmox/PBS shared provider:** Both Proxmox nodes and Docker PBS use the same Authentik provider (`OIDC - Proxmox`) and application (`App - Proxmox`). The three **active** strict redirect URIs are `https://192.168.10.11:8006`, `https://192.168.10.12:8006`, and `https://192.168.30.16:8007`. The old `192.168.30.12:8007` redirect was replaced. Permissions remain service-specific: `gio@authentik` has Administrator on PVE and Admin on PBS. The shared OIDC secret was rotated during PBS migration and fresh login tests passed on all three services November 5; never include the secret in docs.
+
+---
+
+## PBS Docker Migration — OIDC Verification (November 5, 2026)
+
+The former PBS VM `pbs-prod-01` at `192.168.30.12:8007` was replaced with a Docker-based PBS instance on `nas-prod-01` at `https://192.168.30.16:8007`. The operator chose to **retain the shared OIDC provider** rather than create a new provider for PBS.
+
+- **Application / provider:** `App - Proxmox` / `OIDC - Proxmox` (unchanged).
+- **Issuer:** `https://auth.giohosted.com/application/o/proxmox/`.
+- **PBS realm:** `authentik`; username claim `username`, auto-create enabled. `gio@authentik` was granted PBS `Admin` on `/` with propagation.
+- **Redirect:** Replaced the retired PBS URI with strict `https://192.168.30.16:8007`; existing PVE redirect URIs retained.
+- **Secret rotation:** Shared client secret rotated by the operator; fresh private-browser OIDC logins to PBS and both PVE nodes succeeded afterward. No credential value recorded here.
+- **Fallback:** The new PBS Docker image uses `admin@pbs` as a separate local emergency administrator; it does not rely on `root@pam` Linux PAM authentication in the container.
+
+Because this provider is shared, any **future** secret rotation must update the provider clients on all three systems together. This completed rotation was independently validated by successful interactive logins, not by reading the configured secret values.
 
 ---
 

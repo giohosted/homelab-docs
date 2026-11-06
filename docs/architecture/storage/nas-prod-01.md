@@ -3,7 +3,7 @@
 **Host:** nas-prod-01  
 **OS:** Unraid 7.3.2 (verified by live MCP October 30, 2026)  
 **Chassis:** Rosewill RSV-L4412U (4U, 12-bay)  
-**Last Updated:** 2026-10-31
+**Last Updated:** 2026-11-05
 
 ---
 
@@ -12,7 +12,7 @@
 | Interface | Type | IP | VLAN | Purpose |
 |---|---|---|---|---|
 | eth0 (onboard 2.5GbE) | br0 bridge | 192.168.10.10/24 | 10 — Management | Unraid web UI only |
-| eth1 (X710 Port 2, 10GbE) | Direct | 192.168.30.16/24 | 30 — Services | NFS exports, Plex traffic, verified Unraid GraphQL HTTPS access from AI Observer |
+| eth1 (X710 Port 2, 10GbE) | Direct | 192.168.30.16/24 | 30 — Services | NFS exports, Plex traffic, PBS Docker TCP 8007, verified Unraid GraphQL HTTPS access from AI Observer |
 | eth2 (X710 Port 1, 10GbE) | Unconfigured | 10.0.0.x/30 (Phase 3) | None | Point-to-point DAC to pve-prod-01 |
 
 ---
@@ -126,7 +126,7 @@ data/
 ### backups share folder structure
 ```
 /mnt/user/backups/
-├── pbs/                    ← PBS datastore (owned by uid 34 — do not touch)
+├── pbs/                    ← PBS Docker datastore, direct path /mnt/zfs-mirror/backups/pbs (owned by uid 34 — do not touch)
 ├── appdata/                ← rsync appdata backups (owned by root)
 │   ├── docker-prod-01/
 │   ├── auth-prod-01/
@@ -137,7 +137,7 @@ data/
     └── immich-prod-01/
 ```
 
-> **Warning:** The `pbs/` subdirectory must remain owned by uid 34 (PBS `backup` user). Do not place root-owned files inside it. PBS GC scans the entire datastore path and will abort with a permission error if it encounters files it cannot read. This is why PBS is scoped to `/mnt/user/backups/pbs` rather than the share root.
+> **Warning:** The `pbs/` subdirectory must remain owned by UID/GID `34:34` (PBS `backup` user); the root is mode `755` and `.chunks` is mode `750` after registration of the existing datastore in PBS 4.2.0. Do not place unrelated or root-owned files in the datastore. Docker PBS uses the **direct** `/mnt/zfs-mirror/backups/pbs` path, not the `/mnt/user` FUSE alias. The datastore is scoped to the `pbs/` subdirectory rather than the share root.
 
 ### NFS Exports
 
@@ -149,7 +149,32 @@ data/
 
 > **Note:** The `data` share is mounted on docker-prod-01 as a single NFSv3 mount at `/data`. This is required for hardlinks and atomic moves to work correctly across media and downloads. See `architecture/decisions-log.md` for rationale.
 
-### PBS NFS Filesystem and October 2026 Incident
+### PBS Docker — Active Deployment (verified November 5, 2026)
+
+**Current architecture:** The Unraid Community Apps `proxmox-backup-server` container (`ayufan/proxmox-backup-server:latest`, unofficial image; PBS UI 4.2.0) runs on `nas-prod-01`. It uses Docker Host networking and is accessed by PVE through `192.168.30.16:8007` (Services VLAN). Because Host networking uses host interfaces, TCP 8007 may also be reachable through management IP `192.168.10.10`; the desired firewall exposure has not been independently assessed.
+
+**Datastore:** Existing `nas-backups` archives remain in `/mnt/zfs-mirror/backups/pbs` and are bind-mounted to `/backups` inside the PBS container. No separate child dataset was present beneath `zfs-mirror/backups` when checked. The parent dataset also stores separate `appdata/` and `stacks/` rsync backups; do not confuse its capacity usage with exclusive PBS usage. The directory ownership is `34:34`; its root mode was corrected from `700` to `755` for PBS reuse, while `.chunks` remains `750`. No recursive `chown`, datastore wipe, or migration-time ZFS snapshot was performed.
+
+**Container configuration:** Privileged disabled, timezone `America/Chicago`, image tag `latest`, auto-start enabled; Extra Parameters: `--restart unless-stopped --memory=2g --mount type=tmpfs,destination=/run --stop-signal=SIGHUP`. Persistent paths:
+
+| Host path | Container path | Purpose |
+|---|---|---|
+| `/mnt/user/appdata/pbs/etc` | `/etc/proxmox-backup` | PBS configuration and sensitive secrets |
+| `/mnt/user/appdata/pbs/logs` | `/var/log/proxmox-backup` | PBS logs |
+| `/mnt/user/appdata/pbs/lib` | `/var/lib/proxmox-backup` | PBS state |
+| `/mnt/zfs-mirror/backups/pbs` | `/backups` | Existing PBS datastore, direct ZFS |
+
+**Validated:** The old VM 103 is stopped. Existing snapshots were visible (7 groups / 91 snapshots at initial registration). A November 5 manual backup and targeted integrity verification of CT 100 passed, as did both nodes' 02:00 scheduled backup jobs; a file-level restore of `/etc/hostname` succeeded. No isolated full VM/CT restore, post-migration GC/prune/weekly verify execution, or storage mount-order boot test has been completed. The container was still reported RUNNING with auto-start enabled during follow-up live Unraid inspection.
+
+**Authentication and alerts:** PVE uses dedicated PBS API token `pve-backup@pbs!pve-cluster` (token and parent least privilege on `nas-backups`). Authentik OIDC remains shared with Proxmox; client secret rotated and interactive logins tested across PBS and both PVE nodes. Local `admin@pbs` password was changed from the default. The Discord webhook test message was delivered; matcher configured for warning/error. Do not record tokens or client secrets in Markdown.
+
+**Maintenance:** Daily pruning 3 last / 7 daily / 4 weekly / 3 monthly; GC Saturday 04:00; verification Saturday 05:00, skip verified if younger than 30 days. Operator's target is ~500 GB for PBS, as a **soft budget**, not a configured quota.
+
+**Lifecycle risks:** The image is explicitly unofficial/unmaintained and may lag official Proxmox security updates; no new image update was advertised by Unraid on November 5. Update via Unraid Docker image recreation, preserving `/mnt/user/appdata/pbs` and datastore mounts, and monitor new releases. Avoid running the retired VM concurrently. Verify startup ordering after the ZFS pool mount and determine whether to restrict Host-network access to TCP 8007 on the management VLAN. The operator accepted the risk of foregoing a migration-time protective ZFS snapshot and is willing to recreate the datastore if unrecoverable.
+
+### PBS NFS Filesystem and October 2026 Incident — Historical
+
+**Historical only:** The NFSv3 → `fuse.shfs` path below belonged to the retired PBS VM. Docker PBS does **not** currently use that path for its datastore. The October 30 proxy restart was temporary; identical stale-handle errors recurred October 31–November 2 and prompted the November 2026 Docker deployment.
 
 **Verified storage topology (October 30):**
 
@@ -219,6 +244,7 @@ The Homelab Unraid ChatGPT plugin connects through its own outbound OpenAI Secur
 | Container | IP | Purpose |
 |---|---|---|
 | plex | 192.168.30.2 | Plex Media Server — bound to eth1 (VLAN 30) |
+| proxmox-backup-server | Host networking, 192.168.30.16:8007 | PBS 4.2.0 image `ayufan/proxmox-backup-server:latest` — direct ZFS datastore |
 
 - **iGPU passthrough:** /dev/dri → Intel Raptor Lake-S UHD Graphics (QuickSync)
 - **Hardware transcoding:** enabled — HEVC encoding set to "HEVC sources only"

@@ -1,6 +1,6 @@
 # IP Address Plan
 
-**Last updated:** 2026-10-29
+**Last updated:** 2026-11-05
 
 ---
 
@@ -13,7 +13,7 @@ Strictly for infrastructure control plane interfaces — devices you administer,
 |UDM-SE|192.168.10.1|Built-in|Gateway — already configured, do not change|
 |Core Switch (UniFi USW-Pro-Max-24)|192.168.10.2|Management|Switch management interface|
 |UPS (if networked later)|192.168.10.3|—|Reserved — NUT handles shutdown via USB for now|
-|nas-prod-01 — **mgmt only**|192.168.10.10|Onboard 2.5GbE|Unraid web UI access only. NFS is NOT served here.|
+|nas-prod-01 — management interface|192.168.10.10|Onboard 2.5GbE|Unraid management UI. Docker PBS uses Host networking; possible TCP 8007 exposure on this interface has **not** been independently restricted/verified. NFS is not intentionally served here.|
 |pve-prod-01 (MS-A2)|192.168.10.11|2.5GbE RJ45|Proxmox management UI and API|
 |pve-prod-02 (Optiplex)|192.168.10.12|GbE RJ45|Proxmox management UI|
 |pi-prod-01 (Raspberry Pi)|192.168.10.20|GbE RJ45|QDevice + Uptime Kuma + Beszel server. Migrated from VLAN 20 (192.168.20.8) in Phase 3. VLAN 10 outbound reach covers all VLANs — Beszel/Kuma probes work without extra rules.|
@@ -51,11 +51,11 @@ Not every v3 VM is on VLAN 30. The Dragonwilds dedicated game server uses VLAN 5
 |---|---|---|---|
 |dns-prod-01 (AdGuard LXC, pve-prod-01)|192.168.30.10|Virtual (VLAN tag 30)|Primary DNS — AdGuard Home|
 |docker-prod-01 (media/apps VM, pve-prod-01)|192.168.30.11|Virtual (VLAN tag 30)|All media stack containers behind Traefik. Mounts `192.168.30.16:/mnt/user/data` as `/data` via NFSv3 — single mount covering all media and downloads.|
-|pbs-prod-01 (PBS VM, pve-prod-02)|192.168.30.12|Virtual (VLAN tag 30)|Proxmox Backup Server|
+|pbs-prod-01 (retired PBS VM 103)|192.168.30.12|Virtual (VLAN tag 30)|**Stopped** and retained for rollback; no active PBS service at this IP. Must not be started concurrently with Docker PBS.|
 |auth-prod-01 (Authentik VM, pve-prod-01)|192.168.30.13|Virtual (VLAN tag 30)|Authentik IdP — dedicated VM — deployed Phase 4 Wave 1|
 |immich-prod-01 (Immich VM, pve-prod-02)|192.168.30.14|Virtual (VLAN tag 30)|Immich — on pve-prod-02 — deployed Phase 4 Wave 5. Mounts `192.168.30.16:/mnt/user/photos` as `/data/photos` via NFSv3.|
 |dns-prod-02 (AdGuard LXC, pve-prod-02)|192.168.30.15|Virtual (VLAN tag 30)|Secondary DNS — synced from dns-prod-01 via adguardhome-sync|
-|nas-prod-01 — **data/NFS**|192.168.30.16|X710 Port 2 SFP+|NFS exports, Plex container traffic. Services mount NFS from this IP only.|
+|nas-prod-01 — **data/NFS/PBS**|192.168.30.16|X710 Port 2 SFP+|NFS exports, Plex traffic, **PBS Docker at `https://192.168.30.16:8007`**. PBS datastore uses local direct ZFS, not NFS.|
 |observer-prod-01 (AI Observer VM, pve-prod-01)|192.168.30.17|Virtual (VLAN tag 30, ens18)|AI Observer — Proxmox MCP and OpenAI Secure MCP Tunnel. Dedicated read-only API access to pve-prod-01 (192.168.10.11:8006).|
 |plex (Docker container on nas-prod-01)|192.168.30.2|X710 Port 2 SFP+|Plex Media Server — Docker container on nas-prod-01, bound to eth1 (VLAN 30)|
 |192.168.30.100+|—|—|DHCP / sandbox / test / future k3s nodes|
@@ -114,12 +114,12 @@ See:
 
 nas-prod-01 has two logical network presences:
 
-- **Onboard 2.5GbE at 192.168.10.10:** Management-only (Unraid UI).
+- **Onboard 2.5GbE at 192.168.10.10:** Management interface (Unraid UI); Docker PBS Host networking may also expose TCP 8007 here, pending access verification.
     
-- **X710 Port 2 at 192.168.30.16:** Data plane (NFS, Plex).
+- **X710 Port 2 at 192.168.30.16:** Data plane (NFS, Plex, Docker PBS TCP 8007).
     
 
-Services on VLAN 30 mount NFS from `192.168.30.16` without crossing into VLAN 10.
+Services on VLAN 30 mount NFS from `192.168.30.16` without crossing into VLAN 10. Proxmox hosts also connect to the local Unraid PBS Docker service on `192.168.30.16:8007`; this backup traffic no longer traverses an NFS mount inside PBS.
 
 The firewall denies general VLAN 30 → VLAN 10 access. Narrow, explicitly documented exceptions — such as the AI Observer's access to the Proxmox API — are permitted without opening the entire management network.
 
