@@ -1,6 +1,6 @@
 # Architecture Decisions Log
 
-**Last Updated:** 2026-11-01
+**Last Updated:** 2026-11-05
 
 ---
 
@@ -792,7 +792,7 @@ The tunnel daemon runs as the dedicated unprivileged `tunnel-client` account, wi
 
 **Why:** The observer handles credentials that can access infrastructure monitoring APIs and OpenAI tunnel services. These credentials should not be copied into Git history, exposed in command arguments unnecessarily, or made readable by unrelated services.
 
-The deployment uses separate protected `.env` files for Proxmox, Unraid, and Komodo MCP and separate protected runtime credentials for three OpenAI tunnel services. Proxmox and Unraid tunnel clients have additional protected MCP bearer-header files; Komodo intentionally has none. Do not assume new November 1 files are included in the historical October 30 observer backup.
+The November 1 three-integration state used protected `.env` files for Proxmox, Unraid and Komodo, with three separate tunnel runtime credentials. Phase 4 (November 5) added a protected root-only UniFi `.env` and a fourth restricted OpenAI runtime key. Proxmox and Unraid tunnel clients have protected MCP bearer-header files; Komodo and UniFi intentionally have none. Do not assume the November 1 or November 5 files are included in the historical October 30 observer backup.
 
 The `homelab-infra` repository contains the MCP Compose configuration, while secrets remain excluded from Git.
 
@@ -856,3 +856,21 @@ Completing one end-to-end integration before introducing additional systems allo
 **Rationale and security:** Outbound Periphery avoids additional inbound service ports, preserves existing Traefik/TLS routing, and reuses the centrally managed Komodo API. Periphery has highly privileged local Docker-socket access; this **does not** imply ChatGPT gets terminal, inspect, exec, or write privileges. The permanent keys require secure backups and access controls. A post-November 1 observer backup, backup-integrity/credential verification and full observer reboot/reconnect test remain pending. An isolated restore exercise was explicitly excluded from Phase 3 scope and was not performed.
 
 **Related documentation:** `services/infra/ai-observer.md`, `runbooks/ai-observer-operations.md`, `services/media/immich.md`, `services/infra/authentik.md`.
+
+---
+
+### AI Observer Phase 4 — Dedicated Read-Only UniFi MCP with Cloud API Access
+
+**Decision (implemented and end-to-end verified November 5, 2026 CST):** Add `ry-ops/unifi-mcp-server` as a **fourth independent MCP container and outbound OpenAI Secure MCP Tunnel** on `observer-prod-01` to inspect UDM-SE / UniFi Network. Use UniFi's Site Manager and Network cloud connector over `https://api.ui.com` instead of adding broad management-VLAN reachability. Preserve the original Proxmox, Unraid and Komodo MCP deployments unchanged.
+
+**Implementation:** Upstream ry-ops project version `2.1.0`, pinned to commit `e13d0e22dce1b6a498edc5982d78bd589073d44c` (Python MCP SDK 1.30.0); Docker image `homelab/unifi-mcp:ryops-e13d0e2`, stack `/opt/stacks/unifi-mcp/`, root-only API key in `.env`, separate fail-closed `http_server.py` launcher using native Streamable HTTP. Docker publishes **only `127.0.0.1:8086`**, with server binding `0.0.0.0:8000` **inside** the container for Docker networking. Fourth tunnel `homelab-unifi` (`tunnel_6aed5ddd030c8191bf32196220fd079b`) uses `tunnel-client-unifi.service`, protected config/runtime key in `/etc/tunnel-client-unifi/`, and readiness at `127.0.0.1:8087/readyz`.
+
+**Security decision:** `UNIFI_READ_ONLY=true` is required; the launcher refuses to start otherwise. Actual MCP registration and live ChatGPT discovery each showed **55 Read / zero Write** tools, yielding **205 Read / zero Write tools** across all four integrations. The UniFi Site Manager key was created with a **one-year expiration (operator-confirmed)** and Site Manager/Network application access intended for the UDM-SE, stored in Bitwarden. **Critical distinction:** UniFi API-key access is **not independently demonstrated read-only**, so the API key may be write-capable even when MCP exposes only read tools; additionally, the loopback-only UniFi MCP has no local per-caller bearer authentication. Keep the VM, credentials, host port binding and tool list restricted; don't equate read-only tool labels with read-only upstream credentials. No UniFi management, reboot, firewall edit, or other write actions are authorized through ChatGPT.
+
+**Verification:** Site Manager `/v1/hosts` and Network connector `/v1/info` returned HTTP 200; UDM-SE `UDMPROSE` was connected, UniFi OS `5.1.35`, Network `10.6.109`. After correcting the internal HTTP binding, the tunnel-client diagnostic returned `RESULT ok`, systemd was `active`, `/readyz` returned `ready` (HTTP 200), and the operator enabled boot startup. The new `Homelab UniFi` plugin discovered 55 tools; live ChatGPT `unifi_health` and `get_site_status` returned a connected console and **3 devices online, 0 offline, 30 clients (13 wired / 17 wireless)** at `2026-11-05 23:16 CST`. Counts are point-in-time. All 55 operations were not individually tested.
+
+**Out-of-scope verification:** The operator elected **not** to perform VM reboot/reconnect or isolated restore/recovery testing for Phase 4. Current function is verified; post-reboot restoration/backup completeness remain unverified and must not be represented as completed. Exact UniFi key expiration timestamp and persisted application/site grants were not independently read back.
+
+**Related documentation:** `services/infra/ai-observer.md`, `runbooks/ai-observer-operations.md`.
+
+---

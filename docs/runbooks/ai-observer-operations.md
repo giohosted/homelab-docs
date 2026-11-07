@@ -5,22 +5,22 @@
 **Proxmox VMID:** 107  
 **Proxmox Node:** pve-prod-01  
 **Environment:** Homelab v3  
-**Last Updated:** 2026-11-01  
-**Service Status:** Proxmox, Unraid and Komodo MCP integrations verified (84 + 26 + 40 read tools); three Komodo Docker hosts enrolled in Phase 3  
-**Backup Status:** October 30 VM 107 task successful; fresh post-Komodo backup and observer reboot tests pending; isolated restore intentionally excluded from Phase 3
+**Last Updated:** 2026-11-05  
+**Service Status:** Proxmox, Unraid, Komodo and UniFi MCP integrations live-verified (84 + 26 + 40 + 55 = 205 Read / 0 Write tools); three Komodo Docker hosts remain enrolled  
+**Backup Status:** October 30 VM 107 task successful; fresh backup including November 1 Komodo and November 5 UniFi deployment unverified; Phase 4 reboot/recovery testing explicitly skipped by operator
 
 ---
 
 ## Purpose
 This runbook provides operational procedures for managing Homelab v3 AI Observer, including:
 
-- Health checks and live ChatGPT verification for **Proxmox, Unraid and Komodo**.
-- Independent management and troubleshooting of **three** Docker Compose MCP stacks.
-- Independent management of **three** native OpenAI Secure MCP Tunnel systemd services sharing one installed binary.
+- Health checks and live ChatGPT verification for **Proxmox, Unraid, Komodo and UniFi**.
+- Independent management and troubleshooting of **four** Docker Compose MCP stacks.
+- Independent management of **four** native OpenAI Secure MCP Tunnel systemd services sharing one installed binary.
 - Review of upstream identity privileges, MCP tool inventories, authentication differences, and information-disclosure risks.
 - Controlled updates, credential rotation, host configuration recovery, PBS backup verification, and isolated restoration.
 
-This document is an operational reference, **not** an architecture specification or substitute for credential storage. Refer to `services/infra/ai-observer.md` for architecture, security decisions and exact inventories of **84 Proxmox**, **26 Unraid**, and **40 Komodo** tool names and exclusions.
+This document is an operational reference, **not** an architecture specification or substitute for credential storage. Refer to `services/infra/ai-observer.md` for architecture, security decisions and exact inventories of **84 Proxmox**, **26 Unraid**, **40 Komodo**, and **55 UniFi** read tools and their boundaries.
 
 ### Operational Principles
 
@@ -28,7 +28,7 @@ This document is an operational reference, **not** an architecture specification
 2. Make **one consequential change at a time** and get operator authorization.
 3. Verify each change before advancing.
 4. Never expose tokens, `.env` contents or raw sensitive configuration in chat, screenshots or logs.
-5. Preserve all three independent read-only security boundaries.
+5. Preserve all four independent MCP read-only tool boundaries; remember UniFi's upstream API key is not independently read-only.
 6. Do not expand firewall access or privileges merely to troubleshoot a failing tool.
 7. Distinguish container health, tunnel readiness, upstream API access, tool discovery and actual ChatGPT tool success.
 8. Do not claim current backups or restoration readiness from an old successful task alone.
@@ -57,11 +57,13 @@ This document is an operational reference, **not** an architecture specification
 | Proxmox MCP `0.5.1` / 84 read tools | Docker Compose | `/opt/stacks/proxmox-mcp/` |
 | Unraid MCP `0.6.3` / 26 read tools | Docker Compose | `/opt/stacks/unraid-mcp/` |
 | Komodo MCP `1.5.0` / 40 read tools | Docker Compose | `/opt/stacks/komodo-mcp/` |
-| OpenAI Secure MCP Tunnels | Three native systemd services | `sudo systemctl` |
-| ChatGPT plugins | Homelab Proxmox, Homelab Unraid, Homelab Komodo | ChatGPT Plugins |
+| UniFi MCP `2.1.0` / 55 read tools | Docker Compose, locally pinned image | `/opt/stacks/unifi-mcp/` |
+| OpenAI Secure MCP Tunnels | Four native systemd services | `sudo systemctl` |
+| ChatGPT plugins | Homelab Proxmox, Homelab Unraid, Homelab Komodo, Homelab UniFi | ChatGPT Plugins |
 | Proxmox API | Proxmox VE HTTPS | Dedicated `PVEAuditor` identity |
 | Unraid API | Unraid GraphQL HTTPS | Dedicated 14-category `READ_ANY` key |
 | Komodo API | Komodo Core `2.3.4` HTTPS | Dedicated non-admin Read + scoped Logs account |
+| UniFi API | UniFi Site Manager / Network `10.6.109` HTTPS | Dedicated one-year API key; MCP read-only only, key not independently read-only |
 
 ### Key Paths
 | Path | Purpose |
@@ -70,6 +72,7 @@ This document is an operational reference, **not** an architecture specification
 | `/opt/stacks/unraid-mcp/compose.yaml`, `.env` | Unraid MCP stack; protected local credentials in `.env` |
 | `/etc/unraid-mcp/unraid.crt` | Trusted Unraid TLS certificate bundle |
 | `/opt/stacks/komodo-mcp/compose.yaml`, `.env` | Komodo MCP stack; dedicated API key and secret in protected `.env` |
+| `/opt/stacks/unifi-mcp/compose.yaml`, `.env`, `Dockerfile`, `http_server.py`, `source/` | UniFi MCP locally built image, protected UniFi API key, fail-closed Streamable HTTP launcher and pinned upstream source |
 | `/opt/tunnel-client/tunnel-client` | Shared OpenAI tunnel-client binary |
 | `/etc/tunnel-client/config.yaml` | Proxmox tunnel YAML |
 | `/etc/tunnel-client/openai-runtime.key` | Proxmox restricted OpenAI key |
@@ -82,8 +85,11 @@ This document is an operational reference, **not** an architecture specification
 | `/etc/tunnel-client-komodo/config.yaml` | Komodo tunnel YAML |
 | `/etc/tunnel-client-komodo/openai-runtime.key` | Komodo restricted OpenAI key (`homelab-komodo-tunnel`) |
 | `/etc/systemd/system/tunnel-client-komodo.service` | Komodo tunnel unit |
+| `/etc/tunnel-client-unifi/config.yaml` | UniFi tunnel YAML |
+| `/etc/tunnel-client-unifi/openai-runtime.key` | UniFi restricted OpenAI runtime key (`homelab-unifi-tunnel`) |
+| `/etc/systemd/system/tunnel-client-unifi.service` | UniFi tunnel unit |
 
-**Do not create `/etc/tunnel-client-komodo/mcp-authorization` as a routine repair:** Komodo local MCP is intentionally configured without bearer authentication, unlike the Proxmox and Unraid MCP servers. All MCPs remain loopback-bound on observer. A healthy tunnel does not independently prove the upstream API or ChatGPT tools work.
+**Do not create `/etc/tunnel-client-komodo/mcp-authorization` or `/etc/tunnel-client-unifi/mcp-authorization` as a routine repair:** Komodo and UniFi local MCP servers intentionally have no separate bearer authentication, unlike the Proxmox and Unraid MCP servers. All MCPs remain loopback-bound on observer. A healthy tunnel does not independently prove the upstream API or ChatGPT tools work.
 
 ## 2. Normal Operating State
 
@@ -93,19 +99,21 @@ AI Observer is considered operational when all required components are available
 | Check | Expected result |
 |---|---|
 | Observer VM and Docker | Running |
-| MCP containers | `proxmox-mcp`, `unraid-mcp`, `komodo-mcp` running; Unraid/Komodo healthy |
+| MCP containers | `proxmox-mcp`, `unraid-mcp`, `komodo-mcp`, `unifi-mcp` running; UniFi responds via `/mcp` (no Docker healthcheck configured) |
 | Proxmox MCP HTTP | `127.0.0.1:8080/health` HTTP 200 |
 | Unraid MCP | `127.0.0.1:8082/mcp`, bearer-authenticated; unauthenticated HTTP 401 can be expected |
 | Komodo MCP readiness | `127.0.0.1:8084/ready` returns ready; local MCP has **no bearer requirement** |
-| Tunnel systemd services | All three `active` and `enabled` |
-| Tunnel readiness | Ports **8081, 8083 and 8085**, each HTTP 200 `ready` |
+| UniFi MCP transport | `127.0.0.1:8086/mcp` accepts MCP protocol; `/` returns HTTP `404` (expected); **not** a health endpoint |
+| Tunnel systemd services | All four `active` and `enabled` per last verification/operator confirmation |
+| Tunnel readiness | Ports **8081, 8083, 8085 and 8087**, each HTTP 200 `ready` |
 | Proxmox upstream | Authenticated, pinned TLS certificate, auditor identity |
 | Unraid upstream | Authenticated GraphQL over verified TLS |
 | Komodo upstream | Authenticated HTTPS with non-admin Read/Logs account; Core covers all three enrolled Docker hosts |
+| UniFi upstream | `api.ui.com` Site Manager + Network connector authenticated; UDM-SE connected, Network `10.6.109` |
 | Remote Periphery | `immich-prod-01` and `auth-prod-01` each connected outbound over WSS, with persistent keys and no inbound host port |
 | Registered app stacks | `immich` and `authentik` recognized from existing host-side Compose files; running at final verification |
-| ChatGPT plugins | All three connected |
-| Tool inventory | **84 Proxmox + 26 Unraid + 40 Komodo = 150 Read, 0 Write** at verification |
+| ChatGPT plugins | All four connected |
+| Tool inventory | **84 Proxmox + 26 Unraid + 40 Komodo + 55 UniFi = 205 Read, 0 Write** at verification |
 | End-to-end test | Live read-only tool call succeeds from each plugin |
 
 ### End-to-End Request Path
@@ -115,13 +123,16 @@ ChatGPT
   |     -> 127.0.0.1:8080/mcp -> HTTPS 192.168.10.11:8006
   |-- Homelab Unraid -> homelab-unraid tunnel -> tunnel-client-unraid.service
   |     -> 127.0.0.1:8082/mcp -> HTTPS 192.168.30.16:443 (GraphQL)
-  `-- Homelab Komodo -> homelab-komodo tunnel -> tunnel-client-komodo.service
-        -> 127.0.0.1:8084/mcp -> HTTPS komodo.giohosted.com
-        -> Komodo Core on docker-prod-01
-        -> Docker on docker-prod-01 / immich-prod-01 / auth-prod-01 (via each Periphery)
+  |-- Homelab Komodo -> homelab-komodo tunnel -> tunnel-client-komodo.service
+  |     -> 127.0.0.1:8084/mcp -> HTTPS komodo.giohosted.com
+  |     -> Komodo Core on docker-prod-01
+  |     -> Docker on docker-prod-01 / immich-prod-01 / auth-prod-01 (via each Periphery)
+  `-- Homelab UniFi -> homelab-unifi tunnel -> tunnel-client-unifi.service
+        -> 127.0.0.1:8086/mcp -> HTTPS api.ui.com (Site Manager + Network connector)
+        -> UDM-SE / UniFi Network 10.6.109
 ```
 
-Local MCP endpoints: **8080**, **8082**, **8084** (`/mcp`). Local tunnel readiness endpoints: **8081**, **8083**, **8085** (`/readyz`). No public MCP listener or inbound internet port forward is needed.
+Local MCP endpoints: **8080**, **8082**, **8084**, **8086** (`/mcp`). Local tunnel readiness endpoints: **8081**, **8083**, **8085**, **8087** (`/readyz`). No public MCP listener or inbound internet port forward is needed.
 
 ## 3. Routine Health Checks
 
@@ -296,6 +307,27 @@ Expected: a healthy `komodo-mcp` container, `/ready` reporting connected, `activ
 
 ---
 
+### Additional Check — UniFi MCP and Tunnel
+
+On `observer-prod-01` use read-only inspection; do **not** print `.env`, resolved Compose configuration, key files, or full client data in shared logs:
+
+```bash
+sudo docker ps --filter 'name=^unifi-mcp$' \
+  --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+sudo docker inspect unifi-mcp --format 'Status={{.State.Status}} Restarts={{.RestartCount}}'
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml config --quiet
+sudo docker logs --tail 30 unifi-mcp 2>&1
+curl --noproxy '*' -sS --max-time 5 -o /dev/null \
+  -w 'Root HTTP status: %{http_code}\n' http://127.0.0.1:8086/
+systemctl is-active tunnel-client-unifi.service
+systemctl is-enabled tunnel-client-unifi.service
+curl --noproxy '*' -fsS --max-time 10 http://127.0.0.1:8087/readyz
+```
+
+Expected: container running without restarts; the **root `/` returns HTTP 404** (expected), not a reset or `000`; tunnel service `active`/`enabled` with `ready`. Root HTTP `404` proves basic network routing, **not** an MCP handshake, tool classification or UniFi API authentication. For actual MCP verification use the native client test in Section 23, followed by a live ChatGPT `unifi_health` and `get_site_status`. A freshly recreated container can briefly reset connections before Uvicorn finishes starting; check its logs and retry a read-only probe rather than immediately modifying its configuration.
+
+---
+
 ## 4. Quick Diagnostic Command Reference
 
 Run these commands on observer-prod-01 unless otherwise noted.
@@ -323,6 +355,12 @@ sudo docker compose ps
 sudo docker compose logs --tail 50 --no-color komodo-mcp
 sudo docker compose config --quiet
 curl -fsS --max-time 10 http://127.0.0.1:8084/ready
+
+# UniFi — use full Compose path due to root-only /opt/stacks/unifi-mcp directory
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml ps
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml config --quiet
+sudo docker logs --tail 30 unifi-mcp
+curl -sS --max-time 5 -o /dev/null -w 'HTTP %{http_code}\n' http://127.0.0.1:8086/
 ```
 
 `docker compose config --quiet` validates without printing resolved environment variables. Avoid `docker compose config` without `--quiet` when `env_file` contains secrets.
@@ -346,6 +384,12 @@ systemctl is-active tunnel-client-komodo.service
 systemctl is-enabled tunnel-client-komodo.service
 curl -fsS --max-time 10 http://127.0.0.1:8085/readyz
 sudo journalctl -u tunnel-client-komodo.service -n 50 --no-pager
+
+# UniFi
+systemctl is-active tunnel-client-unifi.service
+systemctl is-enabled tunnel-client-unifi.service
+curl -fsS --max-time 10 http://127.0.0.1:8087/readyz
+sudo journalctl -u tunnel-client-unifi.service -n 30 --no-pager
 ```
 
 Inspect journals for operational status but redact any unexpectedly logged secrets before sharing.
@@ -361,7 +405,7 @@ df -h /
 
 df -h /opt
 
-sudo docker stats --no-stream proxmox-mcp unraid-mcp komodo-mcp
+sudo docker stats --no-stream proxmox-mcp unraid-mcp komodo-mcp unifi-mcp
 ```
 
 ### Network
@@ -374,6 +418,8 @@ ip route
 ip route get 192.168.10.11
 
 getent hosts api.openai.com
+
+getent hosts api.ui.com
 ```
 
 ### Local Listening Ports
@@ -391,6 +437,8 @@ Verify that the MCP and tunnel readiness ports bind **only** to `127.0.0.1` on o
 | `8083` | Unraid tunnel readiness |
 | `8084` | Komodo MCP |
 | `8085` | Komodo tunnel readiness |
+| `8086` | UniFi MCP (root `/` returns HTTP 404, `/mcp` serves MCP) |
+| `8087` | UniFi tunnel readiness |
 
 Do not expose these endpoints with public ports, Traefik routes or new firewall forwards.
 
@@ -410,7 +458,7 @@ Do not run Git commands that overwrite local changes as part of basic diagnostic
 
 ## 5. Troubleshooting Workflow
 
-When ChatGPT cannot retrieve Proxmox, Unraid, or Komodo data, first identify the affected plugin and investigate its independent container, tunnel, and upstream API path in order.
+When ChatGPT cannot retrieve Proxmox, Unraid, Komodo, or UniFi data, first identify the affected plugin and investigate its independent container, tunnel, and upstream API path in order.
 
 ### Diagnostic Sequence
 
@@ -418,7 +466,7 @@ When ChatGPT cannot retrieve Proxmox, Unraid, or Komodo data, first identify the
     
 2. Can the observer be reached over SSH?
 
-3. Which integration is affected — Proxmox, Unraid, Komodo, or several?
+3. Which integration is affected — Proxmox, Unraid, Komodo, UniFi, or several?
     
 4. Is the affected MCP container running?
     
@@ -758,12 +806,13 @@ In ChatGPT:
 
 ### Authentication Distinction
 
-All three ChatGPT plugins use **No authentication** because they do not require separate end-user OAuth in ChatGPT. This option **does not define local MCP authorization**.
+All four ChatGPT plugins use **No authentication** because they do not require separate end-user OAuth in ChatGPT. This option **does not define local MCP authorization**.
 
 - **Proxmox and Unraid:** Their local MCP HTTP endpoints require the respective bearer token, supplied from each tunnel's protected `mcp-authorization` header file. Never remove that requirement as a quick fix.
 - **Komodo:** The local MCP endpoint deliberately uses `MCP_AUTH_ENABLED=false`, with anonymous HTTP clients restricted to the upstream read-only tool scope. There is **no local MCP bearer**. The service still authenticates upstream to Komodo Core with a dedicated non-admin API key/secret. Loopback access alone does not authenticate a local caller.
+- **UniFi:** No separate local MCP bearer; its HTTP endpoint is accessible to eligible observer-local callers. The dedicated upstream UniFi Site Manager/Network API key may have write privileges, **even though** `UNIFI_READ_ONLY=true` and the fail-closed launcher expose only 55 read tools. Do not conflate MCP tool restrictions with API-key privileges.
 
-All three have separate restricted OpenAI tunnel runtime API keys. Distinguish ChatGPT OAuth, local MCP authentication, and upstream API authentication during troubleshooting.
+All four have separate restricted OpenAI tunnel runtime API keys. Distinguish ChatGPT OAuth, local MCP authentication, and upstream API authentication during troubleshooting.
 
 ### Tool-Specific Errors
 
@@ -822,7 +871,7 @@ Follow the one-step-at-a-time workflow; recover only the failed layer and confir
 ---
 
 ## 10. Service Management
-AI Observer uses Docker Compose for **three** MCP containers and native systemd for **three** outbound secure tunnels. Isolate repairs; do not restart all three integrations when only one fails.
+AI Observer uses Docker Compose for **four** MCP containers and native systemd for **four** outbound secure tunnels. Isolate repairs; do not restart unrelated integrations when only one fails.
 
 ### Proxmox MCP — Docker Compose
 
@@ -889,6 +938,37 @@ curl -fsS --max-time 10 http://127.0.0.1:8085/readyz
 
 Approved recovery: restart only `tunnel-client-komodo.service`, then verify readiness and a live Komodo tool call.
 
+### UniFi MCP — Docker Compose
+
+```bash
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml ps
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml config --quiet
+sudo docker logs --tail 30 unifi-mcp
+```
+
+After authorized diagnosis, rebuild only the pinned image if the launcher/source changed, then recreate only `unifi-mcp`:
+
+```bash
+sudo docker build -t homelab/unifi-mcp:ryops-e13d0e2 \
+  -f /opt/stacks/unifi-mcp/Dockerfile /opt/stacks/unifi-mcp
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml \
+  up -d --no-deps --force-recreate unifi-mcp
+```
+
+Wait for the Uvicorn startup-complete log before probing the host. Confirm **`0.0.0.0:8000` inside the container and `127.0.0.1:8086` on the observer**, then a live `tools/list` showing 55 read tools, and invoke `unifi_health`. Do not upgrade upstream source or SDK blindly; see Section 23.
+
+### UniFi Tunnel — systemd
+
+```bash
+systemctl is-active tunnel-client-unifi.service
+systemctl is-enabled tunnel-client-unifi.service
+curl -fsS --max-time 10 http://127.0.0.1:8087/readyz
+sudo -u tunnel-client /opt/tunnel-client/tunnel-client doctor \
+  --config /etc/tunnel-client-unifi/config.yaml
+```
+
+Only after approval, restart **`tunnel-client-unifi.service`** if necessary; then verify `ready` and live ChatGPT `unifi_health` / `get_site_status`. Tunnel startup and post-reboot recovery are separate tests; the operator chose to skip the latter for Phase 4.
+
 ### Restart Order
 
 1. Determine which **single** integration and layer is failing.
@@ -897,7 +977,7 @@ Approved recovery: restart only `tunnel-client-komodo.service`, then verify read
 4. Restore the corresponding tunnel service, if necessary, and verify its `/readyz` response.
 5. Perform a live read-only ChatGPT tool call; audit the tool inventory after changes.
 
-An upgrade to the shared `/opt/tunnel-client/tunnel-client` binary affects all three systemd services after restart. Never conflate tunnel readiness with upstream API authentication.
+An upgrade to the shared `/opt/tunnel-client/tunnel-client` binary affects all four systemd services after restart. Never conflate tunnel readiness with upstream API authentication.
 
 ## 11. Updating Proxmox MCP
 
@@ -1028,7 +1108,7 @@ This version was installed from an official release with a verified SHA-256 chec
     
 8. Install the verified replacement.
     
-9. Restart each of the three affected systemd services through an approved maintenance action; validate all three, as they share the binary.
+9. Restart each of the four affected systemd services through an approved maintenance action; validate all four, as they share the binary.
     
 10. Verify readiness and end-to-end ChatGPT functionality.
     
@@ -1053,7 +1133,7 @@ curl -fsS http://127.0.0.1:8081/readyz
 sudo journalctl -u tunnel-client -n 50 --no-pager
 ```
 
-Then also check `8083/readyz` and `8085/readyz`, and perform live Proxmox, Unraid and Komodo queries from ChatGPT. Do not assume one ready tunnel validates the others.
+Then also check `8083/readyz`, `8085/readyz` and `8087/readyz`, and perform live Proxmox, Unraid, Komodo and UniFi queries from ChatGPT. Do not assume one ready tunnel validates the others.
 
 ### Rollback
 
@@ -1082,7 +1162,7 @@ The observer uses the private `homelab-infra` repository.
 
 Only the intended infrastructure configuration is committed.
 
-All three MCP `.env` credential files must remain excluded from Git. Repository tracking of the newly deployed Komodo Compose file is **not yet verified**.
+All four MCP `.env` credential files must remain excluded from Git. Repository tracking of the November 1 Komodo and November 5 UniFi Compose files is **not independently verified**.
 
 ### Read-Only Git Checks
 
@@ -1127,7 +1207,7 @@ Git configuration does not replace backup of credentials, systemd units, or othe
 ---
 
 ## 14. Credential Management and Rotation
-AI Observer uses distinct credentials for its three integrations. Handle one credential at a time; never display values in ChatGPT, shell tracing, support tickets, Git, or Obsidian.
+AI Observer uses distinct credentials for its four integrations. Handle one credential at a time; never display values in ChatGPT, shell tracing, support tickets, Git, or Obsidian.
 
 | Credential | Purpose | Verified storage / outstanding verification |
 |---|---|---|
@@ -1136,9 +1216,11 @@ AI Observer uses distinct credentials for its three integrations. Handle one cre
 | Unraid GraphQL API key | 14-category `READ_ANY` access | Protected Unraid `.env` + Bitwarden |
 | Unraid local MCP bearer | Authenticates Unraid MCP requests | Protected Unraid `.env`, `/etc/tunnel-client-unraid/mcp-authorization`; **separate Bitwarden retention unverified** |
 | Komodo `ai-observer-mcp` API key/secret | Authenticates Komodo MCP → Komodo Core as `ai-observer-komodo` | Protected Komodo `.env`; created/saved outside chat, **independent secure recovery copy must be verified** |
+| UniFi Site Manager / Network API key `homelab-ai-observer-unifi` | UniFi cloud API access; one-year expiration selected, **key not independently read-only** | Root-only `/opt/stacks/unifi-mcp/.env` and Bitwarden; exact expiry/scopes not read back |
 | Proxmox OpenAI runtime key | Tunnel control-plane Read+Use | `/etc/tunnel-client/openai-runtime.key` + Bitwarden |
 | Unraid OpenAI runtime key | Tunnel control-plane Read+Use | `/etc/tunnel-client-unraid/openai-runtime.key` + Bitwarden |
 | Komodo OpenAI runtime key `homelab-komodo-tunnel` | Tunnel control-plane Read+Use | `/etc/tunnel-client-komodo/openai-runtime.key` + Bitwarden (verified saved, nonempty on host) |
+| UniFi OpenAI runtime key `homelab-unifi-tunnel` | Fourth tunnel control-plane Read+Use | `/etc/tunnel-client-unifi/openai-runtime.key` + Bitwarden (verified saved, nonempty on host) |
 | GitHub credential | Version-control operations | Bitwarden/interactive authentication |
 
 ### General Rotation Procedure
@@ -1159,19 +1241,25 @@ Account: `observer@pve`; token ID: `observer@pve!proxmox-mcp`; role: `PVEAuditor
 
 ### MCP Bearer Token Rotation
 
-**Only Proxmox and Unraid use local MCP bearer tokens**. Each tunnel's `mcp-authorization` file contains the complete `Bearer <token>` header. Replace the MCP server-side token and respective tunnel header together in a controlled sequence, verify permissions and test the live ChatGPT plugin. Do not inadvertently copy one integration's token to another. **Komodo has no local MCP bearer token** with its current intentionally unauthenticated MCP configuration; never create one without an approved design change and matching server configuration.
+**Only Proxmox and Unraid use local MCP bearer tokens**. Each tunnel's `mcp-authorization` file contains the complete `Bearer <token>` header. Replace the MCP server-side token and respective tunnel header together in a controlled sequence, verify permissions and test the live ChatGPT plugin. Do not inadvertently copy one integration's token to another. **Komodo and UniFi have no local MCP bearer tokens** in their current configurations; never create one without an approved design change and matching server configuration.
 
 ### OpenAI Runtime API Key Rotation
 
-Each of the three tunnel services has its **own** restricted Tunnels Read+Use runtime key. For the correct service, replace **only** the matching `/etc/tunnel-client[-unraid|-komodo]/openai-runtime.key`, preserve `root:tunnel-client` ownership and `0640` mode, restart only that tunnel after approval, check `/readyz`, then perform a live ChatGPT tool call. Revoke the old key after successful validation. The runtime key does not grant tunnel-management rights.
+Each of the four tunnel services has its **own** restricted Tunnels Read+Use runtime key. For the correct service, replace **only** the matching `/etc/tunnel-client[-unraid|-komodo|-unifi]/openai-runtime.key`, preserve `root:tunnel-client` ownership and `0640` mode, restart only that tunnel after approval, check `/readyz`, then perform a live ChatGPT tool call. Revoke the old key after successful validation. The runtime key does not grant tunnel-management rights.
 
 ### Komodo API Key Rotation
 
 Komodo MCP uses `KOMODO_API_KEY` and `KOMODO_API_SECRET` (verify current environment **variable names** locally before changing them; do not print the values) in `/opt/stacks/komodo-mcp/.env`. Replace credentials only with the same non-admin `ai-observer-komodo` resource permissions. Recreate only `komodo-mcp` after approval; `komodo_health_check` and `komodo_container_list` must work before revoking the prior key. Verify all 40 Read tools and eight exclusions still apply.
 
+### UniFi API Key Rotation
+
+The dedicated UniFi API key in `/opt/stacks/unifi-mcp/.env` was created with a **one-year expiration (operator confirmed)** and saved in Bitwarden. The exact expiry timestamp was not independently captured. Check it in UniFi Site Manager and rotate before expiration. The key grants Site Manager/Network API access and **must not be assumed read-only** at the source API layer. Validate application/site scopes before and after rotation; preserve `UNIFI_READ_ONLY=true`.
+
+Use the general rotation procedure above. Update the root-only `.env` without printing the key or putting it on the shell command line; confirm owner `root:root`, directory `0700`, file `0600`, then recreate only the `unifi-mcp` container after authorization. Verify `unifi_health`, `get_site_status`, the **55 Read / 0 Write** inventory and the ready tunnel before revoking the old key. The OpenAI `homelab-unifi-tunnel` runtime credential in `/etc/tunnel-client-unifi/openai-runtime.key` is distinct and rotates independently.
+
 ### Credential File Permissions
 
-Expected tunnel directories are `root:tunnel-client` `0750`, with configuration and runtime key files `root:tunnel-client` `0640`. Proxmox and Unraid have additional protected `mcp-authorization` files; Komodo **does not**.
+Expected tunnel directories are `root:tunnel-client` `0750`, with configuration and runtime key files `root:tunnel-client` `0640`. Proxmox and Unraid have additional protected `mcp-authorization` files; Komodo and UniFi **do not**.
 
 ```bash
 # Metadata only — never `cat` the key files
@@ -1186,9 +1274,14 @@ sudo stat -c '%A %U:%G %n' \
   /etc/tunnel-client-unraid/mcp-authorization \
   /etc/tunnel-client-komodo \
   /etc/tunnel-client-komodo/config.yaml \
-  /etc/tunnel-client-komodo/openai-runtime.key
+  /etc/tunnel-client-komodo/openai-runtime.key \
+  /etc/tunnel-client-unifi \
+  /etc/tunnel-client-unifi/config.yaml \
+  /etc/tunnel-client-unifi/openai-runtime.key
 
-systemctl show tunnel-client.service tunnel-client-unraid.service tunnel-client-komodo.service \
+sudo stat -c '%A %U:%G %n' /opt/stacks/unifi-mcp /opt/stacks/unifi-mcp/.env
+
+systemctl show tunnel-client.service tunnel-client-unraid.service tunnel-client-komodo.service tunnel-client-unifi.service \
   -p User -p Group -p WorkingDirectory
 ```
 
@@ -1227,6 +1320,12 @@ Verify:
 
 Verify non-admin Komodo user `ai-observer-komodo` retains Read and scoped Logs permissions, without Inspect/Terminal/Attach/Processes/Create, and the observer `.env` is mode `0600`. The MCP config must retain `MCP_AUTH_ENABLED=false` **only** while bound to loopback, `MCP_SECRET_SCRUB_ENABLED=true`, and the **eight blocked tools** listed in the architecture doc. Confirm the ChatGPT plugin still has exactly **40 Read, zero Write**; note remaining `*_info` and log tools may still expose secrets. Never enable a management/write MCP action merely because it appears upstream.
 
+### UniFi API and MCP Permissions
+
+Verify `UNIFI_READ_ONLY=true` in the protected `.env` **without printing the API key** (use an authenticated parsing check), the fail-closed guard in `http_server.py`, the currently pinned source SHA `e13d0e22dce1b6a498edc5982d78bd589073d44c`, the 55-tool read-only inventory, and loopback-only publishing on `127.0.0.1:8086`. The expected `0.0.0.0:8000` binding is **inside Docker only**. UniFi's API key may support write-capable operations regardless of MCP tool exposure. Verify scope in Site Manager and confirm one-year expiration before rotation. No local UniFi MCP bearer is configured.
+
+Use Section 23 for exact checks and safe rebuild/rotation handling. No UniFi write, reboot, firewall-edit or port-control tools are authorized for ChatGPT.
+
 ### MCP Configuration — Proxmox
 
 Verify:
@@ -1248,15 +1347,15 @@ Verify:
 
 Verify:
 
-- All **three** native tunnel systemd services remain enabled.
+- All **four** native tunnel systemd services remain enabled.
     
 - Dedicated `tunnel-client` service account is used.
     
 - Service account has no unnecessary administrative groups.
     
-- All three sets of tunnel config/runtime-key files remain protected; Proxmox/Unraid have bearer header files, Komodo intentionally does not.
+- All four sets of tunnel config/runtime-key files remain protected; Proxmox/Unraid have bearer header files, Komodo and UniFi intentionally do not.
     
-- All three tunnels use outbound connectivity only.
+- All four tunnels use outbound connectivity only.
     
 - No unnecessary public listeners are present.
     
@@ -1326,14 +1425,15 @@ Do not mark the observer as recoverable until these have been verified.
 ### Required Recovery Assets
 | Asset | Recovery source / verification requirement |
 |---|---|
-| Observer VM 107 | October 30 PBS backup task succeeded, **but predates Nov 1 Komodo deployment**; verify a fresh intact snapshot and isolated restore |
+| Observer VM 107 | October 30 PBS backup task succeeded, **but predates Nov 1 Komodo and Nov 5 UniFi deployments**; new protected backup, integrity and recovery not verified; operator skipped Phase 4 recovery tests |
 | Proxmox MCP stack and `.env` | `homelab-infra` Compose (where committed) plus protected credential recovery |
 | Unraid MCP stack and `.env` | Compose repository commit still unverified; protected credential recovery |
 | Komodo MCP stack and `.env` | New November 1 stack; Git tracking/secure file-level backup not verified; restore dedicated Komodo API key/secret |
-| Three tunnel directories | `/etc/tunnel-client/`, `/etc/tunnel-client-unraid/`, `/etc/tunnel-client-komodo/` including protected files |
-| Three OpenAI runtime keys | Secure credential storage; Komodo `homelab-komodo-tunnel` confirmed saved |
+| UniFi MCP stack, source and `.env` | November 5 `source/` revision, `Dockerfile`, `http_server.py`, `compose.yaml`, root-only `.env`; Git tracking/file-level recovery not verified |
+| Four tunnel directories | `/etc/tunnel-client/`, `/etc/tunnel-client-unraid/`, `/etc/tunnel-client-komodo/`, `/etc/tunnel-client-unifi/` including protected files |
+| Four OpenAI runtime keys | Secure credential storage; UniFi `homelab-unifi-tunnel` confirmed saved in Bitwarden |
 | Proxmox/Unraid MCP bearer tokens | Secure storage; separately saved Unraid bearer remains unverified |
-| Three systemd service units | `/etc/systemd/system/tunnel-client*.service` (verify exact set) |
+| Four systemd service units | `/etc/systemd/system/tunnel-client*.service` (verify exact set) |
 | Shared tunnel binaries | Verified official release bundle and rollback copy |
 | Unraid TLS certificate bundle | `/etc/unraid-mcp/unraid.crt` or re-enroll and validate host identity |
 
@@ -1345,7 +1445,7 @@ Before declaring observer recovery ready:
     
 - **Completed:** October 30 VM 107 scheduled backup task succeeded **before Komodo deployment**.
 
-- **Pending:** A new successful, independently checked VM 107 snapshot containing the November 1 three-integration configuration.
+- **Unverified:** A new successful, independently checked VM 107 snapshot containing the November 1 Komodo and November 5 UniFi additions.
     
 - **Pending:** Independently confirm the new VM 107 snapshot in PBS.
     
@@ -1359,7 +1459,7 @@ Before declaring observer recovery ready:
     
 - Restored services pass local health checks.
     
-- End-to-end read-only Proxmox, Unraid **and Komodo** connectivity is verified after the restore.
+- End-to-end read-only Proxmox, Unraid, Komodo **and UniFi** connectivity is verified after any future restore. **This has not been tested; the operator skipped Phase 4 recovery testing.**
     
 
 Only items explicitly marked **Completed** are verified; all remaining checklist items are outstanding requirements.
@@ -1463,17 +1563,19 @@ Confirm:
     
 - Docker and Compose are installed.
     
-- **All three MCP Compose files** exist (`proxmox-mcp`, `unraid-mcp`, `komodo-mcp`).
+- **All four MCP Compose files** exist (`proxmox-mcp`, `unraid-mcp`, `komodo-mcp`, `unifi-mcp`); retain UniFi pinned source, Dockerfile and custom HTTP launcher.
 
-- **All three protected MCP `.env` files** exist, are appropriately restricted and contain recoverable API credentials. Check metadata only; do not reveal values.
+- **All four protected MCP `.env` files** exist, are appropriately restricted and contain recoverable API credentials. Check metadata only; do not reveal values.
 
-- The shared tunnel-client release bundle and **all three systemd units** exist.
+- The shared tunnel-client release bundle and **all four systemd units** exist.
 
-- **All three protected tunnel directories** and their restricted OpenAI runtime keys are present and accessible to the `tunnel-client` service account. Proxmox/Unraid additionally have MCP bearer header files; Komodo does not.
+- **All four protected tunnel directories** and their restricted OpenAI runtime keys are present and accessible to the `tunnel-client` service account. Proxmox/Unraid additionally have MCP bearer header files; Komodo and UniFi do not.
 
 - The trusted Unraid CA bundle exists and matches the expected NAS certificate.
 
 - Komodo MCP is still bound to loopback and remains limited to its approved **40 read tools / eight exclusions**, with a dedicated non-admin `ai-observer-komodo` upstream account.
+
+- UniFi MCP still exposes **55 read tools / zero write tools** on observer-local `8086/mcp`, retains `UNIFI_READ_ONLY=true` and the fail-closed launcher, and the underlying UniFi API key is not assumed read-only.
     
 - API and tunnel credentials are valid.
     
@@ -1488,13 +1590,13 @@ For an approved production recovery:
     
 2. Restore the intended network configuration.
     
-3. Confirm **all three MCP containers** start correctly.
+3. Confirm **all four MCP containers** start correctly.
 
-4. Confirm **all three tunnel services** start correctly without duplicating any of the three production tunnel identities.
+4. Confirm **all four tunnel services** start correctly without duplicating any of the four production tunnel identities.
 
-5. Verify authenticated read-only upstream connections to Proxmox, Unraid and Komodo Core. Preserve TLS verification.
+5. Verify authenticated upstream connections to Proxmox, Unraid, Komodo Core and UniFi Cloud. Preserve TLS verification. **UniFi's underlying key may be write-capable; only its MCP tools are limited to reads.**
 
-6. Verify **all three ChatGPT plugins** and their approved **84 + 26 + 40 read-tool inventories**, with zero write tools.
+6. Verify **all four ChatGPT plugins** and their approved **84 + 26 + 40 + 55 = 205 read-tool inventory**, with zero exposed write tools.
 
 7. Confirm the restored instance is the only active production observer using these identities.
     
@@ -1503,7 +1605,7 @@ For an approved production recovery:
 
 Run the routine health checks in Section 3.
 
-Perform a live read-only ChatGPT query through **each of the three plugins**: Proxmox, Unraid and Komodo.
+Perform a live read-only ChatGPT query through **each of the four plugins**: Proxmox, Unraid, Komodo and UniFi.
 
 Only after these checks pass should the service be marked restored.
 
@@ -1550,19 +1652,19 @@ A fresh installation would need:
     
 6. The private `homelab-infra` repository.
     
-7. **All three** MCP Compose configurations: Proxmox, Unraid, and Komodo.
+7. **All four** MCP Compose configurations: Proxmox, Unraid, Komodo and UniFi; include UniFi's exact pinned `source/`, Dockerfile and custom launcher.
 
-8. All three protected `.env` credential files or approved recovered replacements; Proxmox/Unraid local MCP bearer tokens, dedicated Komodo API key/secret, and validated Unraid TLS certificate bundle.
+8. All four protected `.env` credential files or approved recovered replacements; Proxmox/Unraid local MCP bearer tokens, dedicated Komodo API key/secret, UniFi Site Manager API key, and validated Unraid TLS certificate bundle.
 
 9. The verified OpenAI tunnel-client release and matching companion files.
 
-10. **All three** native tunnel systemd units and their protected YAML configurations.
+10. **All four** native tunnel systemd units and their protected YAML configurations.
 
-11. Separate restricted OpenAI runtime API keys for **all three** tunnels. Proxmox/Unraid have protected MCP bearer header files; Komodo has no local MCP bearer.
+11. Separate restricted OpenAI runtime API keys for **all four** tunnels. Proxmox/Unraid have protected MCP bearer header files; Komodo and UniFi have no local MCP bearer.
 
-12. Valid non-admin Proxmox, Unraid and Komodo upstream identities, with their original read-only permissions.
+12. Original read-only Proxmox, Unraid and Komodo upstream identities and scoped UniFi cloud API credential, recognizing UniFi's key is not independently read-only.
 
-13. Successful local and end-to-end tool testing through **all three** ChatGPT plugins and audit of the 84/26/40 tool inventory.
+13. Successful local and end-to-end tool testing through **all four** ChatGPT plugins and audit of the 84/26/40/55 tool inventory.
     
 
 Do not generate new credentials or replace existing production credentials unnecessarily.
@@ -1593,7 +1695,7 @@ The October 29 backup attempt of VM 107 and other guests failed with connection 
 
 VM 107's October 30 backup task succeeded, but independent snapshot-integrity verification and restoration are not yet complete.
 
-**Next action:** Verify a new post-November 1 observer backup and its integrity/credential coverage; separately verify VM reboot and all three tunnel services reconnect. An isolated restore exercise is excluded from the agreed Phase 3 scope, remains untested, and should not be represented as completed disaster-recovery validation.
+**Status note (November 5, 2026):** A verified recovery point containing both the November 1 Komodo and November 5 UniFi additions is not established. The operator **chose not to perform a Phase 4 VM reboot, tunnel reconnect, or restore test**. Treat those as untested rather than completed or immediate rollout requirements. The earlier isolated restore exercise also remains untested.
 
 ### Additional MCP Integrations
 
@@ -1602,13 +1704,14 @@ VM 107's October 30 backup task succeeded, but independent snapshot-integrity ve
 | Proxmox MCP (`0.5.1`) and Homelab Proxmox plugin | Implemented, end-to-end verified; **84 Read** tools, nine toolsets |
 | Unraid Rust MCP (`0.6.3`) and Homelab Unraid plugin | Implemented, end-to-end verified; **26 Read** tools |
 | Komodo MCP (`1.5.0`) and Homelab Komodo plugin | Implemented November 1, end-to-end verified; **40 Read** tools, eight exclusions; initial 26-container count was for `docker-prod-01` only |
-| OpenAI Secure MCP Tunnels | **Three independent** tunnels implemented, ready and exercised via ChatGPT |
+| UniFi MCP (`2.1.0`, pinned `e13d0e2`) and Homelab UniFi plugin | Implemented November 5, live verified; **55 Read / 0 Write**, UDM-SE Network `10.6.109` |
+| OpenAI Secure MCP Tunnels | **Four independent** tunnels implemented, ready and exercised via ChatGPT |
 | Monitor `immich-prod-01` and `auth-prod-01` | **Implemented and verified November 1**; three Komodo servers `Ok` on Periphery `2.3.4`; both application stacks adopted |
 | Proxmox, Unraid or Komodo write actions | Deferred and not authorized |
 | Automated maintenance | Deferred |
 | Codex tunnel usage | Not yet verified |
 | Fresh protected observer backup including Komodo additions | **Pending**; snapshot integrity and credentials must be checked |
-| Observer reboot and tunnel recovery | **Pending live verification** |
+| Observer reboot and tunnel recovery | **Not performed — operator opted to skip Phase 4 recovery test** |
 | Isolated restoration exercise | **Not performed**; explicitly outside agreed Phase 3 scope; disaster-recovery proof remains incomplete |
 
 Do not mark optional future integrations or additional hosts as implemented before verifying them.
@@ -1621,13 +1724,13 @@ A routine service check is complete when:
 
 - Observer VM is available.
     
-- **All three MCP containers** are healthy / operational.
+- **All four MCP containers** are operational. Note UniFi has no Docker healthcheck, so validate its MCP protocol instead of expecting a Docker `healthy` label.
 
-- **All three tunnel services** are active and report `ready` on ports `8081`, `8083`, and `8085`.
+- **All four tunnel services** are active and report `ready` on ports `8081`, `8083`, `8085`, and `8087`.
 
-- Proxmox, Unraid and Komodo upstream API connectivity succeeds with the intended read-only permissions.
+- Proxmox, Unraid and Komodo upstream API connectivity succeeds with their existing read-only permissions; UniFi Site Manager/Network API access works and its **MCP** remains read-only even though the UniFi key is potentially write-capable.
 
-- A live read-only ChatGPT tool call succeeds through **each** plugin; the inventory remains **84 / 26 / 40 Read and zero Write** unless an authorized change has been made.
+- A live read-only ChatGPT tool call succeeds through **each** plugin; the inventory remains **84 / 26 / 40 / 55 = 205 Read and zero Write** unless an authorized change has been made.
     
 - No unexpected security or permission changes are identified.
     
@@ -1660,7 +1763,7 @@ A disaster recovery exercise is complete only when:
 - Results and remaining risks were documented.
     
 
-**Backup execution has recovered, but observer recovery readiness remains incomplete until a fresh backup, archive integrity, credentials and recovery testing are verified. The isolated restore exercise was not part of the agreed Phase 3 implementation scope.**
+**Backup execution has recovered, but observer restoration readiness remains unverified for the current four-integration deployment. The operator explicitly skipped Phase 4 reboot/recovery testing; this does not constitute a passing test.**
 
 ---
 
@@ -1755,7 +1858,7 @@ The `docker compose pull` changes the local image cache but does **not** restart
 
 ### Tunnel Runtime and Credential Files
 
-All **three** tunnel services use the same `/opt/tunnel-client/tunnel-client` binary and Linux account, but have separate unit files, tunnel IDs, health ports, OpenAI runtime keys and YAML. Only the Proxmox and Unraid tunnels use MCP bearer tokens; Komodo does not. Restarting `tunnel-client-unraid.service` does not intentionally restart the other services. Upgrading the shared binary may affect **all three** after their next restart.
+All **four** tunnel services use the same `/opt/tunnel-client/tunnel-client` binary and Linux account, but have separate unit files, tunnel IDs, health ports, OpenAI runtime keys and YAML. Only the Proxmox and Unraid tunnels use MCP bearer tokens; Komodo and UniFi do not. Restarting `tunnel-client-unraid.service` does not intentionally restart the other services. Upgrading the shared binary may affect **all four** after their next restart.
 
 | Protected path | Purpose | Expected ownership/mode |
 |---|---|---|
@@ -1777,7 +1880,7 @@ The October 30 read-only `unraid_array` call correctly surfaced an **at-that-tim
 
 If Unraid MCP fails, inspect its Compose stack, local localhost binding, TLS bundle, the read-only GraphQL credentials, and `tunnel-client-unraid.service` one layer at a time. Avoid restarting Proxmox MCP as a troubleshooting shortcut.
 
-For observer VM recovery, restore **all three** tunnel configuration directories, **all three** MCP Compose stacks and protected `.env` files, trusted Unraid certificate, **all three** systemd units, and the shared tunnel binaries. Ensure an isolated restore does not duplicate the production IP or any of the three tunnel identities. No full restore procedure has been tested; use Section 17's isolation safeguards.
+For observer VM recovery, restore **all four** tunnel configuration directories, **all four** MCP Compose stacks and protected `.env` files (plus UniFi pinned source and launcher), trusted Unraid certificate, **all four** systemd units, and the shared tunnel binaries. Ensure an isolated restore does not duplicate the production IP or any of the four tunnel identities. No full restore procedure has been tested; use Section 17's isolation safeguards.
 
 Service readiness is demonstrated by healthy containers, ready tunnels, correct read-only tool inventory, and live ChatGPT tool execution. **Full disaster recovery readiness is still unverified.**
 
@@ -1890,11 +1993,128 @@ After failure, isolate whether the cause is the Komodo container, DNS/TLS/API cr
 
 ---
 
+## 23. UniFi MCP — Operations, Security, Updating, and Recovery
+
+This section governs the **implemented and ChatGPT-verified** UniFi Phase 4 integration (November 5, 2026). The authoritative architecture and security record is `services/infra/ai-observer.md`. Do not create a separate service or duplicate all 55 tool names here.
+
+### Deployment Identity
+
+| Item | Value |
+|---|---|
+| Upstream | `ry-ops/unifi-mcp-server`, project `2.1.0`, exact source commit `e13d0e22dce1b6a498edc5982d78bd589073d44c` |
+| Source | `/opt/stacks/unifi-mcp/source/` |
+| Image | `homelab/unifi-mcp:ryops-e13d0e2`, locally built |
+| Container / Compose | `unifi-mcp`; `/opt/stacks/unifi-mcp/compose.yaml` |
+| Credentials | `/opt/stacks/unifi-mcp/.env` (`root:root`, `0600` inside root-only `0700` directory); saved in Bitwarden |
+| HTTP launcher | `/opt/stacks/unifi-mcp/http_server.py` (not modified upstream `main.py`) |
+| Published MCP | `127.0.0.1:8086/mcp`; internally `0.0.0.0:8000` |
+| Tunnel | `homelab-unifi`, ID `tunnel_6aed5ddd030c8191bf32196220fd079b` |
+| Tunnel service | `tunnel-client-unifi.service` under `tunnel-client:tunnel-client`, enabled and active when verified |
+| Tunnel config / key | `/etc/tunnel-client-unifi/config.yaml`, `/etc/tunnel-client-unifi/openai-runtime.key` (`root:tunnel-client`, `0640`) |
+| Tunnel health | `http://127.0.0.1:8087/readyz` (HTTP `200`, `ready`) |
+| Upstream | `https://api.ui.com` → UDM-SE `UDMPROSE`; UniFi OS `5.1.35`, Network `10.6.109` |
+| ChatGPT plugin | `Homelab UniFi`; **55 Read / zero Write** tools discovered; live `unifi_health`, `get_site_status` succeeded |
+
+UniFi API key expiration is **one year (operator-confirmed at creation)**, not one month. The precise expiry date and exact read/write privileges were not independently read back. The intended key selection included Site Manager and Network application access for the UDM-SE. **The source API key itself must be treated as potentially write-capable.** The deployed MCP exposure is limited to 55 read tools by `UNIFI_READ_ONLY=true` and a fail-closed launcher; do not relax these controls.
+
+### Routine Read-Only Verification
+
+```bash
+# On observer-prod-01; metadata and state only
+sudo docker ps --filter 'name=^unifi-mcp$' \
+  --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+sudo docker inspect unifi-mcp --format 'Running={{.State.Running}} Restarts={{.RestartCount}}'
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml config --quiet
+sudo docker logs --tail 30 unifi-mcp
+
+# The root path should return 404, NOT 000 / a connection reset.
+curl --noproxy '*' -sS --max-time 5 -o /dev/null \
+  -w 'HTTP %{http_code}\n' http://127.0.0.1:8086/
+
+systemctl is-active tunnel-client-unifi.service
+systemctl is-enabled tunnel-client-unifi.service
+curl --noproxy '*' -fsS --max-time 10 http://127.0.0.1:8087/readyz
+sudo -u tunnel-client /opt/tunnel-client/tunnel-client doctor \
+  --config /etc/tunnel-client-unifi/config.yaml
+```
+
+Expected: running container, host port `127.0.0.1:8086`, root HTTP `404`, tunnel `active`/`enabled`, tunnel `ready`, and `doctor` `RESULT ok`. A tunnel `doctor` TCP/HTTP probe returning HTTP `406` from `/mcp` is acceptable for an MCP endpoint requiring content negotiation; `RESULT ok` matters. The root probe does not exercise MCP `initialize`, `tools/list`, or the UniFi API.
+
+To re-check **actual** MCP protocol registration without revealing the API key, use the SDK already installed in the container:
+
+```bash
+sudo docker exec -i unifi-mcp python - <<'PYCODE'
+import asyncio
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
+
+async def check():
+    async with streamable_http_client('http://127.0.0.1:8000/mcp') as (rd, wr, _):
+        async with ClientSession(rd, wr) as session:
+            await session.initialize()
+            tools = (await session.list_tools()).tools
+            unsafe = [t.name for t in tools if not (t.annotations and t.annotations.readOnlyHint is True)]
+            print('Registered tools:', len(tools))
+            print('Non-read-only tools:', unsafe)
+            assert len(tools) == 55 and not unsafe
+            print('Read-only audit: PASS')
+
+asyncio.run(check())
+PYCODE
+```
+
+Also perform a fresh ChatGPT plugin `unifi_health` and `get_site_status` read-only call. The first checks console, Network API and default site; the second returns device and client counts. The November 5 test returned 3 devices online, 0 offline and 30 clients (13 wired / 17 wireless); **these totals are historical observations only**. Use `cloud_list_hosts`, `list_adopted_devices`, `list_connected_clients`, and relevant read tools as needed, but review identifiers and network details before sharing.
+
+### Troubleshooting the Container HTTP Binding
+
+A prior startup failure was diagnosed as **container-internal bind `127.0.0.1:8000`**: in-container MCP calls passed, but Docker-host port `8086` returned `curl: (56) Recv failure: Connection reset by peer`, and tunnel `doctor` failed OAuth metadata discovery. Although Compose declared `FASTMCP_HOST=0.0.0.0`, the SDK's constructor/default settings overrode the effective host. The validated fix is in the custom launcher:
+
+```python
+# Inside /opt/stacks/unifi-mcp/http_server.py
+main.mcp.settings.host = '0.0.0.0'
+main.mcp.run(transport='streamable-http')
+```
+
+This allows Docker to route requests to the container while **Compose continues publishing only `127.0.0.1:8086:8000`** on the observer. Do **not** publish `0.0.0.0:8086` on the host. After rebuilding and recreating the container, wait for `Uvicorn running on http://0.0.0.0:8000`; a root `404` means HTTP routing works. A brand-new container may briefly reset connections before application startup completes; check status/logs before making another change. Re-run tunnel `doctor` and a real MCP protocol test.
+
+### Updating Pinned Source and Rebuilding
+
+**Do not auto-pull `latest` or change the git revision without review.** Upstream `mcp[cli]` was pinned below v2 because MCP SDK 2.x changes imports. The deployed `uv.lock` selects MCP SDK `1.30.0`. Review upstream source changes, dependency locks, tool registrations and API methods before approving an update. Preserve the old image and known-good launcher for rollback, and check credentials are excluded from the build context.
+
+After an approved source/launcher/Dockerfile update:
+
+```bash
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml config --quiet
+sudo git -C /opt/stacks/unifi-mcp/source rev-parse HEAD
+sudo docker build -t homelab/unifi-mcp:ryops-e13d0e2 \
+  -f /opt/stacks/unifi-mcp/Dockerfile /opt/stacks/unifi-mcp
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml \
+  up -d --no-deps --force-recreate unifi-mcp
+```
+
+The example image tag is the **currently deployed revision**, not a recommendation to reuse that tag for future commits. If changing commits, update both the image tag and Compose reference together after testing. Then validate container bind/host port, the 55 read tool inventory or an explicitly approved new inventory, `unifi_health`, the `8087/readyz` tunnel and live ChatGPT discovery. Do not expose new write tools or widen the UniFi API scope.
+
+### Secrets and Credential Rotation
+
+- Root-only stack directory `/opt/stacks/unifi-mcp` (`0700`), root-owned `.env` (`0600`). The key is injected as a Docker environment variable, which may be visible to privileged Docker administrators; it is **not** embedded in the image. Never print Compose's resolved configuration, `docker inspect` environment fields, `.env`, tunnel key content, or full debug request logs.
+- `UNIFI_READ_ONLY=true` must remain enabled; the launcher refuses startup without it. The upstream UniFi key itself is not proven read-only. Prefer the narrowest application/site access supported, and inspect the current scope in UniFi Site Manager before rotation.
+- One-year expiration was selected **at key creation**, per operator. Verify exact expiry in Site Manager; rotate before that date. Do not document the key or assume a specific anniversary expiration timestamp.
+- Rotate the separate OpenAI key `homelab-unifi-tunnel` in `/etc/tunnel-client-unifi/openai-runtime.key` only as necessary, preserving `root:tunnel-client`, `0640`, restricted **Tunnels Read + Use**, and no Manage rights. Do not repurpose an admin key. Its tunnel ID and `main` MCP channel remain unchanged.
+- There is **no local UniFi MCP bearer authorization file**. Changes to local MCP authentication require a separately validated server/tunnel design; do not create a bearer file and expect the current server to enforce it automatically.
+
+### Recovery Scope and Status
+
+Files required to reconstruct UniFi: `/opt/stacks/unifi-mcp/{source/,Dockerfile,.dockerignore,http_server.py,compose.yaml,.env}`, `/etc/tunnel-client-unifi/{config.yaml,openai-runtime.key}`, `/etc/systemd/system/tunnel-client-unifi.service`, and the installed matching tunnel-client binary/companion. The private ChatGPT plugin/tunnel identity must still reference `tunnel_6aed5ddd030c8191bf32196220fd079b`. Keep credentials separately retained in Bitwarden. Source and Compose Git commit/independent file-level recovery were **not verified**.
+
+**Operator decision:** Do not perform an observer reboot/reconnect or isolated restore test as part of this rollout. The existing service is **currently operational and end-to-end verified**; post-reboot recovery, backup integrity and full restoration remain **untested**. Do not mark them complete or infer they failed. If future recovery is requested, follow the main disaster-recovery procedures with one authorized step at a time.
+
+---
+
 ## Related Documentation
 
 ### Architecture and Service
 
-- `services/infra/ai-observer.md` — AI Observer architecture, deployment, networking, authentication, security, and complete Proxmox, Unraid, and Komodo tool inventories/exclusions.
+- `services/infra/ai-observer.md` — AI Observer architecture, deployment, networking, authentication, security, and Proxmox, Unraid, Komodo and UniFi tool inventories/boundaries.
 - `architecture/storage/nas-prod-01.md` — Unraid storage architecture, current five-disk array, and resolved October 2026 parity/Disk 3 incident.
     
 - `architecture/compute/pve-prod-01.md` — Proxmox host and VM inventory.
@@ -1938,8 +2158,8 @@ AI Observer is intentionally a read-only monitoring and diagnostic integration.
 
 Its purpose is to provide useful live infrastructure visibility while minimizing the risk of unintended changes.
 
-The documented deployment connects ChatGPT to the Homelab v3 Proxmox cluster, `nas-prod-01`, and Komodo Core on `docker-prod-01` through three separate local MCP services and outbound OpenAI Secure MCP Tunnels on a shared observer VM.
+The documented deployment connects ChatGPT to the Homelab v3 Proxmox cluster, `nas-prod-01`, Komodo Core on `docker-prod-01`, and the UDM-SE through **four** separate local MCP services and outbound OpenAI Secure MCP Tunnels on a shared observer VM.
 
-**All three integrations have passed live ChatGPT tool calls; full backup and disaster recovery readiness remain unverified.**
+**All four integrations have passed live ChatGPT tool calls (205 Read / zero Write tools discovered); backup integrity and disaster recovery readiness remain unverified. The operator skipped Phase 4 reboot/recovery testing.**
 
 All consequential service changes, credential rotations, and restoration procedures should follow the established one-step-at-a-time workflow with explicit authorization and post-change verification.
