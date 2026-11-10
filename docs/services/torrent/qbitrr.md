@@ -2,25 +2,32 @@
 
 **Role:** Torrent and ARR instance manager — health monitoring, automated search, seeding control  
 **Host:** docker-prod-01 (192.168.30.11)  
-**Image:** feramance/qbitrr:latest  
-**Version:** 5.10.1  
+**Image:** `feramance/qbitrr:latest`  
+**Version:** 5.14.9-1 (verified November 2026)  
 **Compose:** `/opt/stacks/torrent/compose.yaml`  
 **Appdata:** `/opt/appdata/qbitrr/`  
 **URL:** `https://qbitrr.giohosted.com/ui`  
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-11-09
 
 ---
 
 ## Overview
 
-qBitrr is the glue between qBittorrent and the ARR stack. It runs as a separate container on the `proxy` network (not inside Gluetun's namespace) and connects to qBittorrent via the `gluetun` hostname.
+qBitrr manages torrent health, automated searches, failed-download recovery, and seeding policies across the ARR stack and Shelfmark's book-download categories.
+
+It runs as a separate Docker container on the `proxy` network, outside Gluetun's VPN network namespace, and connects to qBittorrent through `gluetun:8080`.
 
 qBitrr is configured to:
-- Monitor torrent health across all 4 ARR instances
-- Trigger automated searches for missing media
-- Re-search failed or stalled torrents
-- Tag torrents for seeding tracking
-- Enforce MAM-specific seeding rules for ebooks and audiobooks (14-day minimum, 1.0 ratio)
+
+- Monitor torrent health across four ARR instances.
+- Search for missing, monitored media.
+- Re-search failed and stalled downloads.
+- Filter unwanted files using extension allowlists and exclusion patterns.
+- Manage public torrents using 60-minute seeding limits.
+- Apply tracker-specific MAM seeding requirements to ebooks and audiobooks.
+- Maintain torrent-tracking state in a SQLite database.
+
+**Verification status:** Public audiobook downloading, importing, automatic torrent removal, and continued playback have been tested successfully. MAM tracker-specific protection is configured but has not yet been validated with a real MAM torrent.
 
 ---
 
@@ -33,27 +40,33 @@ qBitrr is configured to:
 | Radarr-1080 | Radarr | `http://radarr-1080p:7878` | `radarr-1080` |
 | Radarr-4K | Radarr | `http://radarr-4k:7878` | `radarr-4k` |
 
+The additional `audiobooks` and `ebooks` categories are managed through qBitrr's qBittorrent category manager rather than dedicated ARR instances.
+
 ---
 
 ## Configuration
 
-Config file: `/opt/appdata/qbitrr/config.toml`
+**Config file:** `/opt/appdata/qbitrr/config.toml`
 
-qBitrr generates a default `config.toml` on first run. The file is edited directly — changes take effect after a container restart.
+qBitrr generates a configuration file on first run. Configuration changes are made directly in the file and loaded after restarting the container.
 
-> **Do not restart qBitrr while it is actively processing torrents** — it will re-tag and re-evaluate all torrents on startup which can cause brief disruption to in-progress downloads.
+**Operational precaution:** Avoid restarting qBitrr during important active downloads unless necessary. On startup, it reconnects to qBittorrent, initializes its workers, and re-evaluates managed torrents.
 
 ### Key Global Settings
 
 | Setting | Value | Notes |
 |---------|-------|-------|
-| `CompletedDownloadFolder` | `/data/downloads` | Root of all download categories |
-| `FreeSpace` | `-1` | Disabled — no automatic pause on low disk |
-| `AutoPauseResume` | `true` | Required for FreeSpace logic if enabled later |
-| `LoopSleepTimer` | `5` | Seconds between torrent reprocessing loops |
-| `FailedCategory` | `failed` | Torrents tagged with this are treated as failed |
-| `RecheckCategory` | `recheck` | Torrents tagged with this are force-rechecked |
-| `BehindHttpsProxy` | `true` | Required — qBitrr is behind Traefik |
+| `CompletedDownloadFolder` | `/data/downloads` | Root of download categories |
+| `FreeSpace` | `-1` | Free-space automation disabled |
+| `AutoPauseResume` | `true` | Available for free-space management |
+| `LoopSleepTimer` | `5` | Main-loop interval, seconds |
+| `SearchLoopDelay` | `-1` | Uses the application's 30-second search delay |
+| `FailedCategory` | `failed` | Failed-torrent handling |
+| `RecheckCategory` | `recheck` | Torrent recheck handling |
+| `FFprobeAutoUpdate` | `true` | FFprobe binary management enabled |
+| `BehindHttpsProxy` | `true` | Used behind Traefik |
+
+The November 2026 performance review found no reason to adjust the loop and polling intervals.
 
 ### qBittorrent Connection
 
@@ -62,66 +75,199 @@ qBitrr generates a default `config.toml` on first run. The file is edited direct
 | `Host` | `gluetun` |
 | `Port` | `8080` |
 | `UserName` | `admin` |
-| `Password` | set in config.toml (not in .env — qBitrr reads directly from config) |
+| `Password` | Stored in `config.toml`; do not expose in logs or documentation |
+
+qBittorrent shares Gluetun's network namespace. Use the `gluetun` hostname rather than `qbittorrent`.
 
 ### Per-Instance Search Settings
 
+The following values were verified across all four ARR instances in November 2026.
+
 | Setting | Value | Notes |
 |---------|-------|-------|
-| `SearchMissing` | `true` | Actively searches for missing media |
-| `SearchLimit` | `5` | Max concurrent searches per instance |
-| `SearchByYear` | `true` | Searches newest to oldest by release year |
-| `SearchBySeries` | `smart` | Sonarr only — uses series or episode search intelligently |
-| `PrioritizeTodaysReleases` | `true` | Sonarr only — today's episodes searched first |
-| `DoUpgradeSearch` | `false` | ARR apps handle upgrades natively — no double-dipping |
-| `RssSyncTimer` | `1` | RSS sync every 1 minute |
-| `RefreshDownloadsTimer` | `1` | Queue refresh every 1 minute |
-| `ReSearch` | `true` | Re-search failed torrents |
+| `SearchMissing` | `true` | Search for missing monitored content |
+| `SearchLimit` | `5` | Limit on queued search commands |
+| `SearchRequestsEvery` | `300` | Request-system polling interval, seconds |
+| `SearchAgainOnSearchCompletion` | `true` | Allow later re-search passes |
+| `SearchByYear` | `true` | Year-based ordering |
+| `SearchInReverse` | `false` | Reverse ordering disabled |
+| `Unmonitored` | `false` | Do not intentionally search unmonitored content |
+| `DoUpgradeSearch` | `false` | Upgrade searches disabled |
+| `QualityUnmetSearch` | `false` | Quality-unmet searches disabled |
+| `CustomFormatUnmetSearch` | `false` | Custom-format upgrade searches disabled |
+| `RefreshDownloadsTimer` | `1` | Download refresh interval, minutes |
+| `ReSearch` | `true` | Re-search after failure handling |
+
+**Sonarr-specific options:**
+
+| Setting | Value |
+|---------|-------|
+| `SearchBySeries` | `smart` |
+| `PrioritizeTodaysReleases` | `true` |
+
+Sonarr and Radarr continue to manage their own release quality profiles, monitoring decisions, and normal RSS activity.
+
+**Search-loop assessment:** Continuous searching was retained intentionally. During the November audit, no excessive repeated indexer searches were confirmed. Search-loop delay messages alone do not establish that indexer queries were submitted.
+
+**Monitoring precaution:** In Sonarr-Anime, series-level monitoring alone is not sufficient to assume that Qbitrr will never select individual monitored episodes. Verify both series and episode monitoring when intentionally excluding content.
 
 ### Per-Instance Torrent Settings
 
+These settings were verified across Sonarr-TV, Sonarr-Anime, Radarr-1080, and Radarr-4K.
+
 | Setting | Value | Notes |
 |---------|-------|-------|
-| `StalledDelay` | `15` | Minutes before a stalled torrent is acted on |
-| `ReSearchStalled` | `true` | Stalled torrents are automatically re-searched for an alternative source |
-| `DoNotRemoveSlow` | `true` | Slow torrents are not removed — only stalled ones |
-| `MaximumDeletablePercentage` | `0.99` | Never delete torrents above 99% complete |
-| `IgnoreTorrentsYoungerThan` | `180` | Seconds — new torrents are left alone |
-| `RemoveTorrent` | `-1` | Never remove ARR torrents — seeding is indefinite |
+| `StalledDelay` | `15` | Delay before stalled-torrent handling |
+| `ReSearchStalled` | `true` | Search for replacement content when stalled |
+| `DoNotRemoveSlow` | `true` | Protect slow but active downloads |
+| `MaximumETA` | `-1` | ETA-based removal disabled |
+| `MaximumDeletablePercentage` | `0.99` | Protect near-complete downloads in applicable failure cleanup |
+| `IgnoreTorrentsYoungerThan` | `180` | Initial grace period, seconds |
+| `AutoDelete` | `false` | Do not automatically delete unwanted downloaded files |
+
+The old seeding configuration used `RemoveTorrent = -1`, which prevented Qbitrr from removing stalled torrents even when it correctly detected a stall.
+
+That restriction was corrected in November 2026.
+
+**Confirmed historical issue:** The stalled torrent `Dracula Untold (2014)` repeatedly triggered removal decisions while Qbitrr logged that `RemoveTorrent=-1` blocked the action. The corrected configuration removes that specific restriction. A new real-world stalled-download recovery event has not yet been observed.
+
+### File Filtering
+
+**Extension allowlist**, configured for all four ARR instances:
+
+```toml
+FileExtensionAllowlist = [".mp4", ".mkv", ".sub", ".ass", ".srt", ".!qB", ".parts"]
+```
+
+Executables such as `.exe` are not included.
+
+`AutoDelete = false` is retained as a conservative safeguard. Qbitrr may exclude unwanted files from downloading, but it is not configured to automatically delete disallowed files that already exist.
+
+Folder and filename exclusion patterns cover samples, extras, featurettes, and selected ancillary media.
+
+**November 2026 regex correction:**
+
+Twelve incorrectly escaped `\d` expressions were corrected across the four ARR instances.
+
+For example:
+
+```toml
+FileNameExclusionRegex = ["\\bncop\\d+?\\b", "\\bnced\\d+?\\b", "\\bsample\\b", "brarbg.com\\b", "\\btrailer\\b", "music video", "comandotorrents.com"]
+```
+
+All 24 follow-up regex tests passed, including `NCOP12`, `NCED05`, and sample filenames.
+
+The complete exclusion lists remain in `config.toml`, which is the authoritative configuration reference.
 
 ---
 
 ## Seeding Rules
 
-### Books categories — global defaults
+### Overview
 
-The `[qBit.CategorySeeding]` block applies to the `audiobooks` and `ebooks` categories. Global defaults allow indefinite seeding with no ratio or time cap — the MAM tracker override below handles enforcement.
+qBitrr is the primary seeding-policy manager.
 
-| Setting | Value |
-|---------|-------|
-| `MaxUploadRatio` | `-1` (unlimited) |
-| `MaxSeedingTime` | `-1` (unlimited) |
-| `MinSeedRatio` | `1.0` |
-| `MinSeedingTimeDays` | `0` |
-| `RemoveTorrent` | `-1` (never — MAM override handles removal) |
+**Important:** qBittorrent's former global 60-minute seeding stop rule was disabled in November 2026 to avoid interfering with tracker-specific policies.
 
-### MAM tracker override
+| Content | Intended policy | Status |
+|---------|-----------------|--------|
+| Public Sonarr/Radarr torrents | 60-minute seeding limit | Configured |
+| Public ebook torrents | 60-minute seeding limit | Configured |
+| Public audiobook torrents | 60-minute seeding limit | End-to-end verified |
+| MyAnonamouse ebooks/audiobooks | At least 14 days AND ratio 1.0 | Configured; live tracker behavior pending verification |
 
-MAM (MyAnonamouse) torrents in the `audiobooks` and `ebooks` categories are subject to tracker-scoped seeding rules. Once both conditions are met (14 days AND 1.0 ratio), qBitrr removes the torrent from qBittorrent automatically.
+Automatic cleanup applies to torrents managed by these qBitrr categories and instances. Unmanaged categories are not guaranteed to receive the same cleanup.
+
+### ARR Seeding Settings
+
+Each ARR instance uses the following configuration:
+
 ```toml
-[qBit.CategorySeeding.Trackers.myanonamouse]
-URL = "myanonamouse.net"
-MinSeedingTimeDays = 14
-MinSeedRatio = 1.0
+[Sonarr-TV.Torrent.SeedingMode]
 MaxUploadRatio = -1
-MaxSeedingTime = -1
-RemoveTorrent = true
-HitAndRunMode = "disabled"
+MaxSeedingTime = 3600
+RemoveTorrent = 2
 ```
 
-**Why `HitAndRunMode = "disabled"`:** MAM audiobooks and ebooks are often slow seeds — HitAndRun detection could incorrectly flag legitimate slow-seeding torrents. The 14-day + 1.0 ratio requirements already satisfy MAM's seeding policy without it.
+Equivalent values are configured under:
 
-Torrents from AudiobookBay or any other tracker are unaffected by this rule — they fall back to the global defaults and seed indefinitely.
+- `[Sonarr-Anime.Torrent.SeedingMode]`
+- `[Radarr-1080.Torrent.SeedingMode]`
+- `[Radarr-4K.Torrent.SeedingMode]`
+
+`RemoveTorrent = 2` selects time-based removal. `MaxSeedingTime = 3600` specifies one hour in seconds.
+
+These are seeding-cleanup settings and do not guarantee that every failed or stalled torrent will be handled identically to a successfully completed torrent.
+
+### Books Categories — Default Policy
+
+The managed qBittorrent categories are:
+
+```toml
+ManagedCategories = ["audiobooks", "ebooks"]
+```
+
+The verified category seeding settings are:
+
+```toml
+[qBit.CategorySeeding]
+MaxUploadRatio = -1
+MaxSeedingTime = 3600
+RemoveTorrent = 2
+```
+
+This establishes the default one-hour seeding policy for the managed book categories.
+
+### MAM Tracker Override
+
+The old `[qBit.CategorySeeding.Trackers.myanonamouse]` definition was replaced with the supported `[[qBit.Trackers]]` structure.
+
+The verified current configuration is:
+
+```toml
+[[qBit.Trackers]]
+Name = "MyAnonamouse"
+URI = "myanonamouse.net"
+Priority = 10
+MaxUploadRatio = 1.0
+MaxSeedingTime = 1209600
+HitAndRunMode = "and"
+MinSeedRatio = 1.0
+MinSeedingTimeDays = 14
+TrackerUpdateBuffer = 3600
+AddTrackerIfMissing = false
+RemoveIfExists = false
+```
+
+**Policy intent:**
+
+- Identify torrents whose tracker matches `myanonamouse.net`.
+- Require a minimum upload ratio of 1.0.
+- Require at least 14 days of seeding.
+- Use `HitAndRunMode = "and"` so both minimum requirements must be met before clearance.
+- Apply a 3,600-second buffer to accommodate tracker-statistics reporting lag.
+- Avoid automatically adding or removing tracker URLs.
+
+The configured maximum seeding time is 1,209,600 seconds, equivalent to 14 days.
+
+**Important verification boundary:** TOML parsing, worker startup, and the presence of this tracker definition have been verified. A real MAM download has not yet been observed remaining protected through the public torrent's 60-minute threshold. Do not describe tracker-specific compliance as end-to-end verified until that test succeeds.
+
+**Tracker caution:** Keep a MAM torrent seeding until its tracker recognizes the required obligations as satisfied. Do not manually remove it merely because the local client reports a sufficient ratio and elapsed time.
+
+### Verified Public Audiobook Workflow
+
+November 9, 2026: `Threshing Day`, downloaded from AudiobookBay through Shelfmark, was used for an end-to-end test.
+
+1. Shelfmark submitted the audiobook torrent to qBittorrent.
+2. qBittorrent completed the download under category `audiobooks`.
+3. Shelfmark placed the audiobook into the Audiobookshelf library.
+4. Audiobookshelf successfully played the audiobook while the torrent was seeding.
+5. After approximately 60 minutes of accumulated seeding, the torrent disappeared from qBittorrent.
+6. The imported audiobook remained present and playable in Audiobookshelf.
+
+**Result:** Public audiobook import, Qbitrr cleanup, and retained library playback verified.
+
+This does not constitute verification of MAM's tracker-specific requirements.
 
 ---
 
@@ -130,95 +276,354 @@ Torrents from AudiobookBay or any other tracker are unaffected by this rule — 
 Access at `https://qbitrr.giohosted.com/ui`.
 
 The WebUI provides:
-- **Processes view** — live status of all worker processes per ARR instance
-- **Logs view** — real-time log output
-- **Arr views** — queue and library status per instance
-- **Config editor** — edit `config.toml` directly from the browser (restart still required after save)
+
+- **Processes view** — worker and instance status.
+- **Logs view** — application activity.
+- **ARR views** — queue and media status.
+- **Config editor** — configuration editing.
 
 ### Authentication
 
-qBitrr WebUI uses its own auth system with OIDC via Authentik. A bearer token is also auto-generated in `config.toml` under `[WebUI].Token` for API access.
+qBitrr uses its own authentication system with OIDC through Authentik.
+
+A WebUI bearer token is stored in `config.toml` under `[WebUI].Token`.
+
+Never copy authentication tokens or API keys into documentation, troubleshooting messages, or publicly shared logs.
 
 ---
 
 ## Monitoring qBitrr
 
-### Check logs
+### Check Container Status
+
+```bash
+docker inspect qbitrr \
+  --format 'Status: {{.State.Status}} | Restart count: {{.RestartCount}}'
+```
+
+### Check Logs
+
 ```bash
 docker logs qbitrr --tail 50
 ```
 
-### Watch live
+### Follow Live Logs
+
 ```bash
 docker logs -f qbitrr
 ```
 
-### Confirm all instances are connecting
-On a healthy startup, 12 workers start:
-```
+### Confirm Worker Initialization
+
+The November 2026 deployment starts **13 worker processes**, plus a separately initialized qBit category manager.
+
+Expected worker categories:
+
+```text
 search(sonarr-tv), torrent(sonarr-tv)
 search(sonarr-anime), torrent(sonarr-anime)
 search(radarr-1080), torrent(radarr-1080)
 search(radarr-4k), torrent(radarr-4k)
-torrent(recheck), torrent(failed)
+torrent(TorrentPolicyManager)
+torrent(failed), torrent(recheck)
 torrent(ebooks), torrent(audiobooks)
 ```
 
-If you see `CRITICAL: Failed to connect to Arr instance` — check the URI and API key in `config.toml` for that instance.
+The category manager handles the `audiobooks` and `ebooks` categories.
+
+At the last verified restart, all 13 workers started successfully.
+
+A warning about an already-started category manager was also observed, with that process reported alive; it was not accompanied by a confirmed startup failure.
+
+### Container Resource Usage
+
+```bash
+docker stats --no-stream qbitrr
+```
+
+November 2026 snapshot:
+
+| Metric | Observed |
+|--------|----------|
+| CPU usage | 3.45% |
+| Memory usage | 368.5 MiB |
+| Process/thread count | 36 |
+| Restart policy | `unless-stopped` |
+| OOM killed | `false` |
+| Docker healthcheck | Not configured |
+
+These are point-in-time observations rather than continuous performance metrics.
+
+### Log Management
+
+Docker currently uses the `json-file` logging driver without explicit per-container rotation settings.
+
+The log file measured approximately 7.3 MB during the November audit.
+
+No immediate action was needed.
+
+**Optional future improvement:** Configure bounded Docker log rotation, for example `max-size=10m` and `max-file=3`, during a planned container configuration update. No such change has been implemented.
+
+---
+
+## Database Maintenance
+
+**Database:** `/opt/appdata/qbitrr/qBitManager/qbitrr.db`
+
+qBitrr uses SQLite for application tracking state.
+
+The current deployment runs periodic WAL checkpoint maintenance approximately every five minutes.
+
+### Check Database Files
+
+```bash
+sudo find /opt/appdata/qbitrr/qBitManager \
+  -maxdepth 1 -type f \
+  \( -name '*.db' -o -name '*.db-wal' -o -name '*.db-shm' \) \
+  -printf '%p — %s bytes\n'
+```
+
+### Read-Only SQLite Integrity Check
+
+```bash
+python3 - <<'PY'
+import sqlite3
+
+path = "file:/opt/appdata/qbitrr/qBitManager/qbitrr.db?mode=ro"
+
+with sqlite3.connect(path, uri=True, timeout=5) as conn:
+    result = conn.execute("PRAGMA quick_check").fetchone()[0]
+    print(f"SQLite integrity: {result}")
+PY
+```
+
+**November 2026 result:** `SQLite integrity: ok`
+
+Repeated WAL checkpoints completed successfully without reported maintenance errors.
+
+Do not manually delete active SQLite WAL or SHM files.
+
+### November 2026 Orphaned-Record Cleanup
+
+During the audit, 384 stale Sonarr-Anime database entries were identified. These referenced missing or no-longer-valid episode records.
+
+After a database backup and targeted cleanup:
+
+- Exactly 384 orphaned entries were removed.
+- SQLite integrity was verified.
+- Sonarr-Anime's stale records were no longer present.
+- Sonarr-TV's tracking records were preserved.
+- Sixteen unrelated leftover Bleach media files, totaling approximately 17 GB, were removed after explicit approval.
+
+Pre-cleanup backup:
+
+```text
+/opt/appdata/qbitrr/backups/qbitrr-pre-cleanup-20261108T233539Z.db
+```
+
+The cleanup was verified, but a suspected search-state/reset issue was not conclusively established as the underlying cause. Monitor for recurrence rather than assuming the issue has been permanently eliminated.
 
 ---
 
 ## Directory Structure
-```
+
+```text
 /opt/stacks/torrent/
-  compose.yaml                        ← in git (shared with Gluetun and qBittorrent)
-  .env                                ← gitignored
+  compose.yaml                      ← shared with Gluetun and qBittorrent
+  .env                              ← credentials; not for documentation
 
 /opt/appdata/qbitrr/
-  config.toml                         ← main config — edit directly, restart to apply
-  config.backup.<timestamp>.toml      ← auto-generated backup before schema migrations
-  logs/                               ← application logs
+  config.toml                       ← active configuration
+  config.toml.pre-seeding-optimization
+  config.toml.pre-regex-fix-*       ← November 2026 backup
+  backups/
+    qbitrr-pre-cleanup-*.db         ← pre-cleanup database snapshot
+  logs/                             ← application logs
   qBitManager/
-    qbitrr.db                         ← SQLite database — torrent tracking state
-    ffprobe.exe                       ← auto-downloaded by qBitrr for media validation
+    qbitrr.db                       ← SQLite application database
+    qbitrr.db-wal                   ← SQLite write-ahead log when present
+    qbitrr.db-shm                   ← SQLite shared memory when present
 ```
+
+Additional generated support files may be present depending on the running version.
 
 ---
 
 ## Troubleshooting
 
-### Instance showing CHANGE_ME errors on startup
-Config file was not saved correctly before container started. Stop the container, verify `config.toml` has correct values, then start:
+### Instance Showing Configuration Errors at Startup
+
+Inspect relevant configuration fields without printing passwords or API keys.
+
 ```bash
-docker stop qbitrr
-cat /opt/appdata/qbitrr/config.toml | grep -E "Host|URI|APIKey|CompletedDownload"
-docker start qbitrr
+python3 - <<'PY'
+import tomllib
+
+with open("/opt/appdata/qbitrr/config.toml", "rb") as f:
+    cfg = tomllib.load(f)
+
+for name in ("Sonarr-TV", "Sonarr-Anime", "Radarr-1080", "Radarr-4K"):
+    print(name, "configured:", name in cfg)
+PY
 ```
 
-### Can't connect to qBittorrent
-qBitrr connects to qBittorrent via `gluetun:8080`. Verify Gluetun is running and healthy:
+Confirm the affected instance URI includes the correct `http://` scheme.
+
+Restart qBitrr only after validating the configuration and considering any active downloads.
+
+### Cannot Connect to qBittorrent
+
+qBitrr connects through `gluetun:8080`.
+
+Check Gluetun and qBittorrent:
+
 ```bash
-docker ps | grep gluetun
+docker ps --filter name=gluetun
+docker ps --filter name=qbittorrent
+docker logs gluetun --tail 20
 ```
 
-### Sonarr-Anime showing "No series returned"
-Expected if Sonarr-Anime has an empty library. Not an error — qBitrr has nothing to search for.
+Consult `qbittorrent.md` and `gluetun.md` for the network and VPN architecture.
 
-### Search loop crashing repeatedly
-Check the URI for that instance in `config.toml` — must include `http://` scheme. Missing scheme causes an immediate crash with `MissingSchema` error.
+### Stalled Torrent Repeatedly Marked for Deletion
 
-### Config changes not taking effect
-qBitrr reads `config.toml` on startup only. Always restart after editing:
+Check for messages resembling:
+
+```text
+Removal blocked ... RemoveTorrent=-1 (never remove)
+```
+
+In November 2026, that policy prevented the removal of a stalled Radarr torrent.
+
+The intended current setting for the four ARR instances is:
+
+```toml
+RemoveTorrent = 2
+```
+
+Review the current seeding policy, torrent state, and hit-and-run clearance before making changes.
+
+Do not assume a log entry saying **Marking for deletion** means the torrent was actually removed. Look for confirmed removal messages or a deletion summary with `confirmed_removed` greater than zero.
+
+### MAM Torrent Removed Too Early or Stopped Seeding
+
+Verify:
+
+1. qBittorrent's global seeding limits remain disabled.
+2. The torrent's tracker URL matches the configured MAM tracker definition.
+3. The expected `[[qBit.Trackers]]` entry is loaded.
+4. `HitAndRunMode = "and"` is configured.
+5. The torrent remains managed by the intended category.
+6. The actual torrent state and Qbitrr logs support the removal decision.
+
+**Do not assume MAM protection is verified based solely on a successful configuration restart.**
+
+### Unwanted or Fake Releases
+
+Check:
+
+- Sonarr/Radarr release history and blocklist.
+- Indexer configuration and release restrictions.
+- Downloaded file extensions.
+- Qbitrr file-exclusion decisions.
+- Whether the episode or movie is actually available.
+
+During the November audit, suspicious unreleased episodes for `Dexter: Resurrection` and `Abbott Elementary` were removed and blocklisted. Their exact file contents were not established.
+
+Review Prowlarr indexer restrictions if unrelated content sources continue supplying unsuitable releases.
+
+### Regex Patterns Not Matching
+
+TOML double-quoted strings require escaped backslashes.
+
+Correct example:
+
+```toml
+"\\bncop\\d+?\\b"
+```
+
+Incorrect example:
+
+```toml
+"\\bncop\\\\d+?\\b"
+```
+
+The November 2026 correction was validated with 24 passing regex tests.
+
+### Shelfmark Imports Failing
+
+Shelfmark can encounter stale NFS file handles on bind-mounted download or library paths.
+
+During the November audit:
+
+- Host `/data` directory listings were successful.
+- Other media containers could list their directories.
+- Shelfmark returned `Stale file handle` when listing mounted directories.
+- Restarting only Shelfmark restored access.
+- Direct EPUB import into CWA and torrent-based audiobook import into Audiobookshelf subsequently succeeded.
+
+This was treated as a resolved incident, not proof that the underlying NFS issue can never recur.
+
+See `../books/shelfmark.md` for the complete workflow and incident notes.
+
+### Configuration Changes Not Taking Effect
+
+Validate `config.toml`, then restart qBitrr:
+
 ```bash
 docker restart qbitrr
 ```
+
+Inspect startup logs for worker initialization.
+
+---
+
+## Operational Notes and Outstanding Verification
+
+### Verified as of November 9, 2026
+
+- Qbitrr v5.14.9-1 deployed.
+- Four ARR instances configured.
+- Two qBit-managed book categories configured.
+- All 13 worker processes started successfully.
+- Public audiobook cleanup and retained library playback verified.
+- Historical stalled-removal restriction corrected.
+- File-exclusion regex escaping corrected across all four ARR instances.
+- SQLite integrity check passed.
+- Database maintenance checkpoints operating normally.
+- CPU and memory usage reasonable.
+- Restart policy set to `unless-stopped`.
+
+### Configured but Not Yet Verified End-to-End
+
+- MAM tracker matching and continued seeding beyond the public 60-minute limit.
+- MAM protection until both the minimum time and upload ratio are satisfied.
+- New stalled-torrent detection followed by successful removal and replacement under the corrected configuration.
+- Torrent-based ebook import and subsequent cleanup, distinct from the successful direct-download EPUB test.
+
+### Optional Improvements
+
+- Add bounded Docker JSON log rotation during a planned maintenance change.
+- Investigate recurring excessive search traffic only if monitoring reveals actual repeated searches or indexer strain.
+- Avoid introducing additional Shelfmark/Qbitrr integration complexity unless failed imports recur.
+
+---
+
+## References
+
+- [qBitrr Configuration](https://feramance.github.io/qBitrr/configuration/)
+- [qBitrr Seeding and Trackers](https://feramance.github.io/qBitrr/configuration/seeding/)
+- [qBitrr Torrent Settings](https://feramance.github.io/qBitrr/configuration/torrents/)
+- [qBitrr Automated Search](https://feramance.github.io/qBitrr/features/automated-search/)
+- [qBitrr Health Monitoring](https://feramance.github.io/qBitrr/features/health-monitoring/)
 
 ---
 
 ## Notes
 
-- qBitrr is on the `proxy` network — unlike qBittorrent it is NOT inside Gluetun's namespace
-- qBitrr connects to ARR instances by container name (e.g. `sonarr-tv`) — works because all containers share the `proxy` Docker network
-- qBitrr connects to qBittorrent via `gluetun` hostname — not `qbittorrent`, because qBittorrent has no independent network presence
-- The `tty: true` setting in the compose is required — qBitrr uses terminal control codes in its output and will behave oddly without it
-- Auto-updates are disabled (`AutoUpdateEnabled = false`) — updates are handled manually by pulling the latest image via Dockman
+- qBitrr runs on the `proxy` network, outside Gluetun's VPN namespace.
+- qBitrr connects to qBittorrent using `gluetun`, not `qbittorrent`.
+- ARR applications connect through their Docker service names.
+- The container's `tty: true` setting was part of the documented deployment and should be retained unless the Compose configuration is deliberately reviewed.
+- Auto-updates were documented as disabled; container updates are managed manually. Reconfirm that setting before relying on it operationally.
+- Sensitive credentials, WebUI tokens, and API keys belong in their existing protected configuration locations, not in this documentation.
