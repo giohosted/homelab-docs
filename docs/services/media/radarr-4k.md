@@ -3,7 +3,7 @@
 **Host:** docker-prod-01 (192.168.30.11)  
 **Container name:** radarr-4k  
 **Status:** Running  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-11-10
 
 ---
 
@@ -68,8 +68,46 @@ A separate Radarr 1080p instance handles the 1080p library. See `services/media/
 |---------|---------|
 | Prowlarr | Indexer management — syncs all indexers automatically |
 | qBitrr | Torrent health monitoring and automated search |
+| Profilarr | Quality profiles, custom formats, and release scoring |
 
 > Bazarr is not connected to Radarr 4K — Bazarr supports one Radarr instance only (connected to Radarr 1080p). Infuse handles subtitles natively for 4K local viewing.
+
+---
+
+## Profilarr / Dumpstarr Configuration
+
+Radarr 4K is connected to Profilarr v2, which centrally manages its quality profiles and custom formats using the Dumpstarr configuration database.
+
+**Profilarr URL:** `https://profilarr.giohosted.com`  
+**Database:** Dumpstarr  
+**Repository:** `https://github.com/Dumpstarr/Database`  
+**Branch:** `stable`
+
+### Quality Profiles
+
+Radarr 4K uses quality profiles synchronized from Dumpstarr.
+
+**Synchronization trigger:** On Pull
+
+The selected Dumpstarr quality profiles were synchronized during the Profilarr v2 migration. Their exact names were not independently recorded during this documentation update.
+
+The active selections can be reviewed under:
+
+`Profilarr → Arrs → Radarr 4K → Sync → Quality Profiles`
+
+Profilarr automatically synchronizes the selected quality profiles and their referenced custom formats when updates are pulled from the Dumpstarr configuration database.
+
+This keeps supported release scoring, quality preferences, and custom format recommendations synchronized without requiring manual adjustments in Radarr.
+
+### Synchronization Behavior
+
+- The upstream configuration source is Dumpstarr's `stable` branch.
+- Profilarr is configured to pull upstream database updates automatically, hourly.
+- The selected quality profiles use the `On Pull` synchronization trigger.
+- Selected custom formats and release scores are synchronized alongside their associated quality profiles.
+- Upstream changes can affect release selection, scoring, and upgrade behavior.
+- Direct modifications to synchronized quality profiles may be overwritten during subsequent synchronization.
+- Media Management and Delay Profile synchronization are controlled separately from Quality Profiles; their final Radarr 4K trigger settings were not independently recorded during this documentation update.
 
 ---
 
@@ -86,8 +124,11 @@ Existing 4K movies from v2 were migrated into this instance using Radarr's Movie
 
 ## Notes
 
-- Both Radarr instances use port 7878 internally — they are distinguished by container name (`radarr-1080p` vs `radarr-4k`) not by port
-- Quality profiles and custom formats are managed by Profilarr — do not edit them directly in Radarr
-- Hardlinks require `/data` to be a single NFS mount covering both `/data/media` and `/data/downloads` — do not split these into separate mounts
-- Not exposed externally — internal only via `local-only@docker` Traefik middleware
-- 4K files are for local viewing only via Infuse/Apple TV 4K — never transcode 4K, always direct play
+- Both Radarr instances use port 7878 internally — they are distinguished by container name (`radarr-1080p` vs `radarr-4k`), not by port.
+- Quality profiles and custom formats are managed by Profilarr — do not edit them directly in Radarr because synchronized changes can overwrite local modifications.
+- Profilarr Quality Profiles synchronization is configured to `On Pull` using the Dumpstarr database.
+- Changes to upstream Dumpstarr scores, cutoffs, and custom formats can affect future grabs and upgrades.
+- Quality profile dependencies may include movies, collections, and import lists. Review these before removing obsolete profiles.
+- Hardlinks require `/data` to be a single NFS mount covering both `/data/media` and `/data/downloads` — do not split these into separate mounts.
+- Not exposed externally — internal only via `local-only@docker` Traefik middleware.
+- 4K files are for local viewing only via Infuse/Apple TV 4K — never transcode 4K, always direct play.

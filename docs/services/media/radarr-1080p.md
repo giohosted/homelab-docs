@@ -3,7 +3,7 @@
 **Host:** docker-prod-01 (192.168.30.11)  
 **Container name:** radarr-1080p  
 **Status:** Running  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-11-10
 
 ---
 
@@ -70,12 +70,67 @@ A separate Radarr 4K instance handles the 4K library. See `services/media/radarr
 | Bazarr | Subtitle automation |
 | Tautulli | Plex analytics (via Plex connection) |
 | qBitrr | Torrent health monitoring and automated search |
+| Profilarr | Quality profiles, custom formats, and release scoring |
+
+---
+
+## Profilarr / Dumpstarr Configuration
+
+Radarr 1080p is connected to Profilarr v2, which centrally manages its quality profiles and custom formats using the Dumpstarr configuration database.
+
+**Profilarr URL:** `https://profilarr.giohosted.com`  
+**Database:** Dumpstarr  
+**Repository:** `https://github.com/Dumpstarr/Database`  
+**Branch:** `stable`
+
+### Quality Profiles
+
+| Profile | Source |
+|---------|--------|
+| LQ 1080p | Dumpstarr |
+| Movies 1080p | Dumpstarr |
+| Movies 1080p HQ | Dumpstarr |
+
+**Synchronization trigger:** On Pull
+
+These three quality profiles were synchronized from Dumpstarr during the Profilarr v2 migration.
+
+Profilarr automatically synchronizes the selected quality profiles and their referenced custom formats when updates are pulled from the Dumpstarr configuration database.
+
+The profiles provide separate release-selection and scoring options for lower-quality, standard, and higher-quality 1080p movie preferences.
+
+### Legacy Quality Profile Cleanup
+
+During the migration, two obsolete Radarr quality profiles were identified:
+
+| Legacy Profile | Resolution |
+|----------------|------------|
+| 1080p LQ | Replaced by Dumpstarr's `LQ 1080p` profile |
+| 1080p Balanced - old | Retired |
+
+Existing movies assigned to `1080p LQ` were reassigned to the new Dumpstarr `LQ 1080p` profile.
+
+Radarr initially prevented deletion of the legacy profiles because collections still referenced them. The relevant collection assignments were corrected, allowing the obsolete quality profiles to be removed.
+
+**Important:** Radarr quality profiles can be referenced by individual movies, collections, and import lists. These dependencies should be reviewed before deleting profiles in the future.
+
+### Synchronization Behavior
+
+- The upstream configuration source is Dumpstarr's `stable` branch.
+- The selected quality profiles use Profilarr's `On Pull` synchronization trigger.
+- Selected custom formats and release scores are synchronized alongside their associated quality profiles.
+- Upstream changes may adjust release scoring, quality preferences, and upgrade behavior.
+- Changes made directly to synchronized Radarr quality profiles may be overwritten during subsequent synchronization.
+- Media Management and Delay Profile synchronization are separate from Quality Profiles; their final Radarr 1080p trigger settings were not independently recorded during this documentation update.
 
 ---
 
 ## Notes
 
-- Both Radarr instances use port 7878 internally — they are distinguished by container name (`radarr-1080p` vs `radarr-4k`) not by port
-- Quality profiles and custom formats are managed by Profilarr — do not edit them directly in Radarr
-- Hardlinks require `/data` to be a single NFS mount covering both `/data/media` and `/data/downloads` — do not split these into separate mounts
-- Not exposed externally — internal only via `local-only@docker` Traefik middleware
+- Both Radarr instances use port 7878 internally — they are distinguished by container name (`radarr-1080p` vs `radarr-4k`), not by port.
+- Quality profiles and custom formats are managed by Profilarr — do not edit them directly in Radarr because synchronized changes can overwrite local modifications.
+- The active Dumpstarr quality profiles are `LQ 1080p`, `Movies 1080p`, and `Movies 1080p HQ`.
+- The legacy `1080p LQ` and `1080p Balanced - old` profiles were retired during the Profilarr v2 migration.
+- When retiring quality profiles, check movie assignments, collection assignments, and import lists before attempting deletion.
+- Hardlinks require `/data` to be a single NFS mount covering both `/data/media` and `/data/downloads` — do not split these into separate mounts.
+- Not exposed externally — internal only via `local-only@docker` Traefik middleware.
