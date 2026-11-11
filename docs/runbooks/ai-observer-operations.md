@@ -5,7 +5,7 @@
 **Proxmox VMID:** 107  
 **Proxmox Node:** pve-prod-01  
 **Environment:** Homelab v3  
-**Last Updated:** 2026-11-05  
+**Last Updated:** 2026-11-06  
 **Service Status:** Proxmox, Unraid, Komodo and UniFi MCP integrations live-verified (84 + 26 + 40 + 55 = 205 Read / 0 Write tools); three Komodo Docker hosts remain enrolled  
 **Backup Status:** October 30 VM 107 task successful; fresh backup including November 1 Komodo and November 5 UniFi deployment unverified; Phase 4 reboot/recovery testing explicitly skipped by operator
 
@@ -88,6 +88,8 @@ This document is an operational reference, **not** an architecture specification
 | `/etc/tunnel-client-unifi/config.yaml` | UniFi tunnel YAML |
 | `/etc/tunnel-client-unifi/openai-runtime.key` | UniFi restricted OpenAI runtime key (`homelab-unifi-tunnel`) |
 | `/etc/systemd/system/tunnel-client-unifi.service` | UniFi tunnel unit |
+| `/opt/stacks/observer/tunnel-client/config/*.yaml.example` | Four sanitized Git-tracked recovery templates, **not** active tunnel YAML |
+| `/opt/stacks/observer/tunnel-client/systemd/*.service` | Four Git-tracked copies of the installed systemd units |
 
 **Do not create `/etc/tunnel-client-komodo/mcp-authorization` or `/etc/tunnel-client-unifi/mcp-authorization` as a routine repair:** Komodo and UniFi local MCP servers intentionally have no separate bearer authentication, unlike the Proxmox and Unraid MCP servers. All MCPs remain loopback-bound on observer. A healthy tunnel does not independently prove the upstream API or ChatGPT tools work.
 
@@ -356,7 +358,7 @@ sudo docker compose logs --tail 50 --no-color komodo-mcp
 sudo docker compose config --quiet
 curl -fsS --max-time 10 http://127.0.0.1:8084/ready
 
-# UniFi — use full Compose path due to root-only /opt/stacks/unifi-mcp directory
+# UniFi — use full Compose path; /opt/stacks/unifi-mcp is restricted (root:gio, 0750)
 sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml ps
 sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml config --quiet
 sudo docker logs --tail 30 unifi-mcp
@@ -946,11 +948,10 @@ sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml config --quiet
 sudo docker logs --tail 30 unifi-mcp
 ```
 
-After authorized diagnosis, rebuild only the pinned image if the launcher/source changed, then recreate only `unifi-mcp`:
+After authorized diagnosis, review the pinned submodule revision and rebuild only the intended local UniFi image if the launcher/source changed. The committed Compose uses a local `homelab/unifi-mcp:latest` build. These commands modify the running deployment and require operator approval:
 
 ```bash
-sudo docker build -t homelab/unifi-mcp:ryops-e13d0e2 \
-  -f /opt/stacks/unifi-mcp/Dockerfile /opt/stacks/unifi-mcp
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml build unifi-mcp
 sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml \
   up -d --no-deps --force-recreate unifi-mcp
 ```
@@ -1162,7 +1163,7 @@ The observer uses the private `homelab-infra` repository.
 
 Only the intended infrastructure configuration is committed.
 
-All four MCP `.env` credential files must remain excluded from Git. Repository tracking of the November 1 Komodo and November 5 UniFi Compose files is **not independently verified**.
+All four MCP `.env` credential files must remain excluded from Git. **Verified November 6, 2026:** Proxmox and Unraid MCP Compose configurations were already tracked; commit `6502c59` added the Komodo and UniFi MCP deployment definitions and pinned UniFi `source/` Git submodule; commit `9887296` added eight inert Observer tunnel examples/systemd unit copies. Both commits were pushed to `main`; `/opt/stacks` on `observer-prod-01` was verified clean and in sync with `origin/main`. **Git tracking is not proof of a tested restore.**
 
 ### Read-Only Git Checks
 
@@ -1202,7 +1203,33 @@ Follow:
 
 Do not use `git reset --hard`, force-push, or overwrite local modifications as routine troubleshooting steps.
 
-Git configuration does not replace backup of credentials, systemd units, or other host-level files.
+### Verified Observer Recovery Artifacts in Git
+
+| Path relative to `/opt/stacks` | Purpose |
+|---|---|
+| `proxmox-mcp/compose.yaml`, `unraid-mcp/compose.yaml`, `komodo-mcp/compose.yaml` | Git-tracked MCP deployment definitions |
+| `unifi-mcp/compose.yaml`, `unifi-mcp/Dockerfile`, `unifi-mcp/.dockerignore`, `unifi-mcp/http_server.py` | Locally built UniFi MCP deployment |
+| `.gitmodules`, `unifi-mcp/source` | Upstream UniFi Git submodule, pinned to `e13d0e22dce1b6a498edc5982d78bd589073d44c` |
+| `observer/tunnel-client/config/{proxmox,unraid,komodo,unifi}.yaml.example` | Sanitized tunnel settings; tunnel IDs and channels are placeholders |
+| `observer/tunnel-client/systemd/tunnel-client*.service` | Copies of all four working systemd units; verified identical to installed files before commit |
+
+The observer-specific `observer/` directory is a normal folder on the **same** `main` branch. A `git pull` on another host stores the files but does not execute them, copy them into `/etc`, or enable services. Before a recovery, fetch the desired reviewed Git revision and initialize the UniFi submodule explicitly:
+
+```bash
+cd /opt/stacks
+# Verify repository status and branch before changing a working checkout.
+git status --short --branch
+git submodule status -- unifi-mcp/source
+# On a new clone, with appropriate permissions and authorized deployment:
+git submodule update --init --recursive -- unifi-mcp/source
+git -C unifi-mcp/source rev-parse HEAD
+```
+
+Expected pinned source at the recorded version: `e13d0e22dce1b6a498edc5982d78bd589073d44c`. On the current observer, `unifi-mcp/source` is root-owned; **do not use `sudo git` casually or change the permissions of the secret-bearing `unifi-mcp/.env`**. A new checkout may require appropriate ownership and root-only permissions before any deployment.
+
+If a push is rejected because another host updated `main`, **never force-push**. Fetch, inspect both sides of the divergence and confirm no overlapping edits. In the verified November 6 case, a clean, unpublished local Observer commit was rebased onto remote commit `61d7ed9` and pushed as `9887296`. Rebase is appropriate only for reviewed, unpublished local commits; do not routinely rewrite already shared history.
+
+Git configuration does not replace backup of credentials, the **installed** systemd files, protected active YAML, or other host-level files.
 
 ---
 
@@ -1255,7 +1282,7 @@ Komodo MCP uses `KOMODO_API_KEY` and `KOMODO_API_SECRET` (verify current environ
 
 The dedicated UniFi API key in `/opt/stacks/unifi-mcp/.env` was created with a **one-year expiration (operator confirmed)** and saved in Bitwarden. The exact expiry timestamp was not independently captured. Check it in UniFi Site Manager and rotate before expiration. The key grants Site Manager/Network API access and **must not be assumed read-only** at the source API layer. Validate application/site scopes before and after rotation; preserve `UNIFI_READ_ONLY=true`.
 
-Use the general rotation procedure above. Update the root-only `.env` without printing the key or putting it on the shell command line; confirm owner `root:root`, directory `0700`, file `0600`, then recreate only the `unifi-mcp` container after authorization. Verify `unifi_health`, `get_site_status`, the **55 Read / 0 Write** inventory and the ready tunnel before revoking the old key. The OpenAI `homelab-unifi-tunnel` runtime credential in `/etc/tunnel-client-unifi/openai-runtime.key` is distinct and rotates independently.
+Use the general rotation procedure above. Update the root-only `.env` without printing the key or putting it on the shell command line; confirm `.env` owner `root:root`, directory `root:gio` / `0750`, and `.env` mode `0600`, then recreate only the `unifi-mcp` container after authorization. Verify `unifi_health`, `get_site_status`, the **55 Read / 0 Write** inventory and the ready tunnel before revoking the old key. The OpenAI `homelab-unifi-tunnel` runtime credential in `/etc/tunnel-client-unifi/openai-runtime.key` is distinct and rotates independently.
 
 ### Credential File Permissions
 
@@ -1427,13 +1454,14 @@ Do not mark the observer as recoverable until these have been verified.
 |---|---|
 | Observer VM 107 | October 30 PBS backup task succeeded, **but predates Nov 1 Komodo and Nov 5 UniFi deployments**; new protected backup, integrity and recovery not verified; operator skipped Phase 4 recovery tests |
 | Proxmox MCP stack and `.env` | `homelab-infra` Compose (where committed) plus protected credential recovery |
-| Unraid MCP stack and `.env` | Compose repository commit still unverified; protected credential recovery |
-| Komodo MCP stack and `.env` | New November 1 stack; Git tracking/secure file-level backup not verified; restore dedicated Komodo API key/secret |
-| UniFi MCP stack, source and `.env` | November 5 `source/` revision, `Dockerfile`, `http_server.py`, `compose.yaml`, root-only `.env`; Git tracking/file-level recovery not verified |
+| Unraid MCP stack and `.env` | Compose tracked in `homelab-infra`; excluded `.env` and protected credential recovery still required |
+| Komodo MCP stack and `.env` | Compose tracked (verified `6502c59`); dedicated API key/secret in excluded `.env` require secure recovery; file-level backup remains unverified |
+| UniFi MCP stack, source and `.env` | Compose/Dockerfile/launcher tracked (`6502c59`), `source/` pinned as Git submodule; initialize on clone. Root-only `.env` and independently tested recovery are not in Git/verified |
 | Four tunnel directories | `/etc/tunnel-client/`, `/etc/tunnel-client-unraid/`, `/etc/tunnel-client-komodo/`, `/etc/tunnel-client-unifi/` including protected files |
 | Four OpenAI runtime keys | Secure credential storage; UniFi `homelab-unifi-tunnel` confirmed saved in Bitwarden |
 | Proxmox/Unraid MCP bearer tokens | Secure storage; separately saved Unraid bearer remains unverified |
-| Four systemd service units | `/etc/systemd/system/tunnel-client*.service` (verify exact set) |
+| Four systemd service units | Exact installed units were copied and committed under `observer/tunnel-client/systemd/` (`9887296`); installation into `/etc/systemd/system/` on a rebuilt host must still be performed explicitly |
+| Four tunnel YAML templates | Sanitized examples under `observer/tunnel-client/config/` (`9887296`); contain placeholder tunnel IDs/channels and *references* to restricted credential files, not live configs or secrets |
 | Shared tunnel binaries | Verified official release bundle and rollback copy |
 | Unraid TLS certificate bundle | `/etc/unraid-mcp/unraid.crt` or re-enroll and validate host identity |
 
@@ -1567,7 +1595,7 @@ Confirm:
 
 - **All four protected MCP `.env` files** exist, are appropriately restricted and contain recoverable API credentials. Check metadata only; do not reveal values.
 
-- The shared tunnel-client release bundle and **all four systemd units** exist.
+- The shared tunnel-client release bundle and **all four installed systemd units** exist. Git-tracked copies are available under `observer/tunnel-client/systemd/`, but their presence in Git alone does not prove successful installation on the restored VM.
 
 - **All four protected tunnel directories** and their restricted OpenAI runtime keys are present and accessible to the `tunnel-client` service account. Proxmox/Unraid additionally have MCP bearer header files; Komodo and UniFi do not.
 
@@ -1652,13 +1680,13 @@ A fresh installation would need:
     
 6. The private `homelab-infra` repository.
     
-7. **All four** MCP Compose configurations: Proxmox, Unraid, Komodo and UniFi; include UniFi's exact pinned `source/`, Dockerfile and custom launcher.
+7. **All four** MCP Compose configurations: Proxmox, Unraid, Komodo and UniFi; include UniFi's exact pinned Git submodule `source/`, Dockerfile and custom launcher. Initialize the submodule after cloning; the parent Git checkout alone does not necessarily populate its working tree.
 
 8. All four protected `.env` credential files or approved recovered replacements; Proxmox/Unraid local MCP bearer tokens, dedicated Komodo API key/secret, UniFi Site Manager API key, and validated Unraid TLS certificate bundle.
 
 9. The verified OpenAI tunnel-client release and matching companion files.
 
-10. **All four** native tunnel systemd units and their protected YAML configurations.
+10. **All four** native tunnel systemd units and their protected YAML configurations. Reusable unit copies and nonsecret YAML examples are now in `observer/tunnel-client/`, but placeholders cannot be used as live tunnel identities.
 
 11. Separate restricted OpenAI runtime API keys for **all four** tunnels. Proxmox/Unraid have protected MCP bearer header files; Komodo and UniFi have no local MCP bearer.
 
@@ -1666,6 +1694,21 @@ A fresh installation would need:
 
 13. Successful local and end-to-end tool testing through **all four** ChatGPT plugins and audit of the 84/26/40/55 tool inventory.
     
+
+### Rebuild Source Checklist — Git-Tracked Files (Not Tested)
+
+**Use only during an authorized, isolated rebuild**, not as a routine command sequence on the existing production observer. This documents the available artifacts; the rebuild and full recovery procedure have **not** been executed or verified.
+
+1. Verify an authorized private `homelab-infra` checkout at `/opt/stacks` on the replacement VM. The last verified Observer configuration commit was `9887296` on `main` (November 6, 2026). Do not assume this is still GitHub's latest state later.
+2. Initialize the `unifi-mcp/source` submodule using the reviewed Git revision. Confirm commit `e13d0e22dce1b6a498edc5982d78bd589073d44c` for this documented deployment. On a fresh checkout, inspect directory ownership; the verified original deployment keeps `unifi-mcp/.env` root-only and the UniFi stack directory protected.
+3. Restore or securely recreate **each MCP `.env`** and `/etc/unraid-mcp/unraid.crt` as applicable. Never print token values, resolved Docker Compose configuration, or secret-bearing Docker inspection fields. Validate Compose syntax with `sudo docker compose -f /opt/stacks/<stack>/compose.yaml config --quiet` only after the required secret files exist.
+4. Install the reviewed official `/opt/tunnel-client/` release bundle independently of Git. Re-create the restricted `tunnel-client` user/group if missing. Confirm the expected binary version and release integrity before installing services.
+5. For Proxmox, Unraid, Komodo and UniFi, use the corresponding `observer/tunnel-client/config/*.yaml.example` as a **starting template only**. Replace the `REPLACE_WITH_TUNNEL_ID` and `REPLACE_WITH_CHANNEL` placeholders from the approved tunnel identities; recover the protected API keys separately. Preserve `root:tunnel-client` ownership, `0750` directories and `0640` active YAML/key files; keep Proxmox/Unraid bearer files and do not invent them for Komodo/UniFi. Do not copy the example unchanged into an active config or make its key-reference targets world-readable.
+6. Compare the four `observer/tunnel-client/systemd/*.service` copies to the intended deployment. After operator approval, install them as root-owned unit files under `/etc/systemd/system/`, then run `systemctl daemon-reload`. **Do not enable/start the production tunnels in an isolated test VM or while the original production observer is active.** Confirm the exact `ExecStart=/opt/tunnel-client/tunnel-client run --config /etc/<service>/config.yaml` paths.
+7. Build UniFi from the checked-out source with the committed `build:` directive (`sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml build unifi-mcp`) only once dependencies, ownership and source integrity are confirmed. Note that `homelab/unifi-mcp:latest` is a **local build tag**, not an upstream registry release. Then deploy the four MCP stacks and activate tunnels one at a time only in an approved production-cutover sequence.
+8. Verify all four loopback MCP endpoints and readiness ports, confirm tool exposure remains **84/26/40/55 Read, zero Write** unless explicitly reapproved, and perform real read-only ChatGPT tool calls for Proxmox, Unraid, Komodo and UniFi. For an isolated restore, prevent duplicate IP/tunnel identity activity until production cutover.
+
+`git pull` on a different Docker host is **not** a service install: the observer-specific files remain ordinary repository content. The Git checkout contains no operational API keys, live tunnel configuration values, or proof that a new VM can be restored. A Git-clone-only restoration is therefore incomplete.
 
 Do not generate new credentials or replace existing production credentials unnecessarily.
 
@@ -2003,9 +2046,9 @@ This section governs the **implemented and ChatGPT-verified** UniFi Phase 4 inte
 |---|---|
 | Upstream | `ry-ops/unifi-mcp-server`, project `2.1.0`, exact source commit `e13d0e22dce1b6a498edc5982d78bd589073d44c` |
 | Source | `/opt/stacks/unifi-mcp/source/` |
-| Image | `homelab/unifi-mcp:ryops-e13d0e2`, locally built |
+| Image | Git-tracked Compose now uses local `homelab/unifi-mcp:latest` plus `build:`; last verified running image used `homelab/unifi-mcp:ryops-e13d0e2`. No rebuild/recreation was performed after the Compose edit |
 | Container / Compose | `unifi-mcp`; `/opt/stacks/unifi-mcp/compose.yaml` |
-| Credentials | `/opt/stacks/unifi-mcp/.env` (`root:root`, `0600` inside root-only `0700` directory); saved in Bitwarden |
+| Credentials | `/opt/stacks/unifi-mcp/.env` (`root:root`, `0600` inside restricted `root:gio` / `0750` directory); saved in Bitwarden |
 | HTTP launcher | `/opt/stacks/unifi-mcp/http_server.py` (not modified upstream `main.py`) |
 | Published MCP | `127.0.0.1:8086/mcp`; internally `0.0.0.0:8000` |
 | Tunnel | `homelab-unifi`, ID `tunnel_6aed5ddd030c8191bf32196220fd079b` |
@@ -2081,22 +2124,26 @@ This allows Docker to route requests to the container while **Compose continues 
 
 **Do not auto-pull `latest` or change the git revision without review.** Upstream `mcp[cli]` was pinned below v2 because MCP SDK 2.x changes imports. The deployed `uv.lock` selects MCP SDK `1.30.0`. Review upstream source changes, dependency locks, tool registrations and API methods before approving an update. Preserve the old image and known-good launcher for rollback, and check credentials are excluded from the build context.
 
-After an approved source/launcher/Dockerfile update:
+After an approved source/launcher/Dockerfile update or an authorized clean rebuild, use the **committed** Compose build definition rather than an untracked manual tag:
 
 ```bash
+# Read-only checks first
+cd /opt/stacks
+git status --short --branch
+git submodule status -- unifi-mcp/source
 sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml config --quiet
-sudo git -C /opt/stacks/unifi-mcp/source rev-parse HEAD
-sudo docker build -t homelab/unifi-mcp:ryops-e13d0e2 \
-  -f /opt/stacks/unifi-mcp/Dockerfile /opt/stacks/unifi-mcp
+
+# Consequential steps: execute only after explicit approval and rollback planning
+sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml build unifi-mcp
 sudo docker compose -f /opt/stacks/unifi-mcp/compose.yaml \
   up -d --no-deps --force-recreate unifi-mcp
 ```
 
-The example image tag is the **currently deployed revision**, not a recommendation to reuse that tag for future commits. If changing commits, update both the image tag and Compose reference together after testing. Then validate container bind/host port, the 55 read tool inventory or an explicitly approved new inventory, `unifi_health`, the `8087/readyz` tunnel and live ChatGPT discovery. Do not expose new write tools or widen the UniFi API scope.
+The checked-in image name is now **`homelab/unifi-mcp:latest`**, locally built from the pinned source; it does **not** automatically update that source. The last runtime image verification predates this tag/configuration edit, and the change was **not** deployed as part of the Git work. Review source changes before updating the parent Git submodule reference and preserve a known-good image for rollback. Then validate container bind/host port, the 55 read tool inventory or an explicitly approved new inventory, `unifi_health`, the `8087/readyz` tunnel and live ChatGPT discovery. Do not expose new write tools or widen the UniFi API scope.
 
 ### Secrets and Credential Rotation
 
-- Root-only stack directory `/opt/stacks/unifi-mcp` (`0700`), root-owned `.env` (`0600`). The key is injected as a Docker environment variable, which may be visible to privileged Docker administrators; it is **not** embedded in the image. Never print Compose's resolved configuration, `docker inspect` environment fields, `.env`, tunnel key content, or full debug request logs.
+- Restricted stack directory `/opt/stacks/unifi-mcp` (`root:gio`, `0750`, changed November 6 for read-only Git access), root-owned `.env` (`root:root`, `0600`). The key is injected as a Docker environment variable, which may be visible to privileged Docker administrators; it is **not** embedded in the image. Never print Compose's resolved configuration, `docker inspect` environment fields, `.env`, tunnel key content, or full debug request logs.
 - `UNIFI_READ_ONLY=true` must remain enabled; the launcher refuses startup without it. The upstream UniFi key itself is not proven read-only. Prefer the narrowest application/site access supported, and inspect the current scope in UniFi Site Manager before rotation.
 - One-year expiration was selected **at key creation**, per operator. Verify exact expiry in Site Manager; rotate before that date. Do not document the key or assume a specific anniversary expiration timestamp.
 - Rotate the separate OpenAI key `homelab-unifi-tunnel` in `/etc/tunnel-client-unifi/openai-runtime.key` only as necessary, preserving `root:tunnel-client`, `0640`, restricted **Tunnels Read + Use**, and no Manage rights. Do not repurpose an admin key. Its tunnel ID and `main` MCP channel remain unchanged.
@@ -2104,7 +2151,7 @@ The example image tag is the **currently deployed revision**, not a recommendati
 
 ### Recovery Scope and Status
 
-Files required to reconstruct UniFi: `/opt/stacks/unifi-mcp/{source/,Dockerfile,.dockerignore,http_server.py,compose.yaml,.env}`, `/etc/tunnel-client-unifi/{config.yaml,openai-runtime.key}`, `/etc/systemd/system/tunnel-client-unifi.service`, and the installed matching tunnel-client binary/companion. The private ChatGPT plugin/tunnel identity must still reference `tunnel_6aed5ddd030c8191bf32196220fd079b`. Keep credentials separately retained in Bitwarden. Source and Compose Git commit/independent file-level recovery were **not verified**.
+Files required to reconstruct UniFi: `/opt/stacks/unifi-mcp/{source/,Dockerfile,.dockerignore,http_server.py,compose.yaml,.env}`, `/etc/tunnel-client-unifi/{config.yaml,openai-runtime.key}`, `/etc/systemd/system/tunnel-client-unifi.service`, and the installed matching tunnel-client binary/companion. The private ChatGPT plugin/tunnel identity must still reference `tunnel_6aed5ddd030c8191bf32196220fd079b`. Keep credentials separately retained in Bitwarden. **Git tracking was verified**: parent commit `6502c59` contains UniFi Compose, `.dockerignore`, Dockerfile, HTTP launcher and exact pinned source Git submodule; `9887296` contains the UniFi tunnel example and copy of the installed systemd unit. Credential restoration, independent file-level backup, full VM restore, and post-reboot behavior remain **unverified**.
 
 **Operator decision:** Do not perform an observer reboot/reconnect or isolated restore test as part of this rollout. The existing service is **currently operational and end-to-end verified**; post-reboot recovery, backup integrity and full restoration remain **untested**. Do not mark them complete or infer they failed. If future recovery is requested, follow the main disaster-recovery procedures with one authorized step at a time.
 
@@ -2147,7 +2194,7 @@ Files required to reconstruct UniFi: `/opt/stacks/unifi-mcp/{source/,Dockerfile,
 
 - `homelab-docs` — Obsidian documentation.
     
-- `homelab-infra` — Version-controlled Docker Compose configuration.
+- `homelab-infra` — Version-controlled MCP Compose definitions, UniFi pinned submodule/build files, and Observer tunnel recovery templates/systemd unit copies.
     
 
 ---

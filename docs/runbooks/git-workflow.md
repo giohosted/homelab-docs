@@ -2,7 +2,7 @@
 
 **Applies to:** docker-prod-01, auth-prod-01, immich-prod-01, observer-prod-01 (`/opt/stacks`)  
 **Repo:** `homelab-infra` (private, GitHub)  
-**Last Updated:** 2026-10-29
+**Last Updated:** 2026-11-06
 
 ---
 
@@ -23,7 +23,7 @@ Secrets are excluded from version control, including `.env` files containing API
 |docker-prod-01|`/opt/stacks`|traefik, arr, books, torrent, dockman, cloudflared, adguardhome-sync, and other application stacks|Active|
 |auth-prod-01|`/opt/stacks`|authentik|Active|
 |immich-prod-01|`/opt/stacks`|immich|Active|
-|observer-prod-01|`/opt/stacks`|proxmox-mcp|Active|
+|observer-prod-01|`/opt/stacks`|proxmox-mcp, unraid-mcp, komodo-mcp, unifi-mcp; `observer/tunnel-client/` source templates|Active|
 
 **GitHub is the source of truth for committed Compose configuration — not any individual host.**
 
@@ -44,7 +44,7 @@ The repository is shared, but each host manages its own deployed workloads.
 
 The observer does not use Dockman.
 
-Its OpenAI Secure MCP Tunnel client is installed as a native systemd service rather than as a Docker Compose stack.
+Its four OpenAI Secure MCP Tunnel clients are installed as **native systemd services** rather than Docker Compose stacks. Their Git-tracked **copies and sanitized examples** are in `observer/tunnel-client/`, separate from active files under `/etc`. Pulling the repository on another host does not install or start those services.
 
 See `services/infra/ai-observer.md`.
 
@@ -441,13 +441,17 @@ Setting `user.name` and `user.email` does not grant permission to pull or push a
 |Path|In Git|Notes|
 |---|---|---|
 |`/opt/stacks/*/compose.yaml`|Yes|Intended infrastructure configuration; must not contain secrets|
+|`/opt/stacks/unifi-mcp/{Dockerfile,.dockerignore,http_server.py}`|Yes|Reproducible UniFi local image and Streamable HTTP launcher|
+|`/opt/stacks/unifi-mcp/source`|Yes, as submodule|Pinned upstream Git commit; submodule working tree must be initialized on a fresh clone|
+|`/opt/stacks/observer/tunnel-client/config/*.yaml.example`|Yes|Four sanitized examples with placeholder tunnel IDs/channels and **credential file paths only**|
+|`/opt/stacks/observer/tunnel-client/systemd/*.service`|Yes|Four copied systemd units; inert inside the Git working tree|
 |`/opt/stacks/*/.env`|No|Gitignored; may contain passwords or API tokens|
 |`/opt/stacks/*/.env.example`|Optional|Placeholder values only; never real credentials|
 |`/opt/appdata/`|No|Persistent application configuration and runtime state|
 |`/etc/tunnel-client/config.yaml`|No|Observer host-level tunnel configuration, outside the repository|
 |`/etc/tunnel-client/openai-runtime.key`|No|Protected OpenAI credential|
 |`/etc/tunnel-client/mcp-authorization`|No|Protected MCP bearer credential|
-|`/etc/systemd/system/tunnel-client.service`|No|Observer systemd service unit, outside the repository|
+|`/etc/systemd/system/tunnel-client*.service`|No|Four **installed** systemd units outside Git; reviewed copies are tracked under `observer/tunnel-client/systemd/`|
 |`/opt/tunnel-client/`|No|Installed tunnel-client binaries, outside the repository|
 
 ### Secrets
@@ -541,7 +545,7 @@ The observer uses the same private `homelab-infra` repository as the other Docke
 
 **Repository:** `homelab-infra`  
 **Local path:** `/opt/stacks`  
-**Managed stack:** `proxmox-mcp`  
+**Managed stacks:** `proxmox-mcp`, `unraid-mcp`, `komodo-mcp`, `unifi-mcp`; plus `observer/tunnel-client/` recovery templates  
 **Administration:** SSH and CLI  
 **GitHub token storage:** Bitwarden; not deliberately persisted through Git's plaintext credential helper.
 
@@ -601,7 +605,7 @@ This disables Git's configured credential helpers for the individual operation. 
 
 ### Files Excluded From Git
 
-The observer's credential-bearing files include:
+The observer's credential-bearing files include all four MCP `.env` files and protected tunnel runtime keys. The examples in Git retain *references to files*, not the referenced secret values. In addition to the paths listed below, protect `/opt/stacks/unraid-mcp/.env`, `/opt/stacks/komodo-mcp/.env`, `/opt/stacks/unifi-mcp/.env`, every `/etc/tunnel-client*/openai-runtime.key`, and the two existing `mcp-authorization` files.
 
 - `/opt/stacks/proxmox-mcp/.env`
     
@@ -610,13 +614,27 @@ The observer's credential-bearing files include:
 - `/etc/tunnel-client/mcp-authorization`
     
 
-The host-level tunnel configuration and service unit also remain outside the Compose repository.
+The **active** tunnel YAML configurations and **installed** systemd units remain outside the repository. On November 6, 2026, sanitized YAML examples and verified copies of all four systemd units were committed under `observer/tunnel-client/` and pushed as `9887296`. The Komodo/UniFi MCP deployment definitions, UniFi local image build files, custom launcher and pinned `source/` submodule were pushed earlier as `6502c59`. The local `observer-prod-01` `main` branch was verified synchronized with GitHub after both commits.
 
-A Git clone or pull alone is insufficient to rebuild the complete AI Observer.
+A `git pull` on `docker-prod-01`, `auth-prod-01` or `immich-prod-01` obtains these inert files but does not run them. The active OpenAI runtime keys, protected MCP bearer credentials, MCP `.env` files, live tunnel configs and installed binary remain outside Git. A Git clone or pull alone is insufficient to rebuild the complete AI Observer.
 
 See `services/infra/ai-observer.md` for implementation details.
 
 ---
+
+### UniFi Git Submodule and Multi-Host Divergence
+
+The parent repository tracks `unifi-mcp/source` as a Git submodule at revision `e13d0e22dce1b6a498edc5982d78bd589073d44c` (upstream `ry-ops/unifi-mcp-server`). A fresh clone requires explicit submodule initialization to obtain the working tree:
+
+```bash
+cd /opt/stacks
+git submodule status -- unifi-mcp/source
+git submodule update --init --recursive -- unifi-mcp/source
+```
+
+These commands are for an **authorized checkout or rebuild**. Do not casually change permissions of the current root-owned UniFi stack/source or use `sudo git` without assessing ownership and credential implications. Git includes the submodule reference, not an immutable container image, a key, or a live deployment.
+
+On November 6, a push from observer was initially rejected because another host had advanced `main` with `61d7ed9` (`komodo/compose.yaml`). The operator fetched and inspected the changed files, then rebased the **unpublished** observer commit without conflicts, producing `9887296`, and pushed successfully. When local/remote have diverged, do **not** assume a blind `git pull --ff-only` will work or use `git push --force`. Inspect `git log --oneline HEAD..origin/main`, `git log --oneline origin/main..HEAD`, and changes from the merge base; resolve overlaps and select a reviewed merge/rebase strategy. Never rebase shared published history routinely.
 
 ## Notes
 
