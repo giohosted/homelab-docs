@@ -34,14 +34,14 @@
 
 ## Network
 
-|Field|Value|
-|---|---|
-|**IP**|192.168.10.11|
-|**VLAN**|10 — Management|
-|**Gateway**|192.168.10.1|
-|**DNS**|9.9.9.9 (public — VLAN 10 does not use AdGuard)|
-|**Switch port**|USW-Pro-Max-24 ports 17–24 (2.5GbE range)|
-|**Link speed**|2500Mb/s confirmed via ethtool|
+| Field           | Value                                     |
+| --------------- | ----------------------------------------- |
+| **IP**          | 192.168.10.11                             |
+| **VLAN**        | 10 — Management                           |
+| **Gateway**     | 192.168.10.1                              |
+| **DNS**         | 192.168.10.1                              |
+| **Switch port** | USW-Pro-Max-24 ports 17–24 (2.5GbE range) |
+| **Link speed**  | 2500Mb/s confirmed via ethtool            |
 
 ### Network Interfaces
 

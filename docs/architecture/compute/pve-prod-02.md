@@ -29,14 +29,14 @@
 
 ## Network
 
-| Field | Value |
-|-------|-------|
-| **IP** | 192.168.10.12 |
-| **VLAN** | 10 — Management |
-| **Gateway** | 192.168.10.1 |
-| **DNS** | 9.9.9.9 (public — VLAN 10 does not use AdGuard) |
+| Field           | Value                                    |
+| --------------- | ---------------------------------------- |
+| **IP**          | 192.168.10.12                            |
+| **VLAN**        | 10 — Management                          |
+| **Gateway**     | 192.168.10.1                             |
+| **DNS**         | 192.168.10.1                             |
 | **Switch port** | USW-Pro-Max-24 (any port — 1GbE max NIC) |
-| **Link speed** | 1000Mb/s (NIC limitation) |
+| **Link speed**  | 1000Mb/s (NIC limitation)                |
 
 ### Network Interfaces
 
