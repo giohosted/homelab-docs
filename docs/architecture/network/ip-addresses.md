@@ -43,12 +43,12 @@ Personal laptops, phones, and trusted client devices.
 
 The historical v2 migration entries below are retained from the original IP plan. Their current operating status and any associated decommissioning have not been reverified as part of this update.
 
-|Device|IP|Notes|
-|---|---|---|
-|v2 Proxmox host|192.168.20.2|Historical v2 allocation — decommission after Phase 4 cutover; current status not verified|
-|v2 Docker host|192.168.20.10|Historical v2 allocation — decommission after Phase 4 cutover; current status not verified|
-|Personal devices|DHCP|Laptops, phones, trusted clients|
-|Synology NAS|192.168.20.9|Historical allocation — planned move to VLAN 30 after Phase 4 cutover; current IP not reverified|
+| Device           | IP   | Notes                            |
+| ---------------- | ---- | -------------------------------- |
+|                  |      |                                  |
+|                  |      |                                  |
+| Personal devices | DHCP | Laptops, phones, trusted clients |
+|                  |      |                                  |
 
 ---
 
