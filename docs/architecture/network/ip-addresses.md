@@ -1,6 +1,6 @@
 # IP Address Plan
 
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-13
 
 ---
 
@@ -16,11 +16,24 @@ Strictly for infrastructure control plane interfaces — devices you administer,
 |nas-prod-01 — management interface|192.168.10.10|Onboard 2.5GbE|Unraid management UI. Docker PBS uses Host networking; possible TCP 8007 exposure on this interface has **not** been independently restricted/verified. NFS is not intentionally served here.|
 |pve-prod-01 (MS-A2)|192.168.10.11|2.5GbE RJ45|Proxmox management UI and API|
 |pve-prod-02 (Optiplex)|192.168.10.12|GbE RJ45|Proxmox management UI|
-|pi-prod-01 (Raspberry Pi)|192.168.10.20|GbE RJ45|QDevice + Uptime Kuma + Beszel server. Migrated from VLAN 20 (192.168.20.8) in Phase 3. VLAN 10 outbound reach covers all VLANs — Beszel/Kuma probes work without extra rules.|
+|pve-prod-03 (ThinkCentre M90q)|192.168.10.13|vmbr0 via nic0|Proxmox management UI and API — active member of homelab-v3|
+|pi-prod-01 (Raspberry Pi)|192.168.10.20|GbE RJ45|Uptime Kuma + Beszel server; historical QDevice role. Current cluster has three online nodes.|
 |192.168.10.30–.49|—|—|Reserved — future expansion / IPMI / OOB|
 |192.168.10.100+|—|—|DHCP pool if needed|
 
 > **Note:** VLAN 10 outbound reach to all VLANs requires **Auto Allow Return Traffic** enabled on the Allow Management to All firewall rule — without it, return packets to VLAN 10 hosts are dropped. See `firewall-rules.md`.
+
+### Proxmox Cluster
+
+Live verification on November 13, 2026 confirmed three online, quorate nodes:
+
+|Node|Management IP|Status|
+|---|---|---|
+|pve-prod-01|192.168.10.11|Online|
+|pve-prod-02|192.168.10.12|Online|
+|pve-prod-03|192.168.10.13|Online|
+
+The pve-prod-03 management bridge is `vmbr0`, configured with `192.168.10.13/24`, gateway `192.168.10.1`, and VLAN-aware bridging through `nic0`.
 
 ---
 
@@ -49,12 +62,12 @@ Not every v3 VM is on VLAN 30. The Dragonwilds dedicated game server uses VLAN 5
 
 |Device|IP|Interface|Notes|
 |---|---|---|---|
-|dns-prod-01 (AdGuard LXC, pve-prod-01)|192.168.30.10|Virtual (VLAN tag 30)|Primary DNS — AdGuard Home|
-|docker-prod-01 (media/apps VM, pve-prod-01)|192.168.30.11|Virtual (VLAN tag 30)|All media stack containers behind Traefik. Mounts `192.168.30.16:/mnt/user/data` as `/data` via NFSv3 — single mount covering all media and downloads.|
-|pbs-prod-01 (retired PBS VM 103)|192.168.30.12|Virtual (VLAN tag 30)|**Stopped** and retained for rollback; no active PBS service at this IP. Must not be started concurrently with Docker PBS.|
+|dns-prod-01 (AdGuard LXC, pve-prod-01)|192.168.30.10|Virtual (VLAN tag 30)|Primary DNS — AdGuard Home, CT 100, 1 GiB RAM|
+|docker-prod-01 (media/apps VM, pve-prod-01)|192.168.30.11|Virtual (VLAN tag 30)|All media stack containers behind Traefik. Mounts `192.168.30.16:/mnt/user/data` as `/data` via NFSv3 — single mount covering media and downloads.|
+|pbs-prod-01 (retired PBS VM 103)|192.168.30.12|Virtual (VLAN tag 30)|Historical allocation. Retired PBS VM is stopped; no active PBS service at this IP. Must not be started concurrently with Docker PBS.|
 |auth-prod-01 (Authentik VM, pve-prod-01)|192.168.30.13|Virtual (VLAN tag 30)|Authentik IdP — dedicated VM — deployed Phase 4 Wave 1|
-|immich-prod-01 (Immich VM, pve-prod-02)|192.168.30.14|Virtual (VLAN tag 30)|Immich — on pve-prod-02 — deployed Phase 4 Wave 5. Mounts `192.168.30.16:/mnt/user/photos` as `/data/photos` via NFSv3.|
-|dns-prod-02 (AdGuard LXC, pve-prod-02)|192.168.30.15|Virtual (VLAN tag 30)|Secondary DNS — synced from dns-prod-01 via adguardhome-sync|
+|immich-prod-01 (Immich VM, pve-prod-03)|192.168.30.14|Virtual (VLAN tag 30)|Immich — VM 105, migrated from pve-prod-02 to pve-prod-03. Previously documented NFS mount: `192.168.30.16:/mnt/user/photos` as `/data/photos`.|
+|dns-prod-02 (AdGuard LXC, pve-prod-03)|192.168.30.15|Virtual (VLAN tag 30)|Secondary DNS — CT 102, 1 GiB RAM. Synced from dns-prod-01 via adguardhome-sync.|
 |nas-prod-01 — **data/NFS/PBS**|192.168.30.16|X710 Port 2 SFP+|NFS exports, Plex traffic, **PBS Docker at `https://192.168.30.16:8007`**. PBS datastore uses local direct ZFS, not NFS.|
 |observer-prod-01 (AI Observer VM, pve-prod-01)|192.168.30.17|Virtual (VLAN tag 30, ens18)|AI Observer — Proxmox MCP and OpenAI Secure MCP Tunnel. Dedicated read-only API access to pve-prod-01 (192.168.10.11:8006).|
 |plex (Docker container on nas-prod-01)|192.168.30.2|X710 Port 2 SFP+|Plex Media Server — Docker container on nas-prod-01, bound to eth1 (VLAN 30)|
@@ -83,13 +96,9 @@ The observer VM is deployed on pve-prod-01 as VM 107.
 The observer requires:
 
 - Outbound HTTPS to the OpenAI Secure MCP Tunnel control plane.
-    
 - HTTPS access to the Proxmox API at `192.168.10.11:8006`.
-    
 - Localhost access to the Proxmox MCP server at `127.0.0.1:8080`.
-    
 - Localhost access to the tunnel health endpoint at `127.0.0.1:8081`.
-    
 
 The Proxmox API connection is permitted through a narrowly scoped UniFi firewall exception:
 
@@ -104,20 +113,15 @@ No publicly exposed MCP endpoint, Traefik route, or inbound internet port forwar
 See:
 
 - `services/infra/ai-observer.md`
-    
 - `architecture/network/firewall-rules.md`
-    
-- `runbooks/ai-observer-operations.md` 
-    
+- `runbooks/ai-observer-operations.md`
 
 ### NAS Dual-Interface Design
 
 nas-prod-01 has two logical network presences:
 
 - **Onboard 2.5GbE at 192.168.10.10:** Management interface (Unraid UI); Docker PBS Host networking may also expose TCP 8007 here, pending access verification.
-    
 - **X710 Port 2 at 192.168.30.16:** Data plane (NFS, Plex, Docker PBS TCP 8007).
-    
 
 Services on VLAN 30 mount NFS from `192.168.30.16` without crossing into VLAN 10. Proxmox hosts also connect to the local Unraid PBS Docker service on `192.168.30.16:8007`; this backup traffic no longer traverses an NFS mount inside PBS.
 
@@ -148,22 +152,17 @@ The VLAN tag is verified in the Proxmox configuration for `dragonwilds-server` (
 
 |Device|VLAN|IP|Notes|
 |---|---|---|---|
-|dragonwilds-server (VM, pve-prod-01)|50|Not verified|RuneScape: Dragonwilds dedicated server. Proxmox VM 106, attached to vmbr0 with VLAN tag 50. VM was stopped during verification.|
+|dragonwilds-server (VM, pve-prod-01)|50|Not verified|RuneScape: Dragonwilds dedicated server. Proxmox VM 106, attached to vmbr0 with VLAN tag 50. VM was stopped during previous verification.|
 
 ### Pending Network Verification
 
 Before recording the full VLAN 50 IP plan, verify:
 
 - Configured subnet and gateway in UniFi.
-    
 - Static or DHCP addressing for the game-server VM.
-    
 - Current guest IP address.
-    
 - Inter-VLAN firewall policies and isolation.
-    
 - Intended internet exposure and any port-forwarding rules.
-    
 
 Do not infer the subnet or IP address from VLAN ID 50 alone.
 
@@ -176,3 +175,21 @@ Do not infer the subnet or IP address from VLAN ID 50 alone.
 |NAS ↔ MS-A2|nas-prod-01 X710 Port 1 (eth2)|pve-prod-01 SFP+ Port 1 (nic3)|10.0.0.2/30|10.0.0.1/30|10.0.0.0/30|Dedicated 10GbE storage traffic. Not on LAN switch. Not routed.|
 
 > This link is isolated — only these two devices can see it. Proxmox on pve-prod-01 uses this link for NFS storage mounts (nas-isos). VMs running on pve-prod-01 (including docker-prod-01) cannot access this link — they use VLAN 30 (192.168.30.16) for NFS instead. pve-prod-02 cannot access this link at all — it uses `nas-isos-p2` which mounts from 192.168.30.16.
+
+---
+
+## Recent Changes
+
+### November 13, 2026 — Proxmox and DNS Placement Verification
+
+Live Proxmox inspection confirmed:
+
+- `pve-prod-03` online at `192.168.10.13`.
+- `dns-prod-02` (CT 102) running on `pve-prod-03`.
+- `immich-prod-01` (VM 105) running on `pve-prod-03`.
+- `dns-prod-02` memory allocation increased from 512 MiB to 1024 MiB and applied live.
+- `homelab-v3` cluster online and quorate with three nodes.
+
+The guest IP addresses remain unchanged following the migration.
+
+See `services/infra/adguard.md` for the November 12 OOM incident and the November 13 resource adjustment.
