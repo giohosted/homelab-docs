@@ -1,6 +1,6 @@
 # Architecture Decisions Log
 
-**Last Updated:** 2026-11-05
+**Last Updated:** 2026-11-13
 
 ---
 
@@ -34,7 +34,7 @@
 - Dell Intel X710-DA2 (newer chipset, dual port)
     
 
-**Why:** X710 has a newer chipset than the X520 with better long-term driver support in Linux. Dual port provides future flexibility at no meaningful cost difference at used prices. Only one port is in use (DAC to MS-A2) but the second is available if needed later.
+**Why:** X710 has a newer chipset than the X520 with better long-term driver support in Linux. The initial decision valued a second port for expansion. **Current implementation:** Port 1 is a dedicated DAC to pve-prod-01; Port 2 is a DAC to USW-Pro-Max-24 for the NAS Services VLAN (`192.168.30.16`). The older single-port-in-use description is superseded.
 
 ---
 
@@ -50,7 +50,7 @@
 
 **Decision:** Keep 32GB DDR4 for the NAS, sell the extra 2x 16GB sticks.
 
-**Why:** No heavy VM workloads run on Unraid — it's a pure NAS with one Plex Docker container. 32GB is generous for this role. Selling the extra sticks recoups cost.
+**Why (original sizing):** No heavy VM workloads originally ran on Unraid, and Plex used QuickSync. 32 GB was considered sufficient for the NAS role; selling the extra sticks recouped cost. **Subsequent change:** PBS also moved to an Unraid Docker container in November 2026. Actual live memory sizing after that change is a separate operational check.
 
 ---
 
@@ -64,7 +64,7 @@
 
 ### Primary Compute — Minisforum MS-A2
 
-**Decision:** Minisforum MS-A2 (Ryzen 9 7945HX, 64GB DDR5) as primary Proxmox node.
+**Decision (original plan):** Minisforum MS-A2 (Ryzen 9 7945HX, planned 64 GB DDR5) as primary Proxmox node. **Current installed RAM is 32 GB**, as reported by current inventory and live Proxmox; the 64 GB figure below was an original sizing decision, not a verified installed configuration.
 
 **Why:** 16-core/32-thread CPU with strong single-thread performance handles multiple concurrent VMs and LXCs without breaking a sweat. Dual 10GbE SFP+ built-in eliminates need for a separate NIC for storage link. Compact form factor fits on a 2U shelf in the rack. 64GB DDR5 is sufficient for all planned workloads with headroom; max is 96GB.
 
@@ -78,9 +78,9 @@
 
 ---
 
-### Secondary Compute — Dell Optiplex 3070 Micro (existing hardware)
+### Secondary Compute — Dell OptiPlex 3070 Micro (historical; replaced November 13, 2026)
 
-**Decision:** Use existing Optiplex 3070 Micro as pve-prod-02 rather than building a second full Proxmox host from spare parts.
+**Historical decision (superseded):** Use existing OptiPlex 3070 Micro as pve-prod-02 rather than building a second full Proxmox host from spare parts. This was the original deployment, not the current node.
 
 **What was considered:**
 
@@ -93,11 +93,35 @@
 
 ---
 
-### Optiplex RAM — Left at 16GB for now
+### Original OptiPlex RAM — Left at 16GB (historical)
 
-**Decision:** Leave Optiplex at 16GB DDR4 (2x 8GB Micron, from work). Do not upgrade yet.
+**Historical decision (superseded):** Leave the original OptiPlex 3070 Micro at 16 GB DDR4 (2×8 GB Micron). The current replacement `pve-prod-02` has 48 GB.
 
-**Why:** Current workload (PBS VM + AdGuard LXC + Immich VM) fits comfortably within 16GB. Revisit if workload grows.
+**Why at the time:** The then-current workload (PBS VM + AdGuard LXC + Immich VM) fit within 16 GB. PBS was later moved to Unraid Docker, CT 102 moved to the new pve-prod-03, and Immich moved to the replacement Dell.
+
+---
+
+### Replace pve-prod-02 with Dell OptiPlex 5000 SFF — November 13, 2026
+
+**Decision (implemented):** Retire the original OptiPlex 3070 Micro and replace `pve-prod-02` with a Dell OptiPlex 5000 SFF (i7-12700, 48 GB DDR4, two 512 GB NVMe drives in ZFS RAID-1). Reuse hostname `pve-prod-02.local` and management IP `192.168.10.12/24` only after removing the old hardware from cluster membership.
+
+**Why:** More CPU/RAM headroom for Immich's containerized ML work, improved boot-disk redundancy, and preservation of established node names and integrations without duplicate host identities.
+
+**Implementation:** Evacuated all guests and destroyed retired PBS VM 103 on the old node; powered it off; removed it with `pvecm delnode pve-prod-02`, deleted the verified-empty stale node config directory, and removed obsolete `local-lvm`. Installed Proxmox VE 9.2 (later updated to 9.2.26/kernel 7.0.14-28-pve) on a ZFS mirror; joined new hardware to `homelab-v3`. The replacement has a VLAN-aware management bridge, two synchronized EFI boot partitions, and active local-zfs. Verified healthy three-node quorum, ZFS mirror, SMART health, updated packages, and host monitoring.
+
+**Limits:** Physical one-drive boot failover has not been tested. The former OptiPlex 3070 Micro must remain isolated or be wiped before reuse because it retains its old hostname/cluster identity on disk.
+
+---
+
+### Third Compute — Lenovo ThinkCentre M90q (`pve-prod-03`) — November 2026
+
+**Decision (implemented):** Add a Lenovo ThinkCentre M90q Tiny (i7-10700, 24 GB RAM, mirrored 2×512 GB NVMe) as the third Proxmox voting node at `192.168.10.13/24`.
+
+**Why:** Increase compute flexibility and establish a healthy 3-node quorum without retaining the earlier Raspberry Pi QDevice. Spread primary and secondary AdGuard onto separate hypervisors.
+
+**Implementation:** Removed QDevice before adding Lenovo; configured ZFS RAID-1, VLAN-aware `vmbr0`, and joined `homelab-v3`. Moved secondary AdGuard CT 102 to this node; temporarily hosted Immich VM 105 while `pve-prod-02` was replaced. By November 13, VM 105 was moved to the new Dell, and CT 102 is the only current guest on `pve-prod-03`.
+
+**Limits:** Proxmox HA remains disabled. Independent boot from each Lenovo SSD and the later BIOS update remain unverified.
 
 ---
 
@@ -141,23 +165,31 @@
 
 **Decision:** Proxmox cluster without HA enabled.
 
-**Why:** HA requires matched hardware and a 3+ node quorum to be meaningful. The Optiplex cannot absorb the MS-A2's workload. Enabling HA without these conditions is false security — it creates the illusion of resilience without delivering it. Clustering is enabled for unified management UI only. If pve-prod-01 goes down, services on it are down until it comes back — that is acceptable for a homelab.
+**Why (current position):** Although the cluster now has three voting nodes, guest HA has **not** been designed or enabled: host capacities differ, guest disks are on local ZFS, and automatic failover behavior and recovery capacity have not been validated. A quorum majority provides cluster control-plane resilience but does not move or restart guests automatically. Clustering primarily supports centralized administration and planned migrations. If a host fails, its local-disk workloads require a deliberate recovery process.
 
 ---
 
-### QDevice on Pi
+### QDevice on Pi (historical; removed November 2026)
 
-**Decision:** Run Proxmox QDevice on pi-prod-01 as cluster tiebreaker.
+**Historical decision (superseded):** Run Proxmox QDevice on pi-prod-01 as a two-node cluster tiebreaker. **QDevice was removed before adding pve-prod-03.**
 
 **Why:** A 2-node Proxmox cluster without a quorum device can suffer split-brain — both nodes think they're the primary and fence each other. QDevice on the Pi costs nothing (10-minute setup) and prevents this. The Pi is lightweight, always-on, and perfectly suited for this role.
 
 ---
 
+### Three-Node Quorum Without QDevice — November 2026
+
+**Decision (implemented):** The cluster now has voting nodes `pve-prod-01`, `pve-prod-02`, and `pve-prod-03`, one vote each; the Pi QDevice is no longer used. Two of the three nodes are required for quorum. HA remains disabled, so this decision affects cluster coordination, not automatic workload failover.
+
+**Why:** Three dedicated Proxmox nodes provide majority quorum without a fourth external vote. This improves operational independence from the monitoring Raspberry Pi while maintaining a straightforward homelab setup.
+
+---
+
 ### DNS — AdGuard Home (carry forward)
 
-**Decision:** Keep AdGuard Home as the DNS solution. Primary LXC on pve-prod-01 (dns-prod-01), secondary LXC on pve-prod-02 (dns-prod-02), synced via adguardhome-sync.
+**Decision (current placement):** Keep AdGuard Home as the DNS solution. Primary CT 100 on `pve-prod-01` (`dns-prod-01`); secondary CT 102 on **`pve-prod-03`** (`dns-prod-02`); synchronization via adguardhome-sync.
 
-**Why:** Works well in v2, ad-blocking is a bonus, no reason to migrate. Two instances on different Proxmox nodes means DNS survives either node going down. Secondary AdGuard moved off the Pi (v2 arrangement) — Pi is now dedicated to QDevice and monitoring only.
+**Why:** Works well in v2, ad-blocking is a bonus, no reason to migrate. Two instances on separate Proxmox nodes provide DNS continuity if one host is lost. Secondary AdGuard moved off the Pi in v3, originally ran on the old pve-prod-02, and was moved to pve-prod-03 during the November replacement. Pi QDevice was removed; Uptime Kuma monitoring remains on the Pi.
 
 ---
 
@@ -311,9 +343,9 @@
 
 ---
 
-### immich-prod-01 — Placed on pve-prod-02, Not pve-prod-01
+### immich-prod-01 — Original Placement on Old pve-prod-02 (historical)
 
-**Decision:** Deploy immich-prod-01 on pve-prod-02 (Optiplex) instead of pve-prod-01 (MS-A2) as originally planned.
+**Historical decision (superseded hardware):** Deploy immich-prod-01 on the original pve-prod-02 (OptiPlex 3070 Micro) instead of pve-prod-01 (MS-A2). This explains the original placement, not the final host model.
 
 **What was considered:**
 
@@ -323,6 +355,16 @@
     
 
 **Why:** At Phase 4 Wave 5 start, pve-prod-01 was already running docker-prod-01 (8GB RAM) and auth-prod-01 (4GB RAM), with docker-prod-01 confirmed to have been swapping (1GB swap usage before RAM bump). Adding a 6GB Immich VM would have pushed pve-prod-01 RAM utilization uncomfortably high. pve-prod-02 was only running PBS (2GB) and one AdGuard LXC (512MB) — ample headroom for the 6GB Immich VM. The CPU performance difference between the i5-9500T and Ryzen 9 7945HX is meaningful for ML workloads but acceptable for a homelab Immich instance where indexing runs in the background.
+
+---
+
+### Immich — Offline Migration to Replacement pve-prod-02 — November 13, 2026
+
+**Decision (implemented):** Keep `immich-prod-01` as VM 105 with its existing IP `192.168.30.14`, VLAN 30, guest CPU/RAM allocation (2 vCPU/6 GiB), and Unraid photo NFS mount. Temporarily move it to `pve-prod-03` while retiring the old Dell, then perform a controlled **offline** migration to the new `pve-prod-02` with `--with-local-disks --targetstorage local-zfs`.
+
+**Why:** Offline migration limits complexity during hardware replacement; using the same VM ID, virtual NIC, guest configuration, and IP preserves Traefik routing and application integrations. The new i7-12700 node offers stronger physical CPU capacity for future Immich ML tuning.
+
+**Verified:** Migration task `OK` on November 13; containers running, operator-tested Immich web UI, NFS photo directories present, and a fresh VM 105 PBS snapshot backup `TASK OK` at 17:16 CST. No CPU/RAM tuning was performed during the move; full restore and independent storage-failure recovery remain untested.
 
 ---
 
@@ -367,11 +409,21 @@
 
 ## Backup
 
-### PBS for VM/LXC Snapshots
+### PBS for VM/LXC Snapshots (original VM-hosted design; superseded)
 
-**Decision:** Proxmox Backup Server (PBS) on pve-prod-02 as a VM (pbs-prod-01), backing up all VMs on both nodes to the NAS ZFS mirror pool.
+**Historical decision (superseded):** Proxmox Backup Server originally ran as VM 103 on the old `pve-prod-02`, backing up guests to the Unraid NAS ZFS mirror. **VM 103 is no longer present.**
 
 **Why:** PBS is the right tool for VM-level backups in a Proxmox environment. Running it on pve-prod-02 means the backup server is on a different node than the primary workloads — a backup server on the same node it's backing up is a single point of failure.
+
+---
+
+### PBS on Unraid Docker — Implemented November 3–5, 2026
+
+**Decision (implemented):** Move PBS off VM 103 to the Docker `proxmox-backup-server` container running on `nas-prod-01`, accessible at `192.168.30.16:8007`, while retaining the Proxmox storage ID `pbs-prod-01` and the existing datastore `nas-backups`.
+
+**Why:** Recurrent PBS failures involved an `ESTALE` stale NFS lock descriptor over the old NFSv3-to-Unraid-FUSE datastore path. The replacement Docker deployment binds directly to NAS ZFS storage at `/mnt/zfs-mirror/backups/pbs`, eliminating that client access path. This does not prove the original upstream invalidation trigger.
+
+**Status:** November 13 scheduled backups succeeded on nodes 01 and 03; VM 105 completed a successful manual snapshot backup from the new node 02. VM 103 was destroyed before physical node replacement; its exclusion remains in the cluster's 02:00 backup job as a harmless stale rule. A full isolated VM/CT restore is still outstanding. See `runbooks/backup-schedule.md`.
 
 ---
 
@@ -441,7 +493,7 @@
 - VLAN 10 (Management) — chosen
     
 
-**Why:** QDevice is infrastructure — it belongs on the management network with the Proxmox nodes it serves as a tiebreaker. VLAN 10 has outbound reach to all VLANs, so Beszel and Uptime Kuma can probe services on VLAN 30 without any extra firewall rules. Return traffic is handled by the stateful firewall (allow established connections). Placing the Pi on VLAN 30 would require punching a hole from VLAN 30 → VLAN 10 for QDevice, which is exactly the kind of management VLAN exposure the design aims to avoid.
+**Why (original decision):** Keeping infrastructure monitoring and the then-active QDevice on VLAN 10 avoided punching additional VLAN 30 → VLAN 10 firewall exceptions. Since the QDevice was removed in November 2026, the Pi remains on VLAN 10 for monitoring and management reachability. Any current Beszel deployment should be checked separately; Uptime Kuma is confirmed operational.
 
 ---
 
@@ -541,9 +593,9 @@
 
 ---
 
-### Immich — nas-isos Dual Storage Entries (One Per Node)
+### NAS ISO Storage — Separate DAC and Services-VLAN Paths
 
-**Decision:** Add a separate `nas-isos-p2` NFS storage entry scoped to pve-prod-02 only, pointing to `192.168.30.16`. Scope the original `nas-isos` entry to pve-prod-01 only.
+**Decision (current scope after November 13, 2026):** Keep `nas-isos` restricted to `pve-prod-01` via `10.0.0.2` (direct DAC), and use `nas-isos-p2` via `192.168.30.16` on **both** `pve-prod-02` and `pve-prod-03`. Both IDs expose the same `/mnt/user/isos` export.
 
 **What was considered:**
 
@@ -552,13 +604,13 @@
 - Adding a duplicate storage entry scoped per-node (chosen)
     
 
-**Why:** The cluster-wide `nas-isos` storage was configured to use `10.0.0.2` (the point-to-point DAC link) which is only reachable from pve-prod-01. pve-prod-02 has no connection to the DAC link — it can only reach the NAS via `192.168.30.16` on VLAN 30. Changing the entry to `192.168.30.16` would break pve-prod-01's storage. Scoping separate entries per node gives each node the correct path without affecting the other.
+**Why:** The `10.0.0.2` point-to-point DAC address is reachable only from pve-prod-01. Nodes 02 and 03 instead reach Unraid's NFS export at `192.168.30.16` over the Services-VLAN path. Preserving distinct storage definitions keeps the primary node's DAC path intact without duplicating any ISO data. The ID `nas-isos-p2` is retained for compatibility even though it now serves both nodes 02 and 03.
 
 ---
 
 ### Immich — Postgres on Local VM Disk, Not NFS
 
-**Decision:** Immich Postgres data stored at `/opt/appdata/immich/postgres` on immich-prod-01's local-lvm disk, not on the NFS-mounted photos share.
+**Decision (current storage):** Keep Immich Postgres at `/opt/appdata/immich/postgres` inside VM 105 on its **local ZFS-backed system disk** (`local-zfs` on new pve-prod-02), never on the NFS-mounted photos share. Its original location used `local-lvm` on the retired Dell; the VM disk was migrated to ZFS during the node replacement.
 
 **Why:** Immich explicitly does not support NFS for the Postgres database. NFS latency and locking behavior cause Postgres stability issues. The photo files themselves (upload location) are correctly stored on NFS — only the database is kept local.
 

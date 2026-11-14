@@ -1,6 +1,6 @@
 # Hardware Inventory
 
-**Last Updated:** 2026-10-31 (NAS drive inventory verified; other sections retain their prior verification dates)
+**Last Updated:** 2026-11-13 (Proxmox compute and cluster inventory refreshed; NAS drive verification remains dated 2026-10-31 and other sections retain their own prior verification dates)
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### pve-prod-01 — Primary Compute
 
-**Role:** Primary Proxmox node. Runs all primary VMs and LXCs (docker-prod-01, auth-prod-01, dns-prod-01).
+**Role:** Primary Proxmox node. Runs primary AdGuard, Docker, Authentik, and the AI Observer VM; game-server VM 106 is currently stopped.
 
 | Component                | Detail                                                                     |
 | ------------------------ | -------------------------------------------------------------------------- |
@@ -35,44 +35,84 @@
 | 100 | dns-prod-01 | LXC (Debian 12) | 192.168.30.10 |
 | 101 | docker-prod-01 | VM (Ubuntu 24.04) | 192.168.30.11 |
 | 104 | auth-prod-01 | VM (Ubuntu 24.04) | 192.168.30.13 |
+| 107 | observer-prod-01 | VM (AI Observer) | See `services/infra/ai-observer.md` |
+
+**Also present but stopped:** VM 106 (`dragonwilds-server`, VLAN 50).
 
 **Notes:**
 
 - Radeon 680M iGPU not configured at launch — Plex transcoding runs on the NAS via i5-13400 QuickSync. Available later for ML inference or additional transcoding if needed.
 - ZFS RAID-1 mirror on boot drives fixes the main fragility from v2 (single NVMe boot). Single drive failure does not kill the hypervisor.
-- immich-prod-01 was originally planned for pve-prod-01 but moved to pve-prod-02 due to RAM headroom. See `architecture/decisions-log.md`.
+- Immich was originally planned for pve-prod-01, later ran on the old pve-prod-02, temporarily on pve-prod-03, and now runs on the replacement pve-prod-02. See `architecture/decisions-log.md`.
 
 ---
 
 ### pve-prod-02 — Secondary Compute
 
-**Role:** Secondary Proxmox node. Runs PBS VM (pbs-prod-01), secondary AdGuard LXC (dns-prod-02), and Immich VM (immich-prod-01).
+**Role:** Dell OptiPlex 5000 SFF running Immich VM 105; replaced the original OptiPlex 3070 Micro on November 13, 2026.
 
-| Component        | Detail                                          |
-| ---------------- | ----------------------------------------------- |
-| **Model**        | Dell Optiplex 3070 Micro                        |
-| **CPU**          | Intel Core i5-9500T (6C/6T, 9th gen)            |
-| **RAM**          | 16GB DDR4 SO-DIMM (2x 8GB Micron)               |
-| **Boot Storage** | 256GB NVMe                                      |
-| **Networking**   | 1x GbE RJ45 built-in — uplink to USW-Pro-Max-24 |
-| **OS**           | Proxmox VE 9.1.6                                |
-| **IP**           | 192.168.10.12 (VLAN 10 — Management)            |
-| **Source**       | Work surplus (free)                             |
+| Component | Detail |
+|-----------|--------|
+| **Model** | Dell OptiPlex 5000 SFF |
+| **CPU** | Intel Core i7-12700 (12C / 20T) |
+| **RAM** | 48 GB DDR4 (2×16 + 2×8 GB) |
+| **Boot Storage** | 2×512 GB NVMe (SK hynix BC711 + Kioxia KBG50ZNS512G), ZFS RAID-1 mirror |
+| **Networking** | Built-in 1 GbE RJ45 → USW-Pro-Max-24; trunk-all profile, VLAN-aware `vmbr0` |
+| **OS** | Proxmox VE 9.2.26, kernel `7.0.14-28-pve` |
+| **BIOS** | Dell OptiPlex 5000 BIOS 1.43.0 (operator-confirmed November 13) |
+| **IP** | `192.168.10.12/24` (VLAN 10 — Management) |
+| **Source** | Repurposed hardware; replacement of work-surplus OptiPlex 3070 Micro |
 
-**Guests running on pve-prod-02:**
+**Current guest:**
 
-| ID | Name | Type | IP |
-|----|------|------|----|
-| 102 | dns-prod-02 | LXC (Debian 12) | 192.168.30.15 |
-| 103 | pbs-prod-01 | VM (PBS 4.1.0) | 192.168.30.12 |
-| 106 | immich-prod-01 | VM (Ubuntu 24.04) | 192.168.30.14 |
+| ID | Name | Type | IP | Status |
+|----|------|------|----|--------|
+| 105 | immich-prod-01 | VM (Ubuntu 24.04) | `192.168.30.14` | Running; VLAN 30 |
 
 **Notes:**
 
-- RAM left at 16GB for now — workload fits comfortably. Upgrade to 32GB later if needed.
-- HA (High Availability) is NOT enabled in the Proxmox cluster — Optiplex cannot absorb MS-A2's workload. Clustering is for unified management UI only. See `architecture/decisions-log.md`.
-- Single NVMe boot is acceptable given this node's non-critical secondary role.
-- immich-prod-01 moved here from pve-prod-01 due to RAM headroom — pve-prod-01 was already running docker-prod-01 (8GB) and auth-prod-01 (4GB).
+- Mirrored `rpool` and `rpool/data` for VM storage; two EFI boot partitions managed by `proxmox-boot-tool`. Each-drive boot failover not physically tested.
+- Both NVMe drives passed SMART checks on November 13 (SK hynix 0%, Kioxia 16% endurance used; zero media/data errors).
+- `local-zfs` assigned across all three Proxmox nodes; each node has its **own local storage**, not shared disks.
+- Shares the Unraid ISO library via `nas-isos-p2` (`192.168.30.16:/mnt/user/isos`), also assigned to pve-prod-03.
+- Immich arrived via offline migration from pve-prod-03 on November 13; web UI, NFS photos mount, containers, and a manual PBS backup were verified.
+- Old OptiPlex 3070 Micro (i5-9500T/16 GB/single 256 GB NVMe) was removed from the cluster after evacuating all guests. Retired PBS VM 103 was destroyed, not retained on the new node.
+- Proxmox HA remains disabled.
+
+See `architecture/compute/pve-prod-02.md`.
+
+---
+
+### pve-prod-03 — Third Compute
+
+**Role:** Lenovo ThinkCentre M90q Tiny; third Proxmox voting node hosting secondary AdGuard CT 102.
+
+| Component | Detail |
+|-----------|--------|
+| **Model** | Lenovo ThinkCentre M90q Tiny |
+| **CPU** | Intel Core i7-10700 (8C / 16T) |
+| **RAM** | 24 GB DDR4 SO-DIMM (16 + 8 GB) |
+| **Boot Storage** | 2×512 GB NVMe (Toshiba KXG60ZNV512G + SK hynix HFS512GDE9X081N), ZFS RAID-1 |
+| **Networking** | 1 GbE RJ45 → USW-Pro-Max-24, port 16 in last verified layout |
+| **OS** | Proxmox VE 9.2.26, kernel `7.0.14-28-pve` |
+| **IP** | `192.168.10.13/24` (VLAN 10 — Management) |
+| **Bridge** | `vmbr0` VLAN-aware, `2-4094` |
+
+**Current guest:**
+
+| ID | Name | Type | IP | Status |
+|----|------|------|----|--------|
+| 102 | dns-prod-02 | LXC (Debian 12) | `192.168.30.15` | Running; VLAN 30 |
+
+**Notes:**
+
+- Added as the third voting cluster node after removal of the former QDevice from pi-prod-01.
+- `local-zfs`, `nas-isos-p2` (same NAS ISO share as node 02), and `pbs-prod-01` are available.
+- On November 13, the ZFS mirror was ONLINE; Toshiba SSD reported 28% endurance used, SK hynix 0%, no known data errors.
+- Temporarily hosted Immich VM 105 while old pve-prod-02 was retired; VM 105 moved to the new Dell on November 13.
+- Independent boot from each SSD remains untested; BIOS update to newer Lenovo firmware identified but not confirmed performed.
+
+See `architecture/compute/pve-prod-03.md`.
 
 ---
 
@@ -114,9 +154,9 @@
 
 ---
 
-### pi-prod-01 — Monitoring / QDevice
+### pi-prod-01 — Monitoring (former QDevice host)
 
-**Role:** Lightweight always-on device. Runs Proxmox QDevice (cluster tiebreaker), Uptime Kuma, and Beszel monitoring server.
+**Role:** Lightweight always-on monitoring device running Uptime Kuma. The former Proxmox QDevice was removed before the cluster grew to three voting nodes; older Beszel documentation may describe historical monitoring, but current Beszel service state was not reverified here.
 
 | Component        | Detail                               |
 | ---------------- | ------------------------------------ |
@@ -130,8 +170,9 @@
 
 **Notes:**
 
-- Secondary AdGuard moved off the Pi compared to v2 — now runs as an LXC on pve-prod-02 (dns-prod-02). Pi is dedicated to QDevice + monitoring only.
-- QDevice acts as tiebreaker for the 2-node Proxmox cluster to prevent split-brain. Lightweight setup, meaningful reliability value.
+- Secondary AdGuard moved off the Pi compared to v2; it now runs as CT 102 on **pve-prod-03**, while the primary remains on pve-prod-01.
+- The Raspberry Pi formerly hosted QDevice for the two-node cluster. **QDevice has been removed**; the three PVE nodes provide quorum directly.
+- Uptime Kuma monitoring of both pve-prod-02 and pve-prod-03 has been confirmed by the operator.
 - SD card boot is acceptable here given the lightweight role — consider USB SSD if SD card causes issues.
 
 ---
@@ -158,7 +199,7 @@
 | Component         | Detail                                           |
 | ----------------- | ------------------------------------------------ |
 | **Model**         | UniFi USW-Pro-Max-24                             |
-| **Ports**         | 16x 2.5GbE RJ45 + 8x 2.5GbE RJ45 + 2x 10GbE SFP+ |
+| **Ports**         | 16x 1GbE RJ45 + 8x 2.5GbE RJ45 + 2x 10GbE SFP+ |
 | **IP**            | 192.168.10.2 (VLAN 10 — Management)              |
 | **Rack Position** | U3                                               |
 | **Source**        | Reddit r/homelabsales                            |

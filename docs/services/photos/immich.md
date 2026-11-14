@@ -2,17 +2,17 @@
 
 **Role:** Photo and video library — backup, organization, ML-powered search and face detection  
 **Host:** immich-prod-01 (192.168.30.14)  
-**Version:** v3.3.5 (confirmed in live `immich_server` startup logs)  
+**Version:** v3.3.5 (last confirmed from `immich_server` startup logs on 2026-11-01; version not re-read after node migration)  
 **Compose:** `/opt/stacks/immich/compose.yaml`  
 **Appdata:** `/opt/appdata/immich/`  
 **URL:** `https://photos.giohosted.com`  
-**Last Updated:** 2026-11-01
+**Last Updated:** 2026-11-13
 
 ---
 
 ## Overview
 
-Immich is the self-hosted photo and video library for homelab-v3. It replaces Google Photos as the primary photo backup and browsing solution. Immich runs on a dedicated VM (immich-prod-01) on pve-prod-02 — isolated from the media stack to contain ML worker CPU spikes during face detection and CLIP indexing.
+Immich is the self-hosted photo and video library for homelab-v3. It replaces Google Photos as the primary photo backup and browsing solution. Immich runs on dedicated VM 105 (`immich-prod-01`) on the **new Dell OptiPlex 5000 SFF at `pve-prod-02`**, isolated from the media stack to contain ML worker CPU spikes. The former OptiPlex 3070 Micro was replaced on November 13, 2026. During cutover the VM was temporarily hosted on `pve-prod-03`; it is now back on node 02.
 
 Photo files live on the NAS (`/mnt/user/photos`) and are NFS-mounted into the VM at `/data/photos`. The Postgres database lives on the VM's local disk — NFS is not supported for Postgres.
 
@@ -23,18 +23,28 @@ Photo files live on the NAS (`/mnt/user/photos`) and are NFS-mounted into the VM
 |Component|Detail|
 |---|---|
 |**VM ID**|105|
-|**Host**|pve-prod-02|
+|**Host**|pve-prod-02 — Dell OptiPlex 5000 SFF (i7-12700 / 48 GB)|
 |**OS**|Ubuntu Server 24.04 LTS|
 |**CPU**|2 cores (x86-64-v2-AES)|
 |**RAM**|6GB|
-|**Disk**|32GB (local-lvm)|
+|**Disk**|32 GB on `local-zfs` (`rpool/data`) with EFI disk also on `local-zfs`|
 |**System**|q35, OVMF UEFI, VirtIO SCSI|
 |**IP**|192.168.30.14/24|
 |**Gateway**|192.168.30.1|
 |**DNS**|192.168.30.10 (dns-prod-01)|
 |**VLAN**|30 — Services|
 |**Docker**|Installed via official script|
-|**QEMU Agent**|Installed and running|
+|**QEMU Agent**|Enabled; VM running and Komodo healthy on 2026-11-13|
+
+### Verified Host Migration — November 13, 2026
+
+- Old `pve-prod-02` (OptiPlex 3070 Micro) was evacuated before replacement. Immich was temporarily hosted on the new `pve-prod-03` (Lenovo ThinkCentre M90q).
+- After the new Dell joined `homelab-v3` and `local-zfs` was enabled across all three nodes, VM 105 was gracefully shut down and migrated offline with `qm migrate 105 pve-prod-02 --with-local-disks --targetstorage local-zfs`.
+- Proxmox migration task completed `OK` (3 minutes, 32 seconds). VM settings remained **2 vCPU, 6 GiB RAM, 32 GB system disk, VLAN tag 30**, original virtual MAC, and UEFI EFI disk.
+- VM 105 started successfully on the replacement node; Komodo confirmed all Immich application containers and Periphery running.
+- Operator verified the Immich web UI and the NFS photos share at `192.168.30.16:/mnt/user/photos` mounted under `/data/photos` (`systemd` automount + NFSv3). Existing `backups`, `encoded-video`, `library`, `profile`, `thumbs`, and `upload` directories were visible.
+- A manual snapshot backup to PBS from `pve-prod-02` finished `TASK OK` on November 13 at **17:16 CST**. This verified a backup operation, **not** a full restore test. NAS photo files are not included in the VM system-disk backup; they depend on their separate NAS protection.
+- CPU/RAM allocations and Immich application settings were **not** changed as part of the migration. Improved host capacity is available for later performance tuning.
 
 ### SSH Access
 
@@ -291,7 +301,7 @@ gunzip -c /data/photos/backups/immich-db-backup-20260310T020000-v2.5.6-pg14.19.s
 |Immich maintenance mode on first boot|Fresh DB had no schema. Bypassed by navigating to maintenance URL from server logs, cancelling restore wizard, creating admin user.|
 |UI restore failed silently|Immich maintenance mode UI restore was interrupted mid-migration, leaving empty tables. Fixed by running restore directly via psql CLI.|
 |Port 2283 not accessible from Traefik|Immich compose had no ports mapping — required for cross-host file provider routing. Added `ports: - "2283:2283"` to immich-server.|
-|nas-isos NFS broken on pve-prod-02|nas-isos storage entry used DAC link IP (10.0.0.2) unreachable from pve-prod-02. Fixed by adding separate `nas-isos-p2` storage entry scoped to pve-prod-02 using 192.168.30.16.|
+|nas-isos NFS broken on original pve-prod-02 (historical)|Original DAC-only `nas-isos` used `10.0.0.2`, unreachable from nodes 02/03. `nas-isos-p2` uses `192.168.30.16`; as of November 13 it is assigned to both nodes 02 and 03.|
 |docker-prod-01 RAM pressure|docker-prod-01 had 1GB active swap. Bumped from 6GB to 8GB before creating immich-prod-01 VM.|
 |Non-standard compose volume path|Initially used `/usr/src/app/upload` as internal mount path — caused confusion during path troubleshooting. Corrected to official `:/data` mapping.|
 
@@ -385,13 +395,13 @@ For upload timeout settings, see the separate **static** Traefik Compose flags d
 
 |Decision|Rationale|
 |---|---|
-|Dedicated VM on pve-prod-02|ML worker CPU spikes isolated from media stack. pve-prod-02 had ample RAM headroom. See `architecture/decisions-log.md`.|
+|Dedicated VM on new pve-prod-02|ML worker CPU spikes remain isolated from the media stack; replacement i7-12700/48 GB node provides additional compute/memory headroom. Historical placement decisions are in `architecture/decisions-log.md`.|
 |Postgres on local VM disk|Immich explicitly does not support NFS for Postgres. Local disk avoids NFS latency and locking issues.|
 |DB restore via psql CLI|UI restore failed silently mid-migration. CLI restore is reliable and provides clear output.|
 |Official compose volume mapping `:/data`|Non-standard paths cause DB asset path mismatches on future migrations. Official mapping ensures consistency with Immich tooling.|
 |LAN-only by default|No need for permanent external exposure. Temporary tunnel added for wedding event only — see cloudflare-tunnel.md.|
 |buffalo_s over buffalo_l|Faster on CPU-only VM with negligible accuracy difference for a personal library.|
-|2 vCPUs retained|ML jobs only run during imports. Idle CPU is 7-8%. Adding cores would sit unused 99% of the time.|
+|2 vCPUs retained after hardware move|Allocation was not changed during migration. Historical 7–8% idle CPU observation predates the Dell replacement; reassess before increasing cores.|
 
 ---
 
@@ -402,4 +412,5 @@ For upload timeout settings, see the separate **static** Traefik Compose flags d
 - NUT client not yet configured — to be done in Phase 5 Wave 7
 - `gio` user added to `service` group (GID 2000) on immich-prod-01 for file permission consistency
 - git identity configured: `delgadogiovanny@gmail.com` / `giohosted`
-- The previous v3.0.2 version note was superseded by a live `immich_server` startup log confirming v3.3.5 on November 1, 2026 (CST). The source/method of the intervening upgrade was not independently documented here.
+- The previous v3.0.2 version note was superseded by a live `immich_server` startup log confirming v3.3.5 on November 1, 2026 (CST). The application version was not independently rechecked after the November 13 host migration.
+- Related host documents: `architecture/compute/pve-prod-02.md`, `architecture/compute/pve-prod-03.md`.

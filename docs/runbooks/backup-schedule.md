@@ -1,7 +1,7 @@
 # Backup Schedule
 
-**Last Updated:** 2026-11-05  
-**Status:** PBS Docker deployment active; November 5 scheduled backups succeeded on both nodes, targeted verification and file-level restore passed; full-guest restore and long-term reliability remain unverified
+**Last Updated:** 2026-11-13  
+**Status:** PBS Docker deployment active; November 13 scheduled backups succeeded on pve-prod-01 and pve-prod-03 (before VM 105's move), and a fresh manual VM 105 backup succeeded on the replacement pve-prod-02 at 17:16 CST. Targeted integrity/file-level restoration from earlier checks passed; full-guest restore and longer-term reliability remain unverified.
 
 Reference document for backup jobs across Homelab v3. Lists what is configured, when jobs run, where backups are stored, and how their success is verified.
 
@@ -13,7 +13,7 @@ Reference document for backup jobs across Homelab v3. Lists what is configured, 
 
 |Time|Job|Source|Destination|Host|Status|
 |---|---|---|---|---|---|
-|02:00 daily|PBS — VM & CT backup|Proxmox VMs and LXCs, excluding retired VM 103|nas-prod-01 `/mnt/zfs-mirror/backups/pbs` (direct ZFS bind mount)|pve-prod-01 and pve-prod-02|**Verified successful 2026-11-05 on both nodes**|
+|02:00 daily|PBS — VM & CT backup|All current Proxmox VMs/LXCs (stale exclusion for removed VM 103 remains)|nas-prod-01 `/mnt/zfs-mirror/backups/pbs` (direct ZFS bind mount)|pve-prod-01, pve-prod-02, pve-prod-03|**Nov 13 scheduled runs OK on nodes 01 and 03; manual VM 105 snapshot OK on replacement node 02 at 17:16 CST. First scheduled run on replacement node 02 not yet verified.**|
 |03:00 daily|rsync — stacks + appdata|`/opt/stacks` + `/opt/appdata`|nas-prod-01 `/mnt/user/backups/`|docker-prod-01|Documented operational; latest execution not reverified|
 |03:00 daily|rsync — stacks + appdata|`/opt/stacks` + `/opt/appdata`|nas-prod-01 `/mnt/user/backups/`|auth-prod-01|Documented operational; latest execution not reverified|
 |03:00 daily|rsync — stacks + appdata|`/opt/stacks` + `/opt/appdata`|nas-prod-01 `/mnt/user/backups/`|immich-prod-01|Documented operational; latest execution not reverified|
@@ -50,7 +50,7 @@ Jobs are sequenced intentionally:
 
 Scheduling alone does not guarantee that jobs finish before the next job begins.
 
-Following failure recurrence on October 31–November 2, PBS was migrated to Docker on Unraid. The November 5 scheduled backups succeeded on both nodes, and a separate CT 100 file-level restoration was verified. Continued reliability and full-guest recovery remain to be tested.
+Following failure recurrence on October 31–November 2, PBS was migrated to Docker on Unraid. The November 5 scheduled backups succeeded on the then-two-node cluster, and a separate CT 100 file-level restoration was verified. On November 13, the three-node cluster also completed scheduled backups on nodes 01 and 03 and a manual VM 105 backup on the replacement node 02. Continued reliability and full-guest recovery remain to be tested.
 
 ---
 
@@ -66,9 +66,9 @@ Following failure recurrence on October 31–November 2, PBS was migrated to Doc
 **Container datastore path:** `/backups`  
 **NAS datastore path:** `/mnt/zfs-mirror/backups/pbs`  
 **Storage:** `zfs-mirror/backups` ZFS dataset, not a separate PBS-specific dataset  
-**Old PBS:** VM 103 on pve-prod-02 (`192.168.30.12`), shut down and retained as a temporary rollback artifact; **must not run concurrently against this datastore**.
+**Old PBS (historical):** VM 103 previously ran on the original `pve-prod-02` at `192.168.30.12`; it was stopped during the November 3–5 migration, then **destroyed before the November 13 Proxmox host replacement**. It is no longer an available rollback artifact. Do not attempt to revive an obsolete PBS configuration against the active datastore.
 
-Proxmox guests back up to the existing `pbs-prod-01` storage definition on both cluster nodes. The cluster-wide storage definition now points to the Docker-based PBS endpoint, uses a dedicated API token, and still targets `nas-backups`. The datastore is bind-mounted from the physical ZFS path; PBS no longer reads its datastore through the old VM's NFSv3 → Unraid `shfs`/FUSE path. The NAS's other NFS exports and share configuration were not changed.
+Proxmox guests back up to the existing `pbs-prod-01` storage definition on all **three** cluster nodes. The cluster-wide storage definition now points to the Docker-based PBS endpoint, uses a dedicated API token, and still targets `nas-backups`. The datastore is bind-mounted from the physical ZFS path; PBS no longer reads its datastore through the old VM's NFSv3 → Unraid `shfs`/FUSE path. The NAS's other NFS exports and share configuration were not changed.
 
 ### Container configuration and safeguards
 
@@ -87,7 +87,7 @@ Proxmox guests back up to the existing `pbs-prod-01` storage definition on both 
 ### Authentication
 
 - Local emergency administrator: `admin@pbs`, default password changed and stored privately.
-- Human SSO administrator: `gio@authentik`, Admin permission on `/`. The existing `OIDC - Proxmox` Authentik provider is still shared with both PVE nodes; the redirect URI was updated to `https://192.168.30.16:8007`. Shared OIDC client secret was rotated and fresh interactive SSO logins passed on PBS and both PVE nodes.
+- Human SSO administrator: `gio@authentik`, Admin permission on `/`. The existing `OIDC - Proxmox` Authentik provider was reused for PBS; its redirect URI was updated to `https://192.168.30.16:8007`. Shared OIDC client secret was rotated and fresh interactive SSO logins passed on PBS and both **then-existing** PVE nodes on November 5. SSO on newly installed pve-prod-02 and pve-prod-03 was not independently retested as part of this documentation update (root@pam GUI access to the replacement pve-prod-02 was tested).
 - Scheduled PVE backups: `pve-backup@pbs!pve-cluster` API token. Parent `pve-backup@pbs` and token both have `DatastoreBackup` permission for `/datastore/nas-backups`; all seven existing backup groups were reassigned to the token identity.
 - Secrets, webhook URLs, password values, and OIDC client secret are intentionally excluded from documentation; store them in Bitwarden or the appropriate protected configuration.
 
@@ -101,7 +101,7 @@ Proxmox guests back up to the existing `pbs-prod-01` storage definition on both 
 
 ### Verified Backup Job Configuration
 
-The job settings were verified through live Proxmox inspection during the October incident and retained through the November 5 migration; the new storage endpoint and successful scheduled execution on both nodes were independently verified November 5.
+The job settings were verified through live Proxmox inspection during the October incident, retained through the November 5 PBS migration, and re-read November 13 after expanding to three nodes. The job remains enabled and selects all current cluster guests. On November 13, the scheduled job succeeded on nodes 01 and 03; VM 105 completed a successful manual backup after moving to the replacement node 02.
 
 |Setting|Value|
 |---|---|
@@ -111,28 +111,29 @@ The job settings were verified through live Proxmox inspection during the Octobe
 |Backup mode|Snapshot|
 |Target storage|`pbs-prod-01`|
 |Guest selection|All guests|
-|Excluded guest|VM 103 — pbs-prod-01|
+|Excluded guest|VM 103 (removed guest; stale exclusion retained, harmless)|
 |Notification mode|Proxmox notification system|
 |Notes template|`{{guestname}}`|
 
-The job is configured to run on both Proxmox nodes, with each node processing its applicable guests.
+The job is cluster-wide and runs on each applicable Proxmox node. Current nodes are pve-prod-01, pve-prod-02, and pve-prod-03.
 
-**VM 103 exclusion:** The retired PBS VM remains explicitly excluded from this job. It is stopped and preserved temporarily for fallback, but must not be started while Docker PBS is using the same datastore. The Docker configuration and ZFS datastore are not protected by this VM backup job.
+**VM 103 exclusion:** VM 103 was already destroyed before the November 13 physical node replacement. The backup job still explicitly excludes ID 103, but **there is no existing VM 103 to back up**. This stale setting is not blocking current guests; consider removing it during a separate validated backup-job housekeeping review. The Unraid Docker PBS configuration and the NAS datastore itself are **not protected by this PVE VM backup job**.
 
 ### Verified Guest Selection
 
-|VMID|Guest|Proxmox node|Included in job|
+|VMID|Guest|Proxmox node (November 13)|Included in job|
 |---|---|---|---|
 |100|dns-prod-01|pve-prod-01|Yes|
 |101|docker-prod-01|pve-prod-01|Yes|
-|102|dns-prod-02|pve-prod-02|Yes|
-|103|pbs-prod-01|pve-prod-02|**No — explicitly excluded**|
+|102|dns-prod-02|**pve-prod-03**|Yes|
 |104|auth-prod-01|pve-prod-01|Yes|
-|105|immich-prod-01|pve-prod-02|Yes|
-|106|dragonwilds-server|pve-prod-01|Yes|
+|105|immich-prod-01|**pve-prod-02** (new Dell)|Yes|
+|106|dragonwilds-server|pve-prod-01 (currently stopped)|Configured to be included when applicable|
 |107|observer-prod-01|pve-prod-01|Yes|
 
-The guest selection establishes intended coverage. The November 5 02:00 scheduled job on pve-prod-01 completed `OK` at 02:05:50 CST (347 seconds); the pve-prod-02 job completed `OK` at 02:04:30 CST (265 seconds). This confirms node-level backup jobs, not individually verified integrity or full restorability for every guest.
+**Retired ID 103 is absent from the live guest inventory.** It remains only as an outdated exclusion in the job definition.
+
+**Historical November 5:** The 02:00 job on pve-prod-01 completed `OK` at 02:05:50 CST (347 seconds); the **original** pve-prod-02 job completed `OK` at 02:04:30 CST (265 seconds). Those results predate the node replacement and do not establish a successful scheduled run on the replacement. The November 13 scheduled job on node 03 captured CT 102 and VM 105 **before** VM 105 was moved later that day. Backup execution does not, by itself, verify full guest restoration.
 
 The live job configuration inspection reported that VM 107's primary disk and EFI disk are selected for backup.
 
@@ -154,7 +155,7 @@ The live job configuration inspection reported that VM 107's primary disk and EF
 
 After the October 30 temporary proxy restart, scheduled backups failed again on October 31, November 1, and November 2 on both PVE nodes. The same PBS proxy process held a stale NFS `.lock` descriptor (`ESTALE`), proving recurrence of the immediate failure mechanism; the original invalidation trigger was not isolated.
 
-With the user's explicit decision to forgo a new protective ZFS snapshot and accept potential loss of historical archives, VM 103 was gracefully stopped on pve-prod-02. The PBS server was freshly configured using the Unraid Community Apps template with image `ayufan/proxmox-backup-server:latest`. The old VM remains stopped. The existing ZFS datastore was registered with **Reuse existing datastore**; its root directory mode was changed from `700` to `755` after PBS rejected the ownership/permission check. No recursive ownership change or datastore wipe was performed.
+With the user's explicit decision to forgo a new protective ZFS snapshot and accept potential loss of historical archives, VM 103 was gracefully stopped on **the then-current OptiPlex 3070 Micro pve-prod-02**. The PBS server was freshly configured using the Unraid Community Apps template with image `ayufan/proxmox-backup-server:latest`. **At the November 5 verification, the old VM was still stopped; it was subsequently destroyed before the November 13 host replacement.** The existing ZFS datastore was registered with **Reuse existing datastore**; its root directory mode was changed from `700` to `755` after PBS rejected the ownership/permission check. No recursive ownership change or datastore wipe was performed.
 
 The original `pbs-prod-01` PVE storage definition was preserved; the endpoint changed from `192.168.30.12` to `192.168.30.16`, and authentication changed from `root@pam` to the least-privilege token `pve-backup@pbs!pve-cluster`. Its TLS fingerprint was replaced with the new PBS certificate fingerprint; the token secret and certificate private material are not documented here. Proxmox's `server` field is fixed in the `pvesm set` API and was updated by editing the corresponding `server` line in cluster-wide `/etc/pve/storage.cfg`. Password/identity/fingerprint were updated through `pvesm set`. No duplicate storage ID was created.
 
@@ -177,7 +178,7 @@ The original `pbs-prod-01` PVE storage definition was preserved; the endpoint ch
 **Status as of October 30:** Immediate operational failure cleared temporarily; the same stale-handle problem recurred October 31–November 2 and the PBS deployment was replaced November 3–5.  
 **Identified:** 2026-10-29 local / 2026-10-30 UTC  
 **Last confirmed successful execution at time of this incident record:** October 30, 2026 at 02:00 CDT, on both PVE nodes  
-**Affected systems:** pve-prod-01, pve-prod-02, pbs-prod-01, and the Unraid NFS datastore
+**Affected systems:** pve-prod-01, the **original OptiPlex 3070 Micro** pve-prod-02 (not the November 13 replacement), pbs-prod-01, and the Unraid NFS datastore
 
 ### Failure history and recovery-point exposure
 
@@ -584,14 +585,14 @@ From Proxmox:
     
 3. Confirm the expected job is enabled.
     
-4. Review the most recent task history on both nodes.
+4. Review the most recent task history on **all three** nodes (`pve-prod-01`, `pve-prod-02`, `pve-prod-03`).
     
 5. Inspect failed tasks and their logs.
     
 6. Confirm that the expected guests were processed.
     
 
-**Latest verified state:** The November 5 02:00 scheduled jobs completed successfully on both nodes using Docker PBS. Targeted CT 100 integrity verification and file-level retrieval passed; a full-guest restore test remains open.
+**Latest verified state (November 13):** The 02:00 scheduled jobs completed successfully on `pve-prod-01` and `pve-prod-03`; a new manual snapshot for VM 105 completed on replacement `pve-prod-02` at 17:16 CST. The first scheduled run on new node 02 remains unverified. Earlier targeted CT 100 integrity verification and file-level retrieval passed; a full-guest restore test remains open.
 
 ### PBS Archives
 
@@ -717,7 +718,9 @@ Until these checks pass, observer recoverability remains unverified.
     
 - `architecture/compute/pve-prod-01.md` — Primary Proxmox node and observer VM.
     
-- `architecture/compute/pve-prod-02.md` — Secondary Proxmox node; retired/stopped PBS VM 103.
+- `architecture/compute/pve-prod-02.md` — Replacement Dell Proxmox node; VM 105, ZFS mirror, retired VM 103 history.
+
+- `architecture/compute/pve-prod-03.md` — Lenovo third voting node; secondary AdGuard CT 102.
     
 - `runbooks/git-workflow.md` — Version-controlled infrastructure configuration.
     
@@ -769,3 +772,21 @@ Until these checks pass, observer recoverability remains unverified.
 | New PBS prune, GC, and scheduled verify execution | Configured; first executions not yet confirmed |
 | NFS/FUSE stale-handle recurrence under Docker | Not observed in initial backup run; continued monitoring needed |
 
+
+### Verification Summary — 2026-11-13 (Current Cluster)
+
+| Item | Result |
+|---|---|
+| Cluster | Three voting nodes: pve-prod-01, replacement pve-prod-02, pve-prod-03; quorum healthy |
+| Backup job `backup-54015f90-26e5` | Enabled, daily 02:00, `pbs-prod-01`, snapshot, all existing guests |
+| Removed VM 103 | Not present; its job exclusion remains as harmless stale configuration |
+| November 13 02:00 on pve-prod-01 | `TASK OK` (live-verified) |
+| November 13 02:00 on pve-prod-03 | `TASK OK`; included CT 102 and then-resident VM 105 |
+| November 13 17:16 on new pve-prod-02 | Manual `vzdump 105 --mode snapshot --storage pbs-prod-01` completed `TASK OK` in ~20 seconds |
+| VM 105 disk coverage | 32 GB system disk and EFI disk included; photos NFS mount is **not** included in that VM disk backup |
+| First 02:00 scheduled backup on replacement pve-prod-02 | Not yet separately observed after replacement |
+| NAS photo-library protection | Separate Unraid/ZFS and Immich database backup procedures; VM backup alone is not sufficient |
+| Isolated full guest restore | Not yet verified |
+| PBS prune, GC, and scheduled verify execution after Docker migration | Not rechecked in this November 13 update |
+
+**Follow-up:** Review the next scheduled 02:00 job on all three nodes, remove obsolete VM 103 exclusion only after confirming guest coverage, verify PBS datastore maintenance, and schedule an isolated restore test. Do not confuse the successful new-node snapshot with proof that the NAS photo files are included or that every recovery path is tested.

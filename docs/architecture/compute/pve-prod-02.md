@@ -1,8 +1,8 @@
 # pve-prod-02 — Secondary Proxmox Node
 
-**Role:** Secondary Proxmox node — runs secondary AdGuard LXC and immich-prod-01; former PBS VM 103 is retained powered off  
-**Status:** Active  
-**Last Updated:** 2026-11-05
+**Role:** Secondary compute node hosting `immich-prod-01` (VM 105)  
+**Status:** Active — replacement hardware deployed November 13, 2026  
+**Last Updated:** 2026-11-13
 
 ---
 
@@ -10,11 +10,16 @@
 
 | Component | Detail |
 |-----------|--------|
-| **Model** | Dell Optiplex 3070 Micro |
-| **CPU** | Intel Core i5-9500T (6C/6T, 9th gen) |
-| **RAM** | 16GB DDR4 SO-DIMM (2x 8GB Micron) |
-| **Boot Storage** | 256GB NVMe — single drive, ext4 |
-| **Networking** | 1x GbE RJ45 built-in |
+| **Model** | Dell OptiPlex 5000 SFF (replaced OptiPlex 3070 Micro on 2026-11-13) |
+| **CPU** | Intel Core i7-12700 (12 cores: 8P + 4E / 20 threads) |
+| **RAM** | 48 GB DDR4 (2×16 GB + 2×8 GB); Proxmox reports ~46.7 GiB usable |
+| **Boot Drive 1** | SK hynix BC711 NVMe 512 GB (`/dev/nvme0n1`) |
+| **Boot Drive 2** | Kioxia KBG50ZNS512G NVMe 512 GB (`/dev/nvme1n1`, PCIe adapter) |
+| **Boot Storage** | ZFS RAID-1 mirror (`rpool`); `rpool/data` backs VM and CT disks |
+| **Networking** | Built-in 1 GbE RJ45, connected to USW-Pro-Max-24 |
+| **BIOS** | Dell OptiPlex 5000 BIOS 1.43.0 (operator-confirmed upgrade November 13) |
+
+**Disk health verified November 13, 2026:** Both NVMe devices reported SMART `PASSED`, 0 critical warnings, and 0 media/data integrity errors. SK hynix reported 0% endurance used at 44°C; Kioxia reported 16% used at 33°C. These are point-in-time readings, not guarantees of remaining life.
 
 ---
 
@@ -22,67 +27,75 @@
 
 | Field | Value |
 |-------|-------|
-| **OS** | Proxmox VE 9.1.6 |
+| **OS** | Proxmox VE 9.2.26 (`pve-manager`), kernel `7.0.14-28-pve` |
 | **Debian base** | Trixie (Debian 13) |
+| **Boot mode** | UEFI, Secure Boot disabled |
+| **Time sync** | Chrony, `America/Chicago`; synchronized after 2026-11-13 correction and reboot |
 
 ---
 
 ## Network
 
-| Field           | Value                                    |
-| --------------- | ---------------------------------------- |
-| **IP**          | 192.168.10.12                            |
-| **VLAN**        | 10 — Management                          |
-| **Gateway**     | 192.168.10.1                             |
-| **DNS**         | 192.168.10.1                             |
-| **Switch port** | USW-Pro-Max-24 (any port — 1GbE max NIC) |
-| **Link speed**  | 1000Mb/s (NIC limitation)                |
+| Field | Value |
+|-------|-------|
+| **Hostname (FQDN)** | `pve-prod-02.local` |
+| **IP** | `192.168.10.12/24` |
+| **VLAN** | 10 — Management, untagged on `vmbr0` |
+| **Gateway** | `192.168.10.1` |
+| **DNS** | `192.168.10.1`; search domain `local` (live-verified) |
+| **Switch** | USW-Pro-Max-24; operator reports `Trunk All` port profile |
+| **Link** | Built-in 1 GbE interface |
 
 ### Network Interfaces
 
 | Interface | Type | Role |
 |-----------|------|------|
-| eno1 | 1GbE RJ45 | Management + VM/LXC traffic via vmbr0 |
-| vmbr0 | Linux bridge | VLAN-aware — management untagged, VMs/LXCs tagged per guest |
+| `nic0` | Physical Ethernet | Bridge port for host management and guest traffic |
+| `vmbr0` | Linux bridge | `192.168.10.12/24`; VLAN-aware, VLAN IDs `2-4094`; guest VLANs tagged |
+
+The bridge is verified active. Immich uses VLAN tag `30` on `net0` and retains IP `192.168.30.14`; application/UI and NFS access were tested after migration.
 
 ---
 
 ## Proxmox Configuration
 
 ### Apt Repositories
-- Enterprise repos removed: `pve-enterprise.sources`
-- No-subscription repo added (trixie)
-- Subscription nag popup removed from proxmoxlib.js
+
+- Debian Trixie, Trixie updates, and security repositories enabled.
+- Proxmox `pve-no-subscription` repository enabled in `/etc/apt/sources.list.d/proxmox.sources`.
+- `pve-enterprise.sources` and `ceph.sources` retained but disabled (`Enabled: no`).
+- November 13 upgrade: 213 packages upgraded, no removals in the simulation; updated Proxmox/kernel verified after reboot.
+- No subscription key. **Subscription-popup modifications are not documented as applied to the replacement host.**
 
 ### Cluster
-- Member of cluster `homelab-v3`
-- Node ID: 0x00000002
-- Joined via join token from pve-prod-01
-- QDevice configured — pi-prod-01 (192.168.10.20) acts as tiebreaker
+
+- Member of `homelab-v3`; node ID `2`; Corosync address `192.168.10.12`.
+- Rejoined on November 13 as a fresh installation using `pvecm add 192.168.10.11` after removal of the retired hardware's cluster membership and stale configuration.
+- Three active voting members: `pve-prod-01`, `pve-prod-02`, and `pve-prod-03`; no QDevice.
+- HA is deliberately disabled. A healthy cluster quorum does not imply automatic VM failover.
 
 ### Storage
 
 | Storage | Type | Notes |
 |---------|------|-------|
-| local | Directory | ISO images, CT templates |
-| local-lvm | LVM-thin | VM disks, LXC rootfs |
-| nas-isos-p2 | NFS | ISO images — `192.168.30.16:/mnt/user/isos`. Scoped to pve-prod-02 only. Added Phase 4 Wave 5. |
-| pbs-prod-01 | PBS | nas-backups datastore at Docker PBS on nas-prod-01, `192.168.30.16:8007` |
+| `local` | Directory | Proxmox templates, ISOs, and other configured directory content |
+| `local-zfs` | ZFS | Local `rpool/data`; VM/LXC disks; storage definition scoped to all three nodes, but **not shared** |
+| `nas-isos-p2` | NFS | `192.168.30.16:/mnt/user/isos`, shared ISO library; assigned to `pve-prod-02` **and** `pve-prod-03` |
+| `pbs-prod-01` | PBS | Cluster-wide backup storage; Docker PBS at `192.168.30.16:8007`, datastore `nas-backups` |
 
-> **nas-isos note:** The cluster-wide `nas-isos` storage entry uses `10.0.0.2` (DAC link) which is only reachable from pve-prod-01. A separate `nas-isos-p2` entry using `192.168.30.16` was added and scoped to pve-prod-02 only. The original `nas-isos` entry is scoped to pve-prod-01 only to prevent mount failures on pve-prod-02.
+The separate `nas-isos` definition, assigned only to `pve-prod-01`, accesses the **same** NAS ISO share over that node's direct DAC storage link (`10.0.0.2`). Do not assign `nas-isos` to the other nodes unless they gain reachability to the DAC subnet.
 
-> local-zfs ghost entry was present after install and removed via `pvesm remove local-zfs` — pve-prod-02 uses local-lvm for VM disks.  
-> local-lvm entry was also lost and re-added via: `pvesm add lvmthin local-lvm --vgname pve --thinpool data --content rootdir,images`
+**ZFS maintenance:** `/etc/cron.d/zfsutils-linux` schedules TRIM at 00:24 on the first Sunday of each month and scrub at 00:24 on the second Sunday. `rpool` autotrim is `off`; scheduled TRIM is the chosen mechanism. On November 13 the mirror was `ONLINE` with zero read/write/checksum errors.
 
-### PBS Backup and VM 103 — November 5, 2026
+**Redundant boot:** `proxmox-boot-tool status` showed two configured UEFI boot partitions (`60B0-9005` and `60B0-E015`), both containing kernels `7.0.14-28-pve` and `7.0.2-6-pve`. **Independent physical boot from each SSD has not been tested.**
 
-**Current active PBS:** Docker `proxmox-backup-server` on Unraid `nas-prod-01`, accessed at `192.168.30.16:8007`, datastore `nas-backups`. The cluster-wide PVE storage ID `pbs-prod-01` is unchanged, and authentication uses `pve-backup@pbs!pve-cluster` API token. Direct datastore bind mount is `/mnt/zfs-mirror/backups/pbs` → `/backups`. The 02:00 cluster backup job `backup-54015f90-26e5` continues to exclude retired PBS VM 103.
+### PBS Backup and Retired VM 103
 
-**Retired VM 103:** `pbs-prod-01` (previously `192.168.30.12`, PBS package 4.1.4-1) was gracefully shut down for the Docker migration and is retained as a temporary fallback. Its 16 GiB disk remains on `local-lvm`, with 2 vCPUs and 4 GiB RAM configured. It does not auto-start (`onboot` is not configured). **Do not start the VM while Docker PBS is using the same datastore.** A root-only PBS configuration archive was created and integrity-checked on the retired VM as a rollback safeguard; it was intentionally **not** imported into Docker.
+**Active PBS:** Unraid Docker `proxmox-backup-server` at `192.168.30.16:8007`, datastore `nas-backups`; cluster storage ID `pbs-prod-01` preserved. PBS datastore is bound directly from `/mnt/zfs-mirror/backups/pbs` on Unraid. The cluster backup job `backup-54015f90-26e5` runs at 02:00, selects all existing guests, and still contains a harmless exclusion for VM 103.
 
-**Incident and migration chronology:** The old VM used an NFSv3 datastore mount from the Unraid `/mnt/user/backups` FUSE path. Repeated `ESTALE` errors were associated with a stale PBS proxy descriptor for `.lock`. Restarting the proxy on October 30 temporarily cleared the fault; the same error recurred October 31–November 2, motivating the Docker migration. The original invalidation trigger was never definitively established. The Docker deployment eliminates the former PBS datastore NFS/FUSE access path without altering Unraid exports or global exclusive-share settings.
+**VM 103 was retired and deleted before replacement of the old `pve-prod-02`.** It is not present on the new host and is **not** an available rollback VM. As of November 5, the former PBS VM was still stopped and retained on the OptiPlex 3070 Micro; that historical arrangement has since been superseded. The former NFSv3/Unraid-FUSE PBS stale-handle incident and migration are documented in `runbooks/backup-schedule.md`.
 
-**Verified on pve-prod-02:** The November 5 02:00 backup job completed `OK` at 02:04:30 CST (265 seconds). Both cluster nodes' PBS storage entries were verified available at `192.168.30.16`. The shared Authentik OIDC provider's secret was rotated; fresh SSO login succeeded on pve-prod-02, pve-prod-01 and PBS. No full guest recovery test or post-migration weekly PBS maintenance run has been completed.
+**November 13 verification:** Manual snapshot backup of VM 105 from the replacement `pve-prod-02` to PBS completed `TASK OK` at 17:16 CST. The scheduled 02:00 job had succeeded earlier that day on `pve-prod-01` and `pve-prod-03`; the **first scheduled 02:00 run on the replacement `pve-prod-02` is not yet separately verified**. Full-guest restore testing remains open.
 
 See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architecture/storage/nas-prod-01.md`.
 
@@ -90,34 +103,44 @@ See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architectu
 
 ## Guests
 
-| ID  | Name           | Type              | VLAN | IP            | Status                               |
-| --- | -------------- | ----------------- | ---- | ------------- | ------------------------------------ |
-| 102 | dns-prod-02    | LXC (Debian 12)   | 30   | 192.168.30.15 | Running                              |
-| 103 | pbs-prod-01 (retired) | VM (PBS 4.1.4-1) | 30 | 192.168.30.12 (historical) | **Stopped**, retained temporarily for fallback |
-| 105 | immich-prod-01 | VM (Ubuntu 24.04) | 30   | 192.168.30.14 | Running — 2 vCPU, 6GB RAM, 32GB disk |
+| ID | Name | Type | VLAN | IP | Status |
+|----|------|------|------|----|--------|
+| 105 | `immich-prod-01` | Ubuntu 24.04 VM | 30 | `192.168.30.14` | Running; 2 vCPU, 6 GiB RAM, 32 GB ZFS disk |
 
-> immich-prod-01 was moved here from pve-prod-01 due to RAM headroom — pve-prod-01 was already running docker-prod-01 (8GB) and auth-prod-01 (4GB). pve-prod-02 had ample capacity. See `architecture/decisions-log.md`.
+`dns-prod-02` (CT 102) now resides on `pve-prod-03` at `192.168.30.15`. PBS runs on Unraid rather than as a PVE guest.
+
+**Immich migration:** VM 105 was temporarily hosted on `pve-prod-03` during the hardware replacement. On November 13 it was shut down and migrated offline to the replacement Dell using `qm migrate 105 pve-prod-02 --with-local-disks --targetstorage local-zfs`. Guest configuration, VLAN tag, virtual NIC MAC, and UEFI disk were retained. Post-migration checks confirmed containers running, UI access, and the NAS photos NFS mount at `/data/photos`.
 
 ---
 
 ## Design Decisions
 
-### Single NVMe Boot — No Mirror
-Single NVMe boot is accepted for pve-prod-02 given its secondary role. If this node goes down, its secondary AdGuard and Immich guests are temporarily unavailable; PBS now runs on Unraid and is **not** hosted on pve-prod-02. The primary workloads on pve-prod-01 are unaffected by this node-specific outage.
+### Mirrored NVMe Boot and Local VM Storage
+
+The replacement uses two 512 GB NVMe drives in a ZFS mirror rather than the old OptiPlex's single NVMe/LVM-thin installation. The mirror protects against one member disk failing, subject to backups and the untested independent-boot scenario; it is not a substitute for PBS.
+
+### Stronger Compute for Immich
+
+The i7-12700 and 48 GB RAM provide additional CPU and memory headroom for Immich, especially its CPU-based machine-learning tasks. VM 105 remains at **2 vCPU and 6 GiB** until separately evaluated; a stronger host does not automatically change its guest allocations.
 
 ### HA Not Enabled
-HA (High Availability) is deliberately not enabled on this cluster. The Optiplex cannot absorb pve-prod-01's workload — enabling HA without matched hardware provides false security. Clustering is for unified management UI only.
 
-### RAM Not Upgraded Yet
-RAM left at 16GB for now — active workload is secondary AdGuard LXC and Immich VM; retired PBS VM 103 is powered off. Upgrade to 32GB later if workload needs justify it.
+Cluster membership is for unified management and operational flexibility. Automatic HA is not enabled; recovery/failover needs a separate capacity-aware design and tested procedures.
 
 ---
 
 ## Installation Notes
 
-### Issues Encountered
-- Proxmox installer showed "no supported hard disk found" on first boot — resolved by changing SATA controller mode from RAID/RST to AHCI in Dell BIOS (F2 → System Configuration → SATA Operation → AHCI)
-- Windows was previously installed on the NVMe drive — AHCI mode change resolved installer detection issue
-- local-zfs ghost entry present after install — removed with `pvesm remove local-zfs`
-- local-lvm entry missing after local-zfs removal — re-added with `pvesm add lvmthin`
-- nas-isos NFS mount broken on pve-prod-02 — cluster-wide entry used DAC link IP (10.0.0.2) unreachable from this node. Fixed by adding separate `nas-isos-p2` storage entry scoped to pve-prod-02 using 192.168.30.16.
+### Replacement — November 13, 2026
+
+1. Retired the old OptiPlex 3070 Micro after moving CT 102 and VM 105 away and deleting retired VM 103; old node had zero remaining guests.
+2. Updated Dell OptiPlex 5000 BIOS to 1.43.0; installed Proxmox VE 9.2 with ZFS RAID-1 on both NVMe drives.
+3. Kept the new Dell off the production network while the old host still held `192.168.10.12`; shut down the old host, removed it with `pvecm delnode pve-prod-02`, and cleared its empty stale `/etc/pve/nodes/pve-prod-02` directory.
+4. Removed obsolete `local-lvm` storage definition, rejoined the new host, extended `local-zfs` to all three nodes, and assigned `nas-isos-p2` to nodes 02 and 03.
+5. Enabled VLAN-aware `vmbr0`; applied package updates and rebooted into kernel `7.0.14-28-pve`.
+6. Corrected a roughly six-hour clock error: Chrony initially had unresolved NTP sources, causing web/API `401 Authentication failed`. `chronyc refresh` populated sources and the clock synchronized; verified stable after reboot.
+7. Migrated VM 105 back from node 03, verified Immich and NAS storage, completed a fresh PBS backup, and confirmed the existing Uptime Kuma host monitor reports UP.
+
+### Historical Hardware — Superseded
+
+The original `pve-prod-02` was a Dell OptiPlex 3070 Micro (i5-9500T, 16 GB RAM, single 256 GB NVMe, Proxmox 9.1.6 with LVM-thin). During its first installation, setting SATA from Intel RAID/RST to AHCI resolved installer disk detection; its `nas-isos` mount required a distinct NFS definition because the primary node's `10.0.0.2` DAC address was unreachable. Those instructions and the former QDevice arrangement **do not describe the current replacement host**.
