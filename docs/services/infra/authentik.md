@@ -1,3 +1,4 @@
+
 # Authentik
 
 **Role:** Identity Provider (IdP) — SSO and OIDC for all internal services  
@@ -6,7 +7,7 @@
 **Compose:** `/opt/stacks/authentik/compose.yaml`  
 **Appdata:** `/opt/appdata/authentik/`  
 **URL:** https://auth.giohosted.com  
-**Last Updated:** 2026-11-05
+**Last Updated:** 2026-11-13
 
 ---
 
@@ -25,8 +26,9 @@ Authentik runs on a dedicated VM (`auth-prod-01`) rather than as containers on d
 | **VM ID** | 104 |
 | **Host** | pve-prod-01 |
 | **OS** | Ubuntu Server 24.04 LTS |
-| **CPU** | 2 cores (x86-64-v3) |
-| **RAM** | 5 GiB (reported by live Proxmox VM inventory on November 1, 2026; formerly documented as 4 GB) |
+| **CPU** | 2 cores (x86-64-v2-AES) |
+| **RAM** | 4 GiB (verified November 13, 2026) |
+| **Memory ballooning** | Disabled |
 | **Disk** | 32GB (local-zfs, no cache) |
 | **System** | q35, OVMF UEFI, VirtIO SCSI |
 | **IP** | 192.168.30.13/24 |
@@ -37,14 +39,60 @@ Authentik runs on a dedicated VM (`auth-prod-01`) rather than as containers on d
 | **QEMU Agent** | Installed and running |
 
 ### SSH Access
+
 ```bash
 ssh gio@192.168.30.13
 ```
 
 ### Git
+
 - homelab-infra repo cloned at `/opt/stacks`
 - Credentials cached via `git config --global credential.helper store`
 - Always run `git pull` before making changes — see `runbooks/git-workflow.md`
+
+### VM Memory Right-Sizing — November 13, 2026
+
+The Authentik VM was reviewed as part of a Homelab v3 Proxmox resource-sizing audit.
+
+Proxmox initially reported nearly full VM memory utilization, while guest-level diagnostics showed substantial reclaimable Linux filesystem cache and low actual application demand.
+
+**Completed change:**
+
+- Reduced VM 104 memory allocation from 5 GiB to 4 GiB.
+- Retained 2 vCPUs.
+- Retained disabled memory ballooning.
+- Rebooted the VM to apply the new memory allocation.
+- Confirmed the 4 GiB configuration was active in Proxmox, with no pending memory changes.
+
+**Post-resize verification:**
+
+|Metric|Observed value|
+|---|---|
+|Configured RAM|4 GiB|
+|Guest-reported total RAM|3.8 GiB|
+|Guest RAM used|1.4 GiB|
+|Guest RAM available|2.4 GiB|
+|Buffer/cache|2.5 GiB|
+|Swap capacity|3.8 GiB|
+|Swap occupied|268 KiB|
+|Memory PSI avg10/avg60/avg300|0.00 / 0.00 / 0.00|
+|Active swap-in/out during five-second sample|None|
+|Komodo server connection|Ok|
+|Docker containers|6 of 6 running|
+
+The verified running containers included `authentik-server`, `authentik-worker`, `authentik-postgres`, `authentik-redis`, `beszel-agent`, and `komodo-periphery`.
+
+**Result:** The 4 GiB allocation passed initial post-reboot verification, with approximately 2.4 GiB of available guest memory, negligible swap occupancy and no observed recent memory pressure.
+
+The previous 5 GiB allocation was not required by the workload observed during this audit. However, the 4 GiB allocation is not an independently established minimum for every possible Authentik workload.
+
+**Operational considerations:**
+
+- Monitor available memory, memory pressure, swap activity and service health during normal operation.
+- Retain sufficient headroom for Authentik upgrades, migrations, background tasks and PostgreSQL maintenance.
+- Reevaluate the allocation if sustained memory pressure, active swapping, OOM events or service degradation occurs.
+- Reboot-related reduction in swap occupancy should not be interpreted as proof that historical memory pressure has been eliminated.
+- No CPU, application configuration, Docker resource limit or authentication-policy changes were made as part of this optimization.
 
 ---
 
@@ -82,7 +130,9 @@ The application stack was adopted by matching its Docker Compose project labels.
 
 The separate non-privileged onboarding key used for initial registration was removed from the Compose file, the Periphery agent recreated and verified logged in with `onboarding_key: None`, the root-only temporary credential file removed and the onboarding key revoked in Komodo Settings. Retain and securely back up the persistent key directory. Host backup coverage of these new keys has not yet been independently verified.
 
-**Live verification:** All three Komodo hosts returned state `Ok` at Periphery `2.3.4`; `authentik` stack was `running` and the four Authentik application containers were listed as running through read-only MCP. The server and worker were also shown healthy by the local Docker CLI before enrollment. The live Proxmox VM inventory showed VM 104 running with **5 GiB** assigned memory, differing from the older 4 GB documentation; no RAM change was made as part of Komodo onboarding.
+**Live verification (November 1):** All three Komodo hosts returned state `Ok` at Periphery `2.3.4`; the `authentik` stack was `running` and the four Authentik application containers were listed as running through read-only MCP. The server and worker were also shown healthy by the local Docker CLI before enrollment. The live Proxmox VM inventory showed VM 104 running with **5 GiB** assigned memory, differing from the older 4 GB documentation; no RAM change was made as part of Komodo onboarding.
+
+**Subsequent resource update (November 13):** VM 104 was intentionally reduced from 5 GiB to 4 GiB during the resource-sizing audit. The new configuration and initial guest memory checks were verified after reboot, and all six containers were running. See the VM Memory Right-Sizing section above.
 
 See `services/infra/ai-observer.md` and `runbooks/ai-observer-operations.md` for full security and operational procedures.
 
@@ -97,6 +147,7 @@ Authentik is on a dedicated VM — Traefik on docker-prod-01 cannot discover it 
 - **AdGuard DNS rewrite:** `auth.giohosted.com` → `192.168.30.11` (Traefik IP)
 
 Traffic path:
+
 ```
 Browser → AdGuard (192.168.30.10) → 192.168.30.11 (Traefik) → 192.168.30.13:9000 (authentik-server)
 ```
@@ -137,6 +188,7 @@ Browser → AdGuard (192.168.30.10) → 192.168.30.11 (Traefik) → 192.168.30.1
 Authentik was restored from a v2 backup rather than set up fresh — all OIDC providers, applications, users, groups, and policies carried forward intact.
 
 ### Restore Process
+
 1. Appdata backed up from v2 host to Synology via Active Backup for Business
 2. `.env` file recovered from Synology (not in NAS rsync backup — rsync excluded secrets)
 3. Appdata copied to auth-prod-01: `/opt/appdata/authentik/`
@@ -147,18 +199,18 @@ Authentik was restored from a v2 backup rather than set up fresh — all OIDC pr
 
 ## SSO-Enabled Services
 
-| Service                             | Method | Provider Slug | Notes                                                                                                                                                   |
-| ----------------------------------- | ------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Service | Method | Provider Slug | Notes |
+|---|---|---|---|
 | Proxmox (pve-prod-01 + pve-prod-02) | OIDC | `proxmox` | Realm: `authentik`. Username claim: `username`. Strict redirect URIs: `https://192.168.10.11:8006`, `https://192.168.10.12:8006`. Shared provider with PBS. |
 | PBS Docker on nas-prod-01 | OIDC | `proxmox` | Shares `OIDC - Proxmox` provider and `App - Proxmox` with PVE. Strict redirect URI: `https://192.168.30.16:8007`. Former VM 103 URI retired. |
-| Beszel                              | OIDC   | `beszel`      | Redirect URI: `http://192.168.10.20:8090/api/oauth2-redirect`.                                                                                          |
-| Synology DSM                        | OIDC   | `synology`    | Well-known URL must use app-specific path: `https://auth.giohosted.com/application/o/synology/.well-known/openid-configuration` — NOT the generic path. |
-| Audiobookshelf                      | OIDC   | —             | Carried forward from v2 backup                                                                                                                          |
-| Calibre-Web-Automated               | OAuth2 | —             | Carried forward from v2 backup                                                                                                                          |
-| Shelfmark                           | OIDC   | —             | New provider created in v3 — callback `https://shelf.giohosted.com/api/auth/oidc/callback`                                                              |
-| qBitrr                              | OIDC   | —             | New provider created in v3 — callback `/signin-oidc`. Both `http://` and `https://` redirect URIs registered.                                           |
-| Immich                              | OIDC   | —             | Carried forward from v2 backup                                                                                                                          |
-| ARR stack, Uptime Kuma              | None   | —             | LAN-only, low risk — no SSO overhead                                                                                                                    |
+| Beszel | OIDC | `beszel` | Redirect URI: `http://192.168.10.20:8090/api/oauth2-redirect`. |
+| Synology DSM | OIDC | `synology` | Well-known URL must use app-specific path: `https://auth.giohosted.com/application/o/synology/.well-known/openid-configuration` — NOT the generic path. |
+| Audiobookshelf | OIDC | — | Carried forward from v2 backup |
+| Calibre-Web-Automated | OAuth2 | — | Carried forward from v2 backup |
+| Shelfmark | OIDC | — | New provider created in v3 — callback `https://shelf.giohosted.com/api/auth/oidc/callback` |
+| qBitrr | OIDC | — | New provider created in v3 — callback `/signin-oidc`. Both `http://` and `https://` redirect URIs registered. |
+| Immich | OIDC | — | Carried forward from v2 backup |
+| ARR stack, Uptime Kuma | None | — | LAN-only, low risk — no SSO overhead |
 
 > **OIDC admin group:** Shelfmark and ABS use the existing `admins` group for admin authorization. No service-specific admin groups were created — reusing `admins` keeps Authentik group management simple.
 
@@ -186,6 +238,7 @@ Because this provider is shared, any **future** secret rotation must update the 
 | Decision | Rationale |
 |----------|-----------|
 | Dedicated VM, not shared with docker-prod-01 | LXC officially removed from Proxmox community scripts May 2025. VM is the only stable option. Isolates IdP from media stack resource contention. |
+| 4 GiB RAM allocation | Verified low steady-state memory demand and significant available RAM after right-sizing from 5 GiB. Retains headroom for normal operation while reclaiming 1 GiB on the Proxmox host. |
 | No disk cache | ZFS (local-zfs) has its own ARC caching. QEMU cache layer is unnecessary and can cause data integrity issues on ZFS storage. |
 | Secrets carried forward from v2 | PG_PASS and AUTHENTIK_SECRET_KEY must match the existing database — changing them breaks the restore. |
 | Proxmox and PBS share one provider | Permissions are identical and managing separate providers adds unnecessary complexity. |
@@ -200,5 +253,5 @@ Because this provider is shared, any **future** secret rotation must update the 
 - Authentik worker mounts the Docker socket (`/var/run/docker.sock`) — required for embedded outpost functionality
 - "No providers assigned to this outpost" warning in logs is normal — embedded outpost present but not configured for any providers
 - Bootstrap email/password only apply on very first boot with empty database — ignored on subsequent starts
-- Historical Phase 4 sizing check: 4 GB allocation, approximately 1.6 GB active usage, minimal swap; no bump needed **at that time**. Live Proxmox inventory on November 1, 2026 reported 5 GiB provisioned. Date/reason for the intervening adjustment was not established in this documentation update.
+- Historical Phase 4 sizing check: 4 GB allocation, approximately 1.6 GB active usage, minimal swap; no bump needed **at that time**. Live Proxmox inventory on November 1, 2026 reported 5 GiB provisioned. Date/reason for the intervening adjustment was not established during the November 5 documentation review. The subsequent reduction to 4 GiB was an intentional, verified change on November 13, 2026.
 - Synology SSO well-known URL must point at the app-specific path (`/application/o/synology/.well-known/openid-configuration`) — the generic path (`/application/o/.well-known/openid-configuration`) causes "Unable to get the URL for SSO authentication" error

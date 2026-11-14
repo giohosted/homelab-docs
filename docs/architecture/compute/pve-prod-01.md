@@ -1,8 +1,9 @@
+
 # pve-prod-01 — Primary Proxmox Node
 
 **Role:** Primary Proxmox node — runs all primary VMs and LXCs  
 **Status:** Active  
-**Last Updated:** 2026-11-05
+**Last Updated:** 2026-11-13
 
 ---
 
@@ -108,29 +109,78 @@ The previous PBS VM connected to the Unraid datastore through NFSv3 and `shfs` F
 
 ## Guests
 
-The following guest inventory was verified through the live Homelab Proxmox MCP integration on 2026-10-30 UTC.
+The original guest inventory was verified through the live Homelab Proxmox MCP integration on October 30, 2026. VM 101 and VM 104 resource allocations and running state were reverified on November 13, 2026. Other inventory entries retain their previous verification scope.
 
 |ID|Name|Type|VLAN|IP|Status|
 |---|---|---|---|---|---|
 |100|dns-prod-01|LXC (Debian 12)|30|192.168.30.10|Running — 1 GiB RAM, 1 vCPU, 4 GiB disk|
-|101|docker-prod-01|VM (Ubuntu 24.04)|30|192.168.30.11|Running — 8 GiB RAM, 4 vCPU, 64 GiB disk|
-|104|auth-prod-01|VM (Ubuntu 24.04)|30|192.168.30.13|Running — 5 GiB RAM, 2 vCPU, 32 GiB disk|
+|101|docker-prod-01|VM (Ubuntu 24.04)|30|192.168.30.11|Running — 7 GiB RAM, 4 vCPU, 64 GiB disk|
+|104|auth-prod-01|VM (Ubuntu 24.04)|30|192.168.30.13|Running — 4 GiB RAM, 2 vCPU, 32 GiB disk|
 |106|dragonwilds-server|VM (Linux)|50|Not verified|Stopped — 8 GiB RAM, 4 vCPU, 40 GiB disk|
 |107|observer-prod-01|VM (Ubuntu 26.04.1)|30|192.168.30.17|Running — 2 GiB RAM, 2 vCPU, 20 GiB disk|
 
-> **Inventory note:** Guest statuses represent the state observed during the live verification, not permanent operating requirements. The Dragonwilds dedicated-server VM was stopped at the time of inspection. Its configured IP address was not verified.
+> **Inventory note:** Guest statuses represent the state observed during the applicable live verification, not permanent operating requirements. The Dragonwilds dedicated-server VM was stopped at the time of its last inventory verification. Its configured IP address was not verified.
 
-> **auth-prod-01:** The VM currently has 5 GiB of allocated RAM, verified through its Proxmox configuration. Earlier documentation listed 4 GB.
+> **auth-prod-01:** VM 104 previously had 5 GiB allocated, verified in November 2026. Its allocation was reduced to 4 GiB and verified after reboot on November 13, 2026.
 
 > immich-prod-01 was originally planned for pve-prod-01 but moved to pve-prod-02 due to RAM headroom. See `architecture/decisions-log.md`.
 
+### VM Memory Right-Sizing — November 13, 2026
+
+A resource-sizing review was conducted after Proxmox displayed nearly full memory utilization for Linux VMs despite substantial guest filesystem cache.
+
+Live Proxmox configuration and performance history were reviewed alongside guest-level `free -h`, swap, memory-pressure and Docker container statistics.
+
+**Completed changes:**
+
+|VM|Previous RAM|Current RAM|vCPU|Ballooning|
+|---|---|---|---|---|
+|docker-prod-01 (101)|8 GiB|7 GiB|4|Disabled|
+|auth-prod-01 (104)|5 GiB|4 GiB|2|Disabled|
+|observer-prod-01 (107)|2 GiB|2 GiB|2|Disabled|
+
+The Immich VM on pve-prod-02 remains allocated 6 GiB RAM and 2 vCPUs. No CPU allocation changes were made to any VM.
+
+Both modified VMs were rebooted, and the new Proxmox memory configurations were confirmed active with no pending memory changes.
+
+**Post-resize guest validation:**
+
+|Metric|docker-prod-01|auth-prod-01|
+|---|---|---|
+|RAM allocated|7 GiB|4 GiB|
+|Guest RAM used|3.5 GiB|1.4 GiB|
+|Guest RAM available|3.2 GiB|2.4 GiB|
+|Swap occupied|268 KiB|268 KiB|
+|Recent memory PSI averages|0.00|0.00|
+|Active swap-in/out during sample|None|None|
+
+Additional live verification through Komodo confirmed:
+
+- docker-prod-01: 25 of 25 containers running.
+- auth-prod-01: 6 of 6 containers running.
+- Both Komodo server connections reported `Ok`.
+- pve-prod-01 had approximately 9.97 GiB available host memory following the changes.
+
+**Result:** A total of 2 GiB of VM memory allocation was reclaimed on pve-prod-01. Both VMs passed initial post-reboot resource and container-state checks, with no observed recent memory pressure or active swapping.
+
+**Operational considerations:**
+
+- Proxmox host-side memory consumption is not equivalent to guest application working-set usage when ballooning is disabled.
+- Linux filesystem cache is reclaimable and should not be interpreted as permanently consumed application RAM.
+- The earlier 6 GiB Docker configuration experienced swap usage during Phase 4; the current 7 GiB allocation is a conservative trial rather than an established minimum.
+- The low swap occupancy immediately following reboot partly reflects the reset of prior swap state.
+- Normal workload behavior was verified at the time of measurement; sustained peak-load, indexing and maintenance windows were not separately stress-tested.
+- Reassess allocation only if ongoing memory pressure, active swap activity, OOM kills, service degradation or workload growth warrants it.
+
 ### AI Observer — observer-prod-01
 
-VM 107 hosts the Homelab v3 AI Observer infrastructure.
+VM 107 hosts the Homelab v3 AI Observer infrastructure, providing AI-assisted, read-only monitoring and diagnostics of Proxmox, Unraid, Komodo, and UniFi.
 
-Its initial read-only Proxmox MCP implementation has since been expanded to **three separately verified integrations**: Proxmox, Unraid and Komodo (Docker on `docker-prod-01`), each accessed from ChatGPT through its own OpenAI Secure MCP Tunnel.
+The observer is intentionally isolated in its own Ubuntu VM rather than sharing the primary Docker application host.
 
-**Verified VM configuration:**
+**Implementation status:** Four MCP integrations and four independent OpenAI Secure MCP Tunnels were deployed and verified end-to-end by November 5, 2026. The UniFi integration remained reachable and reported read-only operation during a live ChatGPT check on November 13, 2026.
+
+#### VM Configuration
 
 |Setting|Value|
 |---|---|
@@ -140,6 +190,7 @@ Its initial read-only Proxmox MCP implementation has since been expanded to **th
 |vCPU|2|
 |CPU type|x86-64-v3|
 |RAM|2 GiB|
+|Memory ballooning|Disabled|
 |Disk|20 GiB on local-zfs|
 |Firmware|OVMF / UEFI|
 |Machine|q35|
@@ -150,28 +201,134 @@ Its initial read-only Proxmox MCP implementation has since been expanded to **th
 |Start at boot|Enabled|
 |Startup delay|90 seconds|
 
-The AI Observer includes:
+The VM's Proxmox configuration and running state were reverified on November 13, 2026.
 
-- Three Docker-hosted read-only MCP servers on the observer: Proxmox (`0.5.1`, 84 read tools), Unraid (`0.6.3`, 26 read tools), and Komodo (`1.5.0`, 40 read tools).
-    
-- Three independent native systemd-managed OpenAI Secure MCP Tunnel clients, sharing one installed binary.
-    
-- A dedicated Proxmox API identity with read-only permissions.
-    
-- A targeted firewall exception permitting access to the Proxmox API on TCP 8006.
-    
-- Three localhost-only MCP listeners (TCP 8080, 8082, 8084) and three localhost tunnel readiness listeners (TCP 8081, 8083, 8085).
-    
-- Protected credentials stored outside the Git repository.
-    
+A November 2026 memory audit found approximately 458 MiB used and 1.1 GiB available inside the guest, with no observed recent memory pressure or active swapping. Its 2 GiB allocation was deliberately retained to preserve headroom for simultaneous MCP queries, maintenance, and future integrations.
 
-All three MCP services and their independent OpenAI tunnels were verified through successful live tool invocation from ChatGPT by November 1, 2026. The Komodo upstream account is read-only with scoped Logs access; its local MCP is intentionally unauthenticated but loopback-bound, and eight sensitive tools are excluded.
+#### MCP Integration Inventory
 
-The observer does not currently expose write operations through Proxmox, Unraid or Komodo. A full November 1 backup and isolated restore test have **not** been verified; see the AI Observer operations runbook.
+|Integration|Server version|Read tools|Purpose|
+|---|---|---|---|
+|Proxmox|mattoddie/proxmox-mcp 0.5.1|84|Cluster, nodes, VMs, containers, storage, backups and diagnostics|
+|Unraid|dinglebear-ai/unraid-rmcp 0.6.3|26|NAS array, disks, shares, Docker and system health|
+|Komodo|MP-Tool/komodo-mcp-server 1.5.0|40|Read-only Docker monitoring across registered hosts|
+|UniFi|ry-ops/unifi-mcp-server 2.1.0|55|UniFi Network, devices, clients, VLANs, firewall and WAN monitoring|
+|**Total**|**4 MCP services**|**205**|**Read-only tool exposure**|
+
+All four are exposed to ChatGPT through dedicated plugins:
+
+- `Homelab Proxmox`
+- `Homelab Unraid`
+- `Homelab Komodo`
+- `Homelab UniFi`
+
+The documented tool inventory contains 205 read tools and zero exposed write tools.
+
+The UniFi MCP version 2.1.0 is pinned to upstream commit `e13d0e22dce1b6a498edc5982d78bd589073d44c`.
+
+#### Multi-Host Docker Monitoring
+
+Komodo Core runs on `docker-prod-01` and monitors three registered Docker hosts:
+
+|Docker host|Role|Komodo connection|
+|---|---|---|
+|docker-prod-01|Primary Docker application host|Local Periphery|
+|immich-prod-01|Immich application host|Remote Periphery over outbound WSS|
+|auth-prod-01|Authentik application host|Remote Periphery over outbound WSS|
+
+All three Komodo hosts returned `Ok` during live verification on November 13, 2026, using Periphery version 2.3.4.
+
+The observer's Komodo MCP connects to the existing Komodo Core HTTPS endpoint. No separate MCP server or OpenAI tunnel is needed for each monitored Docker host.
+
+#### MCP Services and OpenAI Tunnel Architecture
+
+Each integration runs as an independent Docker MCP service on `observer-prod-01`, with a corresponding native systemd-managed outbound OpenAI Secure MCP Tunnel.
+
+|Integration|MCP listener|Tunnel readiness|systemd service|
+|---|---|---|---|
+|Proxmox|127.0.0.1:8080|127.0.0.1:8081|tunnel-client.service|
+|Unraid|127.0.0.1:8082|127.0.0.1:8083|tunnel-client-unraid.service|
+|Komodo|127.0.0.1:8084|127.0.0.1:8085|tunnel-client-komodo.service|
+|UniFi|127.0.0.1:8086|127.0.0.1:8087|tunnel-client-unifi.service|
+
+MCP HTTP endpoint paths use `/mcp`, and the tunnel readiness endpoints use `/readyz`.
+
+The four tunnel services share one installed tunnel-client binary while maintaining independent tunnel identities, runtime credentials, configuration directories and service units.
+
+**Architecture characteristics:**
+
+- All MCP HTTP listeners and tunnel readiness ports are bound to the observer's loopback interface.
+- No public MCP hostname, Traefik route, inbound internet port forwarding, or external firewall exposure is required.
+- Tunnel connections are initiated outbound by the observer.
+- The dedicated `tunnel-client` Linux account has restricted privileges and no Docker group membership.
+- Tunnel credentials, upstream API secrets and MCP environment files are protected outside the Git repository.
+- The OpenAI Secure MCP Tunnels are independent of the homelab's application-oriented Cloudflare Tunnel infrastructure.
+
+#### Security Boundaries
+
+The observer implements several independent security controls:
+
+**Proxmox**
+
+- Uses a dedicated `observer@pve!proxmox-mcp` API identity with `PVEAuditor` permissions.
+- Write, delete and command-execution tool categories are disabled.
+- Access to the Proxmox management API on TCP 8006 is permitted through a targeted firewall exception rather than general VLAN 30 access.
+- The MCP container does not mount the Proxmox host's Docker socket.
+
+**Unraid**
+
+- Uses a dedicated API identity restricted to the intended monitoring categories.
+- Exposes an explicit allowlist of 26 read tools.
+- Uses verified TLS for the upstream GraphQL API.
+- Does not mount the NAS filesystem or Unraid Docker socket into the observer.
+
+**Komodo**
+
+- Uses the dedicated `ai-observer-komodo` account with scoped Read and Logs permissions.
+- Exposes 40 read tools, with eight sensitive tools deliberately excluded.
+- Does not grant ChatGPT administrator access to Komodo.
+- Local MCP authentication is disabled, but access is restricted to the observer's loopback interface and upstream Komodo credentials remain required.
+
+**UniFi**
+
+- Connects through UniFi Site Manager and Network API to the UDM-SE.
+- Uses `UNIFI_READ_ONLY=true` and a fail-closed launcher restricting the exposed MCP tools to 55 read operations.
+- Does not expose UniFi configuration modification operations to ChatGPT.
+- The upstream UniFi API credential may have broader permissions than the read-only MCP tool surface; these are distinct security boundaries.
+
+All four MCP integrations are read-only from the ChatGPT tool interface. This does not mean every upstream service credential independently has read-only permissions, nor does it mean all returned information is nonsensitive.
+
+The observer does not expose direct write operations through the four installed Homelab integrations.
+
+#### Deployment and Recovery References
+
+The four MCP Compose deployments reside under:
+
+- `/opt/stacks/proxmox-mcp/`
+- `/opt/stacks/unraid-mcp/`
+- `/opt/stacks/komodo-mcp/`
+- `/opt/stacks/unifi-mcp/`
+
+The private `homelab-infra` repository includes their deployment definitions and sanitized templates for the four tunnel configurations and systemd units.
+
+The active tunnel configurations, protected credentials and runtime state remain outside Git.
+
+**Verification history:**
+
+- October 29–30: Proxmox MCP deployed and verified.
+- October 30: Unraid MCP deployed and verified.
+- November 1: Komodo MCP deployed; multi-host Docker monitoring verified.
+- November 5: UniFi MCP and fourth tunnel deployed and verified.
+- November 6: Infrastructure-as-code coverage for all four deployments and tunnel templates verified.
+- November 13: Observer VM configuration and UniFi MCP connectivity rechecked through live integrations.
+
+The existence of deployment definitions does not establish that a full observer disaster recovery has been tested. A complete isolated restore and recovery validation remains outstanding in the operational documentation.
 
 **Full service documentation:** `services/infra/ai-observer.md`
 
 **Operational runbook:** `runbooks/ai-observer-operations.md`
+
+The service documentation and runbook are authoritative for container settings, security controls, credentials, service management, troubleshooting and recovery procedures. This node document maintains only the compute and architecture summary.
 
 ---
 
