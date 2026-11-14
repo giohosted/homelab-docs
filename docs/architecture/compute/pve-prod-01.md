@@ -1,60 +1,63 @@
-
 # pve-prod-01 — Primary Proxmox Node
 
 **Role:** Primary Proxmox node — hosts primary infrastructure VMs and LXCs  
 **Status:** Active  
-**Last Updated:** 2026-11-13
+**Last Updated:** 2026-11-14
 
 ---
 
 ## Hardware
 
-|Component|Detail|
+| Component | Detail |
 |---|---|
-|**Model**|Minisforum MS-A2|
-|**CPU**|AMD Ryzen 9 7945HX (16C/32T, 5.4GHz boost)|
-|**iGPU**|AMD Radeon 680M (available for future ML/transcoding — not used at launch)|
-|**RAM**|32GB DDR5 SO-DIMM (1x 32GB — 2nd slot empty, max 96GB)|
-|**Boot Drive 1**|Samsung 980 NVMe 1TB — S/N: S64ANS0W120169T|
-|**Boot Drive 2**|Sabrent Rocket NVMe 1TB|
-|**Boot Config**|ZFS RAID-1 mirror (pool: rpool) — configured in Proxmox installer|
-|**LAN NIC**|2x 2.5GbE RJ45 built-in (igc + r8169)|
-|**Storage NIC**|2x 10GbE SFP+ built-in — Port 1: DAC to nas-prod-01|
+| **Model** | Minisforum MS-A2 |
+| **CPU** | AMD Ryzen 9 7945HX (16C/32T, 5.4GHz boost) |
+| **iGPU** | AMD Radeon 680M (available for future ML/transcoding — not used at launch) |
+| **RAM** | 32GB DDR5 SO-DIMM (1x 32GB — 2nd slot empty, max 96GB) |
+| **Boot Drive 1** | Samsung 980 NVMe 1TB — S/N: S64ANS0W120169T |
+| **Boot Drive 2** | Sabrent Rocket NVMe 1TB |
+| **Boot Config** | ZFS RAID-1 mirror (pool: rpool) — configured in Proxmox installer |
+| **LAN NIC** | 2x 2.5GbE RJ45 built-in (igc + r8169) |
+| **Storage NIC** | 2x 10GbE SFP+ built-in — Port 1: DAC to nas-prod-01 |
 
 ---
 
 ## Software
 
-|Field|Value|
+| Field | Value |
 |---|---|
-|**OS**|Proxmox VE 9.1.6|
-|**Kernel**|6.17.13-1-pve|
-|**Debian base**|Trixie (Debian 13)|
+| **OS** | Proxmox VE 9.1.6 |
+| **Kernel** | 6.17.13-1-pve |
+| **Debian base** | Trixie (Debian 13) |
+
+**November 14 verification:** Proxmox VE `9.1.6` and kernel `6.17.13-1-pve` remained active. The planned update to Proxmox VE 9.2.x had not yet been performed.
 
 ---
 
 ## Network
 
-| Field           | Value                                     |
-| --------------- | ----------------------------------------- |
-| **IP**          | 192.168.10.11                             |
-| **VLAN**        | 10 — Management                           |
-| **Gateway**     | 192.168.10.1                              |
-| **DNS**         | 192.168.10.1                              |
+| Field | Value |
+|---|---|
+| **IP** | 192.168.10.11 |
+| **VLAN** | 10 — Management |
+| **Gateway** | 192.168.10.1 |
+| **DNS** | 192.168.10.1 |
 | **Switch port** | USW-Pro-Max-24 ports 17–24 (2.5GbE range) |
-| **Link speed**  | 2500Mb/s confirmed via ethtool            |
+| **Link speed** | 2500Mb/s confirmed via ethtool |
 
 ### Network Interfaces
 
-|Interface|Type|Role|
+| Interface | Type | Role |
 |---|---|---|
-|nic0 (igc)|2.5GbE RJ45|Management + VM/LXC traffic via vmbr0|
-|nic1 (r8169)|2.5GbE RJ45|Unused — no cable connected|
-|vmbr0|Linux bridge on nic0|VLAN-aware — management untagged, VMs/LXCs tagged per guest|
-|SFP+ Port 1|10GbE|DAC to nas-prod-01 X710 Port 1 — dedicated storage link|
-|SFP+ Port 2|10GbE|Unused at launch|
+| nic0 (igc) | 2.5GbE RJ45 | Management + VM/LXC traffic via vmbr0 |
+| nic1 (r8169) | 2.5GbE RJ45 | Unused — no cable connected |
+| vmbr0 | Linux bridge on nic0 | VLAN-aware — management untagged, VMs/LXCs tagged per guest |
+| SFP+ Port 1 | 10GbE | DAC to nas-prod-01 X710 Port 1 — dedicated storage link |
+| SFP+ Port 2 | 10GbE | Unused at launch |
 
-> **vmbr0 is VLAN-aware.** The Proxmox management interface (192.168.10.11) runs untagged on the bridge. VMs and LXCs use VLAN tags appropriate to their roles. Production services, including docker-prod-01, auth-prod-01, and observer-prod-01, use VLAN 30 (Services). The Dragonwilds dedicated server uses VLAN 50 (Game Servers).
+> **vmbr0 is VLAN-aware.** The Proxmox management interface (192.168.10.11) runs untagged on the bridge. VMs and LXCs use VLAN tags appropriate to their roles. Current Services VLAN 30 guests on this node include `docker-prod-01`, `dns-prod-01`, and `observer-prod-01`. The Dragonwilds dedicated server uses VLAN 50 (Game Servers).
+
+> **Authentik placement:** `auth-prod-01` (VM 104) also uses VLAN 30 but now runs on `pve-prod-03`. Its service IP remains `192.168.30.13`. The host migration did not require any network addressing or VLAN changes.
 
 ---
 
@@ -66,6 +69,24 @@
 - No-subscription repo added: `pve-no-subscription` (trixie)
 - Subscription nag popup removed from proxmoxlib.js
 
+**November 14 verification:**
+
+The live Proxmox repository configuration was inspected before the planned Proxmox VE 9.2.x update.
+
+Active repositories:
+
+| Repository | Suite | Components |
+|---|---|---|
+| Proxmox no-subscription | trixie | pve-no-subscription |
+| Debian | trixie, trixie-updates | main, contrib, non-free-firmware |
+| Debian security | trixie-security | main, contrib, non-free-firmware |
+
+Enterprise and testing repositories were not configured.
+
+The installed package update list was not accessible through the read-only Proxmox integration because the API identity lacks the required package-management privilege. A local APT refresh and upgrade simulation remain necessary before installing updates.
+
+No repository changes or package installations were performed during this documentation review.
+
 ### Cluster
 
 **Cluster:** `homelab-v3`  
@@ -75,7 +96,7 @@
 **External QDevice:** Not configured  
 **Proxmox HA:** Not enabled
 
-The current three-node cluster configuration was verified through the read-only Homelab Proxmox integration on November 13, 2026.
+The current three-node cluster configuration was verified through the read-only Homelab Proxmox integration on November 14, 2026.
 
 | Node | Node ID | Management IP | Votes | State |
 |---|---|---|---|---|
@@ -111,50 +132,90 @@ See `architecture/compute/pve-prod-02.md`, `architecture/compute/pve-prod-03.md`
 
 ### Storage
 
-|Storage|Type|Path / Pool|Notes|
+| Storage | Type | Path / Pool | Notes |
 |---|---|---|---|
-|local|Directory|/var/lib/vz|ISO images, CT templates|
-|local-zfs|ZFS|rpool/data|VM disks, LXC rootfs|
-|nas-isos|NFS|10.0.0.2:/mnt/user/isos|ISO images — via DAC link. Scoped to pve-prod-01 only.|
-|pbs-prod-01|PBS|nas-backups datastore|Docker PBS on nas-prod-01 at 192.168.30.16:8007; shared PVE storage ID preserved|
+| local | Directory | /var/lib/vz | ISO images, CT templates |
+| local-zfs | ZFS | rpool/data | VM disks, LXC rootfs |
+| nas-isos | NFS | 10.0.0.2:/mnt/user/isos | ISO images — via DAC link. Scoped to pve-prod-01 only. |
+| pbs-prod-01 | PBS | nas-backups datastore | Docker PBS on nas-prod-01 at 192.168.30.16:8007; shared PVE storage ID preserved |
 
 > local-lvm ghost entry was present after install and removed via `pvesm remove local-lvm` — pve-prod-01 uses local-zfs for VM disks.  
 > local-zfs entry was lost at one point and re-added via: `pvesm add zfspool local-zfs --pool rpool/data --content rootdir,images`
 
+**November 14 storage verification:**
+
+- `local-zfs` was available on all three Proxmox nodes.
+- Each node uses its own physically separate ZFS storage; sharing the same storage ID does not make guest storage shared.
+- `nas-isos` was available on `pve-prod-01`.
+- `nas-isos-p2` was available on `pve-prod-02` and `pve-prod-03`.
+- `pbs-prod-01` was available to all three nodes.
+- `pve-prod-01` local ZFS storage reported approximately 88.1 GiB used of 896 GiB (9.8%).
+- The `rpool` ZFS mirror was `ONLINE`, with no known data errors and zero reported read, write, or checksum errors.
+
+The local ZFS usage reflects the state after VM 104 was migrated away. The migration relocated the guest's 32 GiB virtual disk and UEFI disk to the destination node.
+
+**ZFS feature note:** The pool reported that some supported ZFS features were not enabled. The pool remained usable and healthy. No `zpool upgrade` was performed. Enabling additional pool features should be considered separately because it can affect compatibility with older ZFS implementations.
+
 ### PBS Backup Migration and Validation — November 5, 2026
 
-**Active:** PVE cluster-wide storage `pbs-prod-01` targets `nas-backups` on Docker PBS at `192.168.30.16:8007`, hosted by Unraid (`nas-prod-01`). The old PBS VM 103 at `192.168.30.12` on pve-prod-02 is shut down. Existing PVE storage ID and daily 02:00 cluster job `backup-54015f90-26e5` were preserved. Cluster storage now authenticates using dedicated `pve-backup@pbs!pve-cluster` token, whose permissions and backup-group ownership were migrated. No secret values are recorded here.
+**Active:** PVE cluster-wide storage `pbs-prod-01` targets `nas-backups` on Docker PBS at `192.168.30.16:8007`, hosted by Unraid (`nas-prod-01`).
 
-The previous PBS VM connected to the Unraid datastore through NFSv3 and `shfs` FUSE. A stale proxy `.lock` file descriptor caused failed backups. A targeted proxy restart on October 30 temporarily restored backups, but errors recurred October 31–November 2 on both Proxmox nodes. The Docker replacement accesses the same ZFS datastore directly through `/mnt/zfs-mirror/backups/pbs` → `/backups`, bypassing the former PBS datastore NFS/FUSE path.
+The former PBS VM 103 at `192.168.30.12` on the original `pve-prod-02` was shut down during the November 3–5 PBS migration and **subsequently destroyed before the November 13 replacement of the original Proxmox node**. VM 103 is no longer present in the cluster and is not an available rollback VM.
 
-**Verified on pve-prod-01:**
+The existing PVE storage ID and daily 02:00 cluster job `backup-54015f90-26e5` were preserved. Cluster storage now authenticates using the dedicated `pve-backup@pbs!pve-cluster` token, whose permissions and backup-group ownership were migrated. No secret values are recorded here.
+
+The previous PBS VM connected to the Unraid datastore through NFSv3 and `shfs` FUSE. A stale proxy `.lock` file descriptor caused failed backups. A targeted proxy restart on October 30 temporarily restored backups, but errors recurred October 31–November 2 on both then-existing Proxmox nodes.
+
+The Docker replacement accesses the same ZFS datastore directly through `/mnt/zfs-mirror/backups/pbs` → `/backups`, bypassing the former PBS datastore NFS/FUSE path.
+
+**Verified on pve-prod-01 — November 5:**
 
 - Manual CT 100 (`dns-prod-01`) backup at 00:36 CST on November 5: `TASK OK`, 4 seconds, approximately 79.7% reuse. Its new snapshot passed targeted PBS integrity verification.
-- 02:00 scheduled backup job on November 5 finished `OK` at 02:05:50 CST (347 seconds). Backup selection includes CT 100, VMs 101, 104, 106, and 107 (as configured; individual per-guest integrity not exhaustively verified).
+- 02:00 scheduled backup job on November 5 finished `OK` at 02:05:50 CST (347 seconds). Backup selection included CT 100, VMs 101, 104, 106, and 107 at that time (individual per-guest integrity not exhaustively verified).
 - A file-level restore of CT 100's `/etc/hostname` succeeded via the PVE backup browser. A full VM/CT restore has not been performed.
-- Shared Authentik OIDC secret was rotated; a fresh SSO login passed on this PVE node and on pve-prod-02 and PBS.
+- Shared Authentik OIDC secret was rotated; a fresh SSO login passed on this PVE node and on the then-existing pve-prod-02 and PBS.
 
-**To monitor:** Continued 02:00 backups, PBS scheduled prune/GC/verification, actual warning/error notification delivery if desired, and a later isolated full guest recovery test. Direct Docker Host networking may expose PBS TCP 8007 on both NAS interfaces; access restrictions were not independently validated. See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architecture/storage/nas-prod-01.md`.
+**Subsequent verification — November 14:**
+
+- The scheduled 02:00 PBS backup job on `pve-prod-01` completed successfully.
+- The task log confirmed successful backups for CT 100, VM 101, VM 104, VM 106, and VM 107.
+- VM 104 was still hosted on `pve-prod-01` during that scheduled backup.
+- VM 104 was subsequently migrated to `pve-prod-03` later on November 14.
+- A new manual backup of VM 104 was completed successfully from `pve-prod-03` at 14:09:45 CST.
+- Future scheduled backups of VM 104 should execute from its new host, `pve-prod-03`, under the existing cluster-wide backup job.
+
+**To monitor:** Continued 02:00 backups across all three nodes, PBS scheduled prune/GC/verification, actual warning/error notification delivery if desired, and a later isolated full guest recovery test.
+
+Direct Docker Host networking may expose PBS TCP 8007 on both NAS interfaces; access restrictions were not independently validated.
+
+See `runbooks/backup-schedule.md`, `runbooks/backup-restore.md`, and `architecture/storage/nas-prod-01.md`.
 
 ---
 
 ## Guests
 
-The original guest inventory was verified through the live Homelab Proxmox MCP integration on October 30, 2026. VM 101 and VM 104 resource allocations and running state were reverified on November 13, 2026. Other inventory entries retain their previous verification scope.
+The original guest inventory was verified through the live Homelab Proxmox MCP integration on October 30, 2026. Guest resource allocations were subsequently reviewed on November 13.
 
-|ID|Name|Type|VLAN|IP|Status|
+The active guest inventory was refreshed through the live integration on **November 14, 2026**, after the Authentik migration.
+
+| ID | Name | Type | VLAN | IP | Status |
 |---|---|---|---|---|---|
-|100|dns-prod-01|LXC (Debian 12)|30|192.168.30.10|Running — 1 GiB RAM, 1 vCPU, 4 GiB disk|
-|101|docker-prod-01|VM (Ubuntu 24.04)|30|192.168.30.11|Running — 7 GiB RAM, 4 vCPU, 64 GiB disk|
-|104|auth-prod-01|VM (Ubuntu 24.04)|30|192.168.30.13|Running — 4 GiB RAM, 2 vCPU, 32 GiB disk|
-|106|dragonwilds-server|VM (Linux)|50|Not verified|Stopped — 8 GiB RAM, 4 vCPU, 40 GiB disk|
-|107|observer-prod-01|VM (Ubuntu 26.04.1)|30|192.168.30.17|Running — 2 GiB RAM, 2 vCPU, 20 GiB disk|
+| 100 | dns-prod-01 | LXC (Debian 12) | 30 | 192.168.30.10 | Running — 1 GiB RAM, 1 vCPU, 4 GiB disk |
+| 101 | docker-prod-01 | VM (Ubuntu 24.04) | 30 | 192.168.30.11 | Running — 7 GiB RAM, 4 vCPU, 64 GiB disk |
+| 106 | dragonwilds-server | VM (Linux) | 50 | Not verified | Stopped — 8 GiB RAM, 4 vCPU, 40 GiB disk |
+| 107 | observer-prod-01 | VM (Ubuntu 26.04.1) | 30 | 192.168.30.17 | Running — 2 GiB RAM, 2 vCPU, 20 GiB disk |
 
-> **Inventory note:** Guest statuses represent the state observed during the applicable live verification, not permanent operating requirements. The Dragonwilds dedicated-server VM was stopped at the time of its last inventory verification. Its configured IP address was not verified.
+**Current guest count:**
 
-> **auth-prod-01:** VM 104 previously had 5 GiB allocated, verified in November 2026. Its allocation was reduced to 4 GiB and verified after reboot on November 13, 2026.
+- 3 running guests.
+- 1 stopped guest.
+- 4 guests registered on this node.
 
-> immich-prod-01 was originally planned for pve-prod-01 but moved to pve-prod-02 due to RAM headroom. See `architecture/decisions-log.md`.
+> **Inventory note:** Guest statuses represent the state observed during the applicable live verification, not permanent operating requirements. The Dragonwilds dedicated-server VM was stopped at the time of verification. Its configured IP address was not verified.
+
+> **auth-prod-01:** VM 104 previously ran on this node with 5 GiB allocated, later reduced to 4 GiB and verified after reboot on November 13, 2026. It was migrated offline to `pve-prod-03` on November 14, 2026, retaining 4 GiB RAM and 2 vCPU. It is no longer a current guest of `pve-prod-01`.
+
+> **immich-prod-01:** VM 105 was originally planned for pve-prod-01 but deployed on the original pve-prod-02 due to RAM headroom. It was temporarily hosted on pve-prod-03 during hardware replacement and is now on the replacement pve-prod-02. See `architecture/decisions-log.md`.
 
 ### VM Memory Right-Sizing — November 13, 2026
 
@@ -162,28 +223,28 @@ A resource-sizing review was conducted after Proxmox displayed nearly full memor
 
 Live Proxmox configuration and performance history were reviewed alongside guest-level `free -h`, swap, memory-pressure and Docker container statistics.
 
-**Completed changes:**
+**Completed changes at the time of the review:**
 
-|VM|Previous RAM|Current RAM|vCPU|Ballooning|
+| VM | Previous RAM | Resulting RAM | vCPU | Ballooning |
 |---|---|---|---|---|
-|docker-prod-01 (101)|8 GiB|7 GiB|4|Disabled|
-|auth-prod-01 (104)|5 GiB|4 GiB|2|Disabled|
-|observer-prod-01 (107)|2 GiB|2 GiB|2|Disabled|
+| docker-prod-01 (101) | 8 GiB | 7 GiB | 4 | Disabled |
+| auth-prod-01 (104) | 5 GiB | 4 GiB | 2 | Disabled |
+| observer-prod-01 (107) | 2 GiB | 2 GiB | 2 | Disabled |
 
-The Immich VM on pve-prod-02 remains allocated 6 GiB RAM and 2 vCPUs. No CPU allocation changes were made to any VM.
+The Immich VM on pve-prod-02 remained allocated 6 GiB RAM and 2 vCPUs. No CPU allocation changes were made to any VM.
 
 Both modified VMs were rebooted, and the new Proxmox memory configurations were confirmed active with no pending memory changes.
 
-**Post-resize guest validation:**
+**Post-resize guest validation — November 13:**
 
-|Metric|docker-prod-01|auth-prod-01|
+| Metric | docker-prod-01 | auth-prod-01 |
 |---|---|---|
-|RAM allocated|7 GiB|4 GiB|
-|Guest RAM used|3.5 GiB|1.4 GiB|
-|Guest RAM available|3.2 GiB|2.4 GiB|
-|Swap occupied|268 KiB|268 KiB|
-|Recent memory PSI averages|0.00|0.00|
-|Active swap-in/out during sample|None|None|
+| RAM allocated | 7 GiB | 4 GiB |
+| Guest RAM used | 3.5 GiB | 1.4 GiB |
+| Guest RAM available | 3.2 GiB | 2.4 GiB |
+| Swap occupied | 268 KiB | 268 KiB |
+| Recent memory PSI averages | 0.00 | 0.00 |
+| Active swap-in/out during sample | None | None |
 
 Additional live verification through Komodo confirmed:
 
@@ -192,7 +253,7 @@ Additional live verification through Komodo confirmed:
 - Both Komodo server connections reported `Ok`.
 - pve-prod-01 had approximately 9.97 GiB available host memory following the changes.
 
-**Result:** A total of 2 GiB of VM memory allocation was reclaimed on pve-prod-01. Both VMs passed initial post-reboot resource and container-state checks, with no observed recent memory pressure or active swapping.
+**Result at that time:** A total of 2 GiB of VM memory allocation was reclaimed on pve-prod-01. Both VMs passed initial post-reboot resource and container-state checks, with no observed recent memory pressure or active swapping.
 
 **Operational considerations:**
 
@@ -202,6 +263,125 @@ Additional live verification through Komodo confirmed:
 - The low swap occupancy immediately following reboot partly reflects the reset of prior swap state.
 - Normal workload behavior was verified at the time of measurement; sustained peak-load, indexing and maintenance windows were not separately stress-tested.
 - Reassess allocation only if ongoing memory pressure, active swap activity, OOM kills, service degradation or workload growth warrants it.
+
+### Authentik Relocation — November 14, 2026
+
+**Status:** Completed and post-migration validation passed.
+
+VM 104 (`auth-prod-01`) was migrated from `pve-prod-01` to `pve-prod-03` as part of the preparation for upgrading the primary Proxmox node.
+
+The migration was performed offline because the source and destination use different CPU architectures and the guest's disks reside on local ZFS storage.
+
+**Migration configuration:**
+
+| Item | Value |
+|---|---|
+| VMID | 104 |
+| Guest | auth-prod-01 |
+| Source node | pve-prod-01 |
+| Destination node | pve-prod-03 |
+| Method | Offline migration with local disks |
+| Source storage | local-zfs |
+| Target storage | local-zfs |
+| Primary disk | 32 GiB |
+| UEFI disk | Migrated |
+| vCPU | 2 |
+| RAM | 4 GiB |
+| CPU type | x86-64-v2-AES |
+| Network bridge | vmbr0 |
+| VLAN | 30 |
+| Guest IP | 192.168.30.13 |
+| Virtual NIC MAC | BC:24:11:CA:5D:1B |
+
+**Procedure:**
+
+1. Verified all three Proxmox nodes were healthy and the cluster was quorate.
+2. Verified the destination's ZFS mirror was `ONLINE`, with zero known data errors.
+3. Confirmed the November 14 scheduled PBS backup of VM 104 completed successfully on the source node.
+4. Gracefully shut down VM 104.
+5. Executed the offline migration from `pve-prod-01`:
+
+   ```bash
+   qm migrate 104 pve-prod-03 --with-local-disks --targetstorage local-zfs --online 0
+   ```
+
+6. Confirmed Proxmox registered the migrated VM on `pve-prod-03`.
+7. Verified the VM's configuration, including CPU, RAM, disks, UEFI firmware, MAC address, and VLAN.
+8. Started VM 104 on the destination node.
+9. Performed post-migration guest, Docker, application, DNS, reverse-proxy, SSO, and UPS monitoring checks.
+10. Completed a fresh PBS snapshot backup from `pve-prod-03`.
+
+**Post-migration validation:**
+
+| Check | Result |
+|---|---|
+| VM 104 placement | pve-prod-03 |
+| VM state | Running |
+| Guest IPv4 | 192.168.30.13 |
+| Default gateway | 192.168.30.1 |
+| Guest memory total | 3.8 GiB |
+| Guest memory used | 1.3 GiB |
+| Guest memory available | 2.4 GiB |
+| Swap occupied | 0 B |
+| Authentik application containers | Running |
+| PostgreSQL | Healthy |
+| Authentik server | Healthy |
+| Authentik worker | Healthy |
+| Local health endpoint | HTTP 200 |
+| Backend HTTP response | HTTP 302 |
+| Public URL HTTP response | HTTP 302 |
+| DNS rewrite | auth.giohosted.com → 192.168.30.11 |
+| SSO functional testing | Passed |
+| Komodo Periphery | Connected, state `Ok` |
+| Destination NUT client | Enabled, active; UPS `OL` |
+
+**Post-migration PBS backup:**
+
+A manual snapshot backup was executed from `pve-prod-03`:
+
+```bash
+vzdump 104 --storage pbs-prod-01 --mode snapshot
+```
+
+The backup completed successfully on November 14, 2026, at 14:09:45 CST.
+
+- Virtual disk size processed: 32.00 GiB.
+- Sparse zero data: 11.59 GiB (36%).
+- Reused backup data: 30.52 GiB (95%).
+- Duration: 44 seconds.
+- Result: Backup job finished successfully.
+
+The notification message `notification was not matched by any matcher` did not represent a backup failure.
+
+**Impact on pve-prod-01:**
+
+- VM 104 no longer consumes an active 4 GiB guest memory allocation on this node.
+- Its virtual disks are no longer part of the source node's active guest storage allocation.
+- The host now has fewer critical application dependencies.
+- Future planned reboots of `pve-prod-01` will not directly power down the Authentik VM.
+- `auth-prod-01` now shares `pve-prod-03` with secondary DNS CT 102.
+
+**November 14 live resource observation:**
+
+After the migration, `pve-prod-01` reported approximately 15.1 GiB of 29.1 GiB host RAM in use, with approximately 14 GiB available.
+
+This is a point-in-time host observation, not a guaranteed amount of permanently free memory. ZFS ARC, Linux cache, and VM workloads can change host memory usage.
+
+**Limitations:**
+
+- The move was an offline migration, not a failover test.
+- The destination uses node-local ZFS storage.
+- No automatic Proxmox HA configuration was added.
+- A future failure of `pve-prod-03` would still require a deliberate guest recovery procedure.
+- The successful PBS snapshot backup does not replace an isolated full-VM restore test.
+
+**Related documentation:**
+
+- `services/infra/authentik.md`
+- `architecture/compute/pve-prod-03.md`
+- `architecture/hardware/inventory.md`
+- `runbooks/backup-schedule.md`
+- `architecture/decisions-log.md`
 
 ### AI Observer — observer-prod-01
 
@@ -213,38 +393,38 @@ The observer is intentionally isolated in its own Ubuntu VM rather than sharing 
 
 #### VM Configuration
 
-|Setting|Value|
+| Setting | Value |
 |---|---|
-|VMID|107|
-|Host|pve-prod-01|
-|OS|Ubuntu Server 26.04.1 LTS|
-|vCPU|2|
-|CPU type|x86-64-v3|
-|RAM|2 GiB|
-|Memory ballooning|Disabled|
-|Disk|20 GiB on local-zfs|
-|Firmware|OVMF / UEFI|
-|Machine|q35|
-|Network bridge|vmbr0|
-|VLAN|30 — Services|
-|IP|192.168.30.17|
-|QEMU guest agent|Enabled|
-|Start at boot|Enabled|
-|Startup delay|90 seconds|
+| VMID | 107 |
+| Host | pve-prod-01 |
+| OS | Ubuntu Server 26.04.1 LTS |
+| vCPU | 2 |
+| CPU type | x86-64-v3 |
+| RAM | 2 GiB |
+| Memory ballooning | Disabled |
+| Disk | 20 GiB on local-zfs |
+| Firmware | OVMF / UEFI |
+| Machine | q35 |
+| Network bridge | vmbr0 |
+| VLAN | 30 — Services |
+| IP | 192.168.30.17 |
+| QEMU guest agent | Enabled |
+| Start at boot | Enabled |
+| Startup delay | 90 seconds |
 
-The VM's Proxmox configuration and running state were reverified on November 13, 2026.
+The VM's Proxmox configuration and running state were reverified on November 13, 2026. It remained running on `pve-prod-01` during the November 14 guest inventory review.
 
 A November 2026 memory audit found approximately 458 MiB used and 1.1 GiB available inside the guest, with no observed recent memory pressure or active swapping. Its 2 GiB allocation was deliberately retained to preserve headroom for simultaneous MCP queries, maintenance, and future integrations.
 
 #### MCP Integration Inventory
 
-|Integration|Server version|Read tools|Purpose|
+| Integration | Server version | Read tools | Purpose |
 |---|---|---|---|
-|Proxmox|mattoddie/proxmox-mcp 0.5.1|84|Cluster, nodes, VMs, containers, storage, backups and diagnostics|
-|Unraid|dinglebear-ai/unraid-rmcp 0.6.3|26|NAS array, disks, shares, Docker and system health|
-|Komodo|MP-Tool/komodo-mcp-server 1.5.0|40|Read-only Docker monitoring across registered hosts|
-|UniFi|ry-ops/unifi-mcp-server 2.1.0|55|UniFi Network, devices, clients, VLANs, firewall and WAN monitoring|
-|**Total**|**4 MCP services**|**205**|**Read-only tool exposure**|
+| Proxmox | mattoddie/proxmox-mcp 0.5.1 | 84 | Cluster, nodes, VMs, containers, storage, backups and diagnostics |
+| Unraid | dinglebear-ai/unraid-rmcp 0.6.3 | 26 | NAS array, disks, shares, Docker and system health |
+| Komodo | MP-Tool/komodo-mcp-server 1.5.0 | 40 | Read-only Docker monitoring across registered hosts |
+| UniFi | ry-ops/unifi-mcp-server 2.1.0 | 55 | UniFi Network, devices, clients, VLANs, firewall and WAN monitoring |
+| **Total** | **4 MCP services** | **205** | **Read-only tool exposure** |
 
 All four are exposed to ChatGPT through dedicated plugins:
 
@@ -261,13 +441,15 @@ The UniFi MCP version 2.1.0 is pinned to upstream commit `e13d0e22dce1b6a498edc5
 
 Komodo Core runs on `docker-prod-01` and monitors three registered Docker hosts:
 
-|Docker host|Role|Komodo connection|
+| Docker host | Role | Komodo connection |
 |---|---|---|
-|docker-prod-01|Primary Docker application host|Local Periphery|
-|immich-prod-01|Immich application host|Remote Periphery over outbound WSS|
-|auth-prod-01|Authentik application host|Remote Periphery over outbound WSS|
+| docker-prod-01 | Primary Docker application host | Local Periphery |
+| immich-prod-01 | Immich application host | Remote Periphery over outbound WSS |
+| auth-prod-01 | Authentik application host | Remote Periphery over outbound WSS |
 
 All three Komodo hosts returned `Ok` during live verification on November 13, 2026, using Periphery version 2.3.4.
+
+Following the November 14 migration, the Komodo connection to `auth-prod-01` was checked again and returned `Ok`, with all six containers running.
 
 The observer's Komodo MCP connects to the existing Komodo Core HTTPS endpoint. No separate MCP server or OpenAI tunnel is needed for each monitored Docker host.
 
@@ -275,12 +457,12 @@ The observer's Komodo MCP connects to the existing Komodo Core HTTPS endpoint. N
 
 Each integration runs as an independent Docker MCP service on `observer-prod-01`, with a corresponding native systemd-managed outbound OpenAI Secure MCP Tunnel.
 
-|Integration|MCP listener|Tunnel readiness|systemd service|
+| Integration | MCP listener | Tunnel readiness | systemd service |
 |---|---|---|---|
-|Proxmox|127.0.0.1:8080|127.0.0.1:8081|tunnel-client.service|
-|Unraid|127.0.0.1:8082|127.0.0.1:8083|tunnel-client-unraid.service|
-|Komodo|127.0.0.1:8084|127.0.0.1:8085|tunnel-client-komodo.service|
-|UniFi|127.0.0.1:8086|127.0.0.1:8087|tunnel-client-unifi.service|
+| Proxmox | 127.0.0.1:8080 | 127.0.0.1:8081 | tunnel-client.service |
+| Unraid | 127.0.0.1:8082 | 127.0.0.1:8083 | tunnel-client-unraid.service |
+| Komodo | 127.0.0.1:8084 | 127.0.0.1:8085 | tunnel-client-komodo.service |
+| UniFi | 127.0.0.1:8086 | 127.0.0.1:8087 | tunnel-client-unifi.service |
 
 MCP HTTP endpoint paths use `/mcp`, and the tunnel readiness endpoints use `/readyz`.
 
@@ -324,8 +506,9 @@ The observer implements several independent security controls:
 
 - Connects through UniFi Site Manager and Network API to the UDM-SE.
 - Uses `UNIFI_READ_ONLY=true` and a fail-closed launcher restricting the exposed MCP tools to 55 read operations.
-- Does not expose UniFi configuration modification operations to ChatGPT.
-- The upstream UniFi API credential may have broader permissions than the read-only MCP tool surface; these are distinct security boundaries.
+- Does not expose UniFi configuration modification operations.
+
+The upstream UniFi API credential may have broader permissions than the read-only MCP tool surface; these are distinct security boundaries.
 
 All four MCP integrations are read-only from the ChatGPT tool interface. This does not mean every upstream service credential independently has read-only permissions, nor does it mean all returned information is nonsensitive.
 
@@ -352,6 +535,7 @@ The active tunnel configurations, protected credentials and runtime state remain
 - November 5: UniFi MCP and fourth tunnel deployed and verified.
 - November 6: Infrastructure-as-code coverage for all four deployments and tunnel templates verified.
 - November 13: Observer VM configuration and UniFi MCP connectivity rechecked through live integrations.
+- November 14: Authentik VM 104 migrated to node 03; the observer's Proxmox and Komodo integrations remained functional during post-migration validation.
 
 The existence of deployment definitions does not establish that a full observer disaster recovery has been tested. A complete isolated restore and recovery validation remains outstanding in the operational documentation.
 

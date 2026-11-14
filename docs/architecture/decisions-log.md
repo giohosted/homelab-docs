@@ -1,6 +1,6 @@
 # Architecture Decisions Log
 
-**Last Updated:** 2026-11-13
+**Last Updated:** 2026-11-14
 
 ---
 
@@ -119,7 +119,7 @@
 
 **Why:** Increase compute flexibility and establish a healthy 3-node quorum without retaining the earlier Raspberry Pi QDevice. Spread primary and secondary AdGuard onto separate hypervisors.
 
-**Implementation:** Removed QDevice before adding Lenovo; configured ZFS RAID-1, VLAN-aware `vmbr0`, and joined `homelab-v3`. Moved secondary AdGuard CT 102 to this node; temporarily hosted Immich VM 105 while `pve-prod-02` was replaced. By November 13, VM 105 was moved to the new Dell, and CT 102 is the only current guest on `pve-prod-03`.
+**Implementation:** Removed QDevice before adding Lenovo; configured ZFS RAID-1, VLAN-aware `vmbr0`, and joined `homelab-v3`. Moved secondary AdGuard CT 102 to this node; temporarily hosted Immich VM 105 while `pve-prod-02` was replaced. By November 13, VM 105 was moved to the new Dell, leaving CT 102 as the only guest **at that time**. On November 14, Authentik VM 104 was migrated from `pve-prod-01` to `pve-prod-03`, and is now hosted alongside CT 102. The application and PBS post-migration checks passed.
 
 **Limits:** Proxmox HA remains disabled. Independent boot from each Lenovo SSD and the later BIOS update remain unverified.
 
@@ -137,7 +137,7 @@
 
 **Decision:** StarTech 4POSTRACK18U 18U open-frame rack (bundled with switch, $560 total).
 
-**Why:** 18U provides enough space for all current hardware (U1-U11 occupied) plus 6 empty U's for future expansion. Open-frame is fine for a basement/closet install and simplifies cable access vs. enclosed cabinet.
+**Why (original rack plan):** 18U was selected to accommodate the planned U1–U11 equipment layout and leave capacity for expansion. Open-frame is suitable for a basement/closet install and simplifies cable access vs. an enclosed cabinet. **Subsequent change:** The replacement Dell and Lenovo were physically placed on rack shelves on November 14; their exact U positions and post-relocation switch ports are not yet verified, so the original U1–U11 occupancy statement is not a current rack audit.
 
 ---
 
@@ -145,19 +145,45 @@
 
 **Decision:** UniFi USW-Pro-Max-24 24-port 2.5GbE managed switch (bundled with rack).
 
-**Why:** 2.5GbE on all ports future-proofs LAN connections — all current hosts support 2.5GbE or better. Stays in the UniFi ecosystem with the UDM-SE for unified management. SFP+ uplink ports used for DAC connections to UDM-SE and MS-A2.
+**Why:** The switch provides 16 × 1GbE RJ45, 8 × 2.5GbE RJ45, and 2 × 10GbE SFP+ interfaces, supplying faster ports for higher-bandwidth hosts while retaining sufficient 1GbE connectivity for lower-demand devices. Stays in the UniFi ecosystem with the UDM-SE for unified management. Current SFP+ links include the UDM-SE uplink and NAS X710 data interface; the MS-A2-to-NAS storage DAC is point-to-point, not connected through the switch.
 
 ---
 
 ## Networking
 
-### VLAN Design — 4 VLANs
+### VLAN Design — Original Four-Network Plan (historical)
 
-**Decision:** VLAN 10 (Management), VLAN 20 (Trusted), VLAN 30 (Services), VLAN 40 (IoT).
+**Historical decision (superseded in part):** Use VLAN 10 (Management), VLAN 20 (Trusted), VLAN 30 (Services), and VLAN 40 (IoT).
 
-**Why:** Clean separation of concerns. Management VLAN isolates infrastructure devices (Proxmox hosts, NAS, switches) from everything else. Trusted is personal devices. Services is all v3 VMs and LXCs. IoT is fully isolated with internet-only access. Default VLAN 1 intentionally not used as management — devices should never accidentally land on the management VLAN.
+**Why (original design):** Separate infrastructure management devices from trusted clients, production services, and IoT. The original plan explicitly intended **not** to use default VLAN 1 for Management, to avoid accidental attachment of unmanaged endpoints to the management segment. This describes the original decision, not the gateway's currently observed tagging.
 
-**Historical note (2026-10-29):** This records the original four-VLAN design. VLAN 50 (Game Servers) was subsequently introduced for dedicated game-server workloads. Proxmox VM 106 (`dragonwilds-server`) has been verified with VLAN tag 50. Its complete addressing and UniFi firewall configuration remain to be verified. See `architecture/network/vlan-design.md`.
+**History:** Game Servers VLAN 50 was subsequently added for VM 106 (`dragonwilds-server`). The original four-network description, the desired default-deny stance, and the planned dedicated Management VLAN ID 10 were superseded by the live configuration established in November 2026.
+
+---
+
+### Network and Firewall-Zone Configuration — Live Reconciliation, November 14, 2026
+
+**Decision (document current implementation; no configuration changes):** Keep the existing operational UniFi networks and document their **actual VLAN IDs, zones, addressing, and firewall behavior** instead of treating original design intentions as installed configuration.
+
+|Network|Actual UniFi VLAN ID|IPv4 network|Firewall zone|
+|---|---|---|---|
+|Management|**1 (default/untagged)**|192.168.10.0/24|Internal|
+|Trusted|20|192.168.20.0/24|Internal|
+|Services|30|192.168.30.0/24|Internal|
+|IoT|40|192.168.40.0/24|Internal|
+|Game Servers|50|192.168.50.0/24|Dmz|
+
+**Evidence:** Live UniFi Network API returned all five networks enabled, their zone memberships, and the Game Servers gateway `192.168.50.1` with DHCP range `192.168.50.6–192.168.50.254`. Proxmox VM 106 is configured with VLAN tag 50, but the guest's own IP and game-server port-forwarding were not verified.
+
+**Firewall reality:** UniFi has a system-defined **Internal-to-Internal allow fallback**. The intended segmentation is implemented through explicit user-defined block rules rather than a universal default-deny rule. The AI Observer (`192.168.30.17` → `192.168.10.11:8006`) and Beszel (Services → `192.168.10.20`, port 45876) exceptions were confirmed enabled. The live rules did not contain an explicit Trusted-to-IoT deny, so that path requires testing before it can be described as blocked. The Internal-to-Dmz default policy allows new connections, while new Dmz-to-Internal connections are blocked by the system-defined zone policy, subject to applicable exceptions and return traffic.
+
+**DNS evidence:** DHCP overrides are `9.9.9.9`/`1.1.1.1` for Management; `192.168.30.10`/`192.168.30.15` for Trusted and Services; and `9.9.9.9` for IoT. Whether separate interception/NAT policies redirect IoT DNS is unverified.
+
+**Rationale:** Preserve the currently working network without a gratuitous VLAN renumbering or firewall change. Correct the documentation first, then separately review management switch-port tagging, effective Trusted-to-IoT and DMZ access, and any required hardening.
+
+**Limitations:** The live configuration proves UniFi object values, not every effective packet path. Historical references to “VLAN 10” should be interpreted as the **Management network at 192.168.10.0/24** until corresponding documentation is reconciled. No policy or VLAN changes were performed.
+
+**References:** `architecture/network/vlan-design.md`, `architecture/network/firewall-rules.md`, `architecture/network/ip-addresses.md`.
 
 ---
 
@@ -213,11 +239,11 @@
 
 ## Storage
 
-### NAS Platform — Unraid 7.2.3 (replaces TrueNAS SCALE)
+### NAS Platform — Unraid (replaces TrueNAS SCALE; original decision at 7.2.3)
 
-**Decision:** Unraid as the NAS OS.
+**Decision:** Unraid as the NAS OS. The original decision was made at 7.2.3; the hardware inventory subsequently records 7.2.4. This is a software-version history note, not a newly verified Unraid release check.
 
-**Why:** Hybrid ZFS + parity array model fits the data risk tolerance perfectly. ZFS used where data integrity is non-negotiable (photos, backups). Parity array used for recoverable bulk media where mixed drive sizes and expandability matter more than ZFS guarantees. TrueNAS ran as a VM in v2 — v3 gives it a dedicated host as it should have always had.
+**Why:** Hybrid ZFS + parity array model fits the data risk tolerance. ZFS is used for critical data such as photos and backups; parity-array storage is used for recoverable bulk media where mixed drive sizes and expandability matter. Parity protects against drive failures but is not itself a backup. TrueNAS ran as a VM in v2; v3 gives the NAS a dedicated physical host.
 
 ---
 
@@ -253,9 +279,9 @@
 
 ---
 
-### UID/GID — 2000:2000 for All Services
+### UID/GID — Common Service Account Standard (2000:2000)
 
-**Decision:** All containers run as PUID=2000, PGID=2000. Clean break from v2.
+**Decision (original service-account standard):** Use PUID=2000, PGID=2000 for application containers that support the common media/services UID/GID model. Clean break from v2. This is not a claim that _every_ infrastructure container, including PBS, PostgreSQL and privileged management agents, runs as UID/GID 2000; service-specific ownership and requirements take precedence.
 
 **Why:** v2 had messy ownership from organic growth — some services ran as root, some as gio (1000:1000), inconsistent across NFS mounts. v3 starts clean with a dedicated service UID/GID that is separate from both root and the human user account. NAS share permissions set to allow 2000:2000 read/write on all service shares.
 
@@ -331,7 +357,31 @@
 
 **Decision:** Authentik runs on a dedicated VM (auth-prod-01), not an LXC.
 
-**Why:** The Proxmox community officially removed the Authentik LXC helper script in May 2025 due to frequent breakage and a 14GB RAM requirement during build. VM is the only stable deployment option. Dedicated VM also isolates the IdP from other workloads — appropriate given Authentik is the SSO gateway for everything.
+**Why (original decision):** The Proxmox community removed the Authentik LXC helper script in May 2025 due to frequent breakage and high build-time RAM requirements. A dedicated VM is the established and supported deployment choice in this homelab, isolating the IdP from application workloads. This rationale is historical; it is not a claim that Linux containers are technically incapable of running Authentik.
+
+---
+
+### Authentik — Move VM 104 to pve-prod-03 — November 14, 2026
+
+**Decision (implemented):** Migrate the existing `auth-prod-01` VM 104 **offline** from `pve-prod-01` (AMD Minisforum MS-A2) to `pve-prod-03` (Intel Lenovo ThinkCentre M90q). Preserve the VM ID, 2 vCPUs, **4 GiB RAM**, local ZFS virtual disks, VLAN 30, IP `192.168.30.13`, virtual MAC, and application configuration.
+
+**Why:** Remove a critical identity-service dependency from the primary node before its planned Proxmox upgrade; distribute work across the three-node cluster; and avoid live CPU-state compatibility concerns between AMD and Intel while migrating node-local ZFS disks.
+
+**Implementation:** Shut down VM 104 gracefully, then migrated from the source with:
+
+```
+qm migrate 104 pve-prod-03 --with-local-disks --targetstorage local-zfs --online 0
+```
+
+Started the migrated VM on node 03. The destination ZFS mirror was `ONLINE`, and the cluster remained three-node, quorate, and without a QDevice or automatic Proxmox HA.
+
+**Verified November 14:** VM 104 running on node 03; guest address and default gateway unchanged; guest memory approximately **2.4 GiB available, 0 B swap occupied**; Authentik server/worker and PostgreSQL healthy; local health endpoint HTTP 200; DNS/Traefik routing worked (backend and public URL HTTP 302); functional SSO test passed; Komodo server `Ok`, six host containers running; NUT monitor on node 03 enabled/active with UPS status `OL`.
+
+**Backup verification:** Manual `vzdump 104 --storage pbs-prod-01 --mode snapshot` on **pve-prod-03** succeeded November 14 at **14:09:45 CST**, processing a 32 GiB system disk plus EFI disk and reusing approximately 95% of backup data. A separate full restore test has **not** been performed.
+
+**Tradeoffs and limits:** Authentik now shares node 03 with secondary AdGuard CT 102, so losing node 03 affects both services; their local guest disks do not provide automatic failover. Primary DNS CT 100 and the main Docker host remain on node 01. The migration was operationally validated, not a host-failure recovery exercise. Current OIDC redirect registration for `pve-prod-03` was not independently verified.
+
+**References:** `services/infra/authentik.md`, `architecture/compute/pve-prod-01.md`, `architecture/compute/pve-prod-03.md`, `runbooks/backup-schedule.md`.
 
 ---
 
@@ -354,7 +404,7 @@
 - pve-prod-02 (chosen — more RAM headroom)
     
 
-**Why:** At Phase 4 Wave 5 start, pve-prod-01 was already running docker-prod-01 (8GB RAM) and auth-prod-01 (4GB RAM), with docker-prod-01 confirmed to have been swapping (1GB swap usage before RAM bump). Adding a 6GB Immich VM would have pushed pve-prod-01 RAM utilization uncomfortably high. pve-prod-02 was only running PBS (2GB) and one AdGuard LXC (512MB) — ample headroom for the 6GB Immich VM. The CPU performance difference between the i5-9500T and Ryzen 9 7945HX is meaningful for ML workloads but acceptable for a homelab Immich instance where indexing runs in the background.
+**Why (historical sizing at Phase 4 Wave 5):** pve-prod-01 was running docker-prod-01 (then 8 GiB RAM) and auth-prod-01 (then documented around 4 GiB RAM), with docker-prod-01 previously observed using approximately 1 GiB of swap before its RAM increase. Adding a 6GB Immich VM would have pushed pve-prod-01 RAM utilization uncomfortably high. pve-prod-02 was only running PBS (2GB) and one AdGuard LXC (512MB) — ample headroom for the 6GB Immich VM. The CPU performance difference between the i5-9500T and Ryzen 9 7945HX is meaningful for ML workloads but acceptable for a homelab Immich instance where indexing runs in the background.
 
 ---
 
@@ -423,7 +473,7 @@
 
 **Why:** Recurrent PBS failures involved an `ESTALE` stale NFS lock descriptor over the old NFSv3-to-Unraid-FUSE datastore path. The replacement Docker deployment binds directly to NAS ZFS storage at `/mnt/zfs-mirror/backups/pbs`, eliminating that client access path. This does not prove the original upstream invalidation trigger.
 
-**Status:** November 13 scheduled backups succeeded on nodes 01 and 03; VM 105 completed a successful manual snapshot backup from the new node 02. VM 103 was destroyed before physical node replacement; its exclusion remains in the cluster's 02:00 backup job as a harmless stale rule. A full isolated VM/CT restore is still outstanding. See `runbooks/backup-schedule.md`.
+**Status (updated November 14):** The 02:00 scheduled PBS jobs completed `TASK OK` on **all three current Proxmox nodes**: node 01 processed CT 100 and VMs 101/104/106/107; replacement node 02 processed VM 105; node 03 processed CT 102. These runs occurred before Authentik moved. VM 104 subsequently completed a successful manual snapshot backup **from node 03** at 14:09:45 CST (32 GiB system disk and EFI disk included; approximately 44 seconds). VM 103 was destroyed before physical node replacement; its exclusion remains in the cluster backup job as a harmless stale rule. The first scheduled VM 104 backup from node 03, independent archive verification, PBS maintenance-job execution, and a full isolated VM/CT restore remain outstanding. See `runbooks/backup-schedule.md`.
 
 ---
 
@@ -431,13 +481,13 @@
 
 **Decision:** Docker appdata and compose stacks backed up independently via hardened rsync script, separate from PBS.
 
-**Why:** PBS backs up VM disk images — it does not back up application data inside VMs. Container appdata (databases, configs) requires its own backup strategy. rsync to NAS /backups share (ZFS mirror pool) nightly, with Healthchecks.io heartbeat monitoring for silent failure detection.
+**Why:** PBS VM backups include application files stored on the **included virtual disks**; they do not automatically capture external NFS mounts or filesystems excluded from the guest backup. Independent rsync copies of Compose files, Git-excluded `.env` values and `/opt/appdata` provide a separate **file-level** recovery path without requiring a full VM restore. Nightly rsync to the NAS `backups` share and Healthchecks.io heartbeats remain documented, but their latest successful executions after guest migration were not reverified in this decision review. The rolling rsync mirror uses `--delete` and is not a versioned archive.
 
 ---
 
 ### NAS Network Interface Design — Dual Interface, Management/Data Separation
 
-**Decision:** nas-prod-01 uses two separate physical network interfaces for two distinct purposes. Onboard 2.5GbE → VLAN 10 (management only, Unraid UI at 192.168.10.10). X710 Port 2 SFP+ → VLAN 30 (data/NFS, at 192.168.30.16).
+**Decision:** nas-prod-01 uses two separate physical network interfaces for two distinct purposes. Onboard 2.5GbE → Management network (192.168.10.10; historically described as VLAN 10, currently the default/untagged network). X710 Port 2 SFP+ → Services VLAN 30 (data/NFS, at 192.168.30.16). Docker PBS uses Host networking, so its TCP 8007 bind/reachability on the management IP remains an explicit verification item.
 
 **What was considered:**
 
@@ -448,7 +498,7 @@
 - Dual interface separating management and data planes (chosen)
     
 
-**Why:** The NAS holds backups, photos, and all irreplaceable data. Putting the Unraid management UI on VLAN 30 alongside services means a compromised container could reach it. Putting everything on VLAN 10 requires poking holes in the management VLAN for NFS traffic, undermining its isolation. Dual interface solves both problems cleanly — services on VLAN 30 reach NFS via 192.168.30.16, the firewall hard-blocks VLAN 30 → VLAN 10, so no compromised container can ever reach the Unraid UI at 192.168.10.10. Management UI is only reachable from Trusted (VLAN 20) on TCP 443.
+**Why:** The NAS holds backups, photos, and irreplaceable data. Putting the Unraid management UI on the Services network would expose it to service workloads; putting NFS exclusively on the Management network would require broader firewall exceptions. The dual-interface approach allows Services clients to use NFS at `192.168.30.16` while the enabled Services-to-Management firewall policy restricts direct access to `192.168.10.10`. This is a network-design control, **not a guarantee** that no compromised workload could reach the NAS by another path; effective access and PBS Host-network exposure require independent verification. Trusted clients have documented administrative access on approved management ports.
 
 ---
 
@@ -478,13 +528,13 @@
 - Onboard 2.5GbE RJ45 to switch RJ45 (chosen)
     
 
-**Why:** VM/LXC workloads on pve-prod-01 (Traefik, ARR stack, Authentik, Immich, DNS) do not come close to saturating 2.5GbE. Using the DAC on MS-A2 would consume the switch's last SFP+ port for no meaningful performance gain, while the NAS data interface benefits significantly from 10GbE. Repurposing the 1M DAC to the NAS eliminates the need to purchase an additional cable.
+**Why (original decision):** The expected VM/LXC workloads, then including Traefik, ARR, Authentik, Immich, and DNS, were not expected to saturate 2.5GbE. Using the DAC from MS-A2 to the switch would consume an SFP+ port for limited benefit, while the NAS data interface benefits more from 10GbE. Repurposing the 1M DAC eliminated another cable purchase. **Current placement:** Authentik moved to pve-prod-03 on November 14; Immich moved to replacement pve-prod-02 on November 13. The LAN-interface choice remains unchanged.
 
 ---
 
 ### pi-prod-01 — VLAN 10 (Management), Not VLAN 30
 
-**Decision:** pi-prod-01 remains on VLAN 10 at 192.168.10.20.
+**Decision:** pi-prod-01 remains on the Management network at 192.168.10.20 (historically called VLAN 10; UniFi currently identifies it as the default/untagged VLAN ID 1).
 
 **What was considered:**
 
@@ -499,7 +549,7 @@
 
 ### IP Addressing Scheme — 192.168.x.x Retained
 
-**Decision:** Keep 192.168.x.x addressing. VLAN 10 = 192.168.10.0/24, VLAN 20 = 192.168.20.0/24, VLAN 30 = 192.168.30.0/24, VLAN 40 = 192.168.40.0/24.
+**Decision:** Keep 192.168.x.x addressing. Original mapping: Management (historically called VLAN 10) = 192.168.10.0/24; Trusted VLAN 20 = 192.168.20.0/24; Services VLAN 30 = 192.168.30.0/24; IoT VLAN 40 = 192.168.40.0/24. **Current additions/clarifications:** Game Servers VLAN 50 = 192.168.50.0/24; live UniFi reports Management as the default VLAN ID **1**, not tagged VLAN 10.
 
 **What was considered:**
 
@@ -648,9 +698,23 @@
 
 ### docker-prod-01 RAM — Bumped from 6GB to 8GB
 
-**Decision:** Increase docker-prod-01 RAM allocation from 6GB to 8GB during Phase 4 Wave 5.
+**Historical decision (subsequently right-sized):** Increase docker-prod-01 RAM allocation from 6GB to 8GB during Phase 4 Wave 5.
 
-**Why:** Verified via `free -h` that docker-prod-01 had 1GB of active swap usage — evidence of real memory pressure during ARR stack operation (search bursts, simultaneous container startup). 8GB provides comfortable headroom for the full stack (Traefik, ARR stack, books stack, torrent stack) with room to grow. auth-prod-01 was also checked and found to have only 268KB swap — no bump needed there.
+**Why (at the time):** `free -h` showed approximately 1 GB of swap occupied on docker-prod-01, prompting the original increase during ARR deployment. The author chose 8 GiB as a conservative allocation for the application stack. The old Authentik memory observation also describes that earlier check, not the later November 13 sizing audit.
+
+---
+
+### VM Memory Right-Sizing — November 13, 2026
+
+**Decision (implemented and verified):** Reduce `docker-prod-01` (VM 101) from **8 GiB to 7 GiB**, and `auth-prod-01` (VM 104) from **5 GiB to 4 GiB**, retaining their existing CPU allocations and disabled memory ballooning. Keep `observer-prod-01` (VM 107) at **2 GiB**.
+
+**Why:** Earlier host-side Proxmox memory use appeared high, but guest-level `free -h`, swap activity, memory pressure and container metrics indicated substantial reclaimable cache and available guest memory. A moderate reduction would reclaim resources while keeping practical headroom.
+
+**Verification:** Both changed VMs were rebooted to apply the new RAM configurations; VM 101 reported approximately 3.2 GiB available, VM 104 approximately 2.4 GiB available, negligible swap occupancy, no observed recent memory pressure, and running application containers. The reductions were confirmed active in Proxmox. These are point-in-time observations, not a guarantee of adequate sizing under every future workload.
+
+**November 14 follow-up:** Authentik still runs with **4 GiB** after moving to pve-prod-03; the guest reported 2.4 GiB available and no occupied swap during post-migration verification. The respective current allocations supersede the prior 5 GiB Authentik and 8 GiB Docker allocations.
+
+**References:** `architecture/compute/pve-prod-01.md`, `services/infra/authentik.md`.
 
 ---
 
@@ -924,5 +988,3 @@ Completing one end-to-end integration before introducing additional systems allo
 **Out-of-scope verification:** The operator elected **not** to perform VM reboot/reconnect or isolated restore/recovery testing for Phase 4. Current function is verified; post-reboot restoration/backup completeness remain unverified and must not be represented as completed. Exact UniFi key expiration timestamp and persisted application/site grants were not independently read back.
 
 **Related documentation:** `services/infra/ai-observer.md`, `runbooks/ai-observer-operations.md`.
-
----
