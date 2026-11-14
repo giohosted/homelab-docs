@@ -89,6 +89,79 @@ The separate `nas-isos` definition, assigned only to `pve-prod-01`, accesses the
 
 **Redundant boot:** `proxmox-boot-tool status` showed two configured UEFI boot partitions (`60B0-9005` and `60B0-E015`), both containing kernels `7.0.14-28-pve` and `7.0.2-6-pve`. **Independent physical boot from each SSD has not been tested.**
 
+### UPS Monitoring — NUT Client
+
+**Implemented and operationally verified November 13, 2026.**
+
+The replacement Dell runs Network UPS Tools (NUT) as a network client. The UPS is physically connected by USB to `nas-prod-01`, which operates the NUT server. This node does not run a separate UPS driver or NUT server.
+
+| Setting | Value |
+|---------|-------|
+| **Package** | `nut-client` 2.8.1-5 |
+| **Operating mode** | `netclient` |
+| **NUT server** | `192.168.10.10` (`nas-prod-01`) |
+| **UPS identifier** | `ups` |
+| **MONITOR target** | `ups@192.168.10.10` |
+| **MONITOR role** | `slave` / secondary |
+| **Power value** | `1` |
+| **MINSUPPLIES** | `1` |
+| **SHUTDOWNCMD** | `/sbin/shutdown -h +0` |
+| **POLLFREQ** | `5` seconds |
+| **HOSTSYNC** | `15` seconds |
+| **DEADTIME** | `15` seconds |
+| **FINALDELAY** | `5` seconds |
+| **POWERDOWNFLAG** | `/etc/killpower` |
+| **Systemd service** | `nut-monitor.service`, enabled and active |
+
+**Configuration files:**
+
+- `/etc/nut/nut.conf` — `MODE=netclient`.
+- `/etc/nut/upsmon.conf` — monitoring endpoint, shutdown settings, and protected authentication credentials.
+- `/etc/systemd/system/nut-monitor.service.d/override.conf` — local correction for the NUT systemd pre-start command.
+
+Both active NUT configuration files were installed with owner/group `root:nut` and permissions `0640`. The monitoring username and password are intentionally excluded from this documentation.
+
+**Systemd packaging workaround:**
+
+The Debian Trixie `nut-monitor.service` package references `/usr/lib/tmpfiles.d/nut-common-tmpfiles.conf`, which was absent on this installation. The installed package instead provides `/usr/lib/tmpfiles.d/nut-client.conf`.
+
+A systemd drop-in was installed without modifying the vendor unit:
+
+```ini
+[Service]
+ExecStartPre=
+ExecStartPre=/usr/bin/systemd-tmpfiles --create /usr/lib/tmpfiles.d/nut-client.conf
+```
+
+After `systemctl daemon-reload` and service restart, `ExecStartPre` completed with `status=0/SUCCESS`. Review this workaround when NUT packages are upgraded; remove it if the vendor unit is corrected.
+
+**November 13 verification:**
+
+- `upsc ups@192.168.10.10 ups.status` returned `OL` (utility power online).
+- `nut-monitor.service` was enabled and `active (running)`.
+- The service log identified `ups@192.168.10.10` as a secondary UPS monitor with power value `1`.
+- The corrected tmpfiles pre-start command succeeded.
+- No authentication-denied or UPS communication-loss errors appeared in the reviewed startup journal.
+- The temporary SSH-staged copies under `/root/nut-reference/` were removed after successful activation; active copies remain in `/etc/nut/`.
+
+**Observed startup messages:** NUT logged a missing existing `upsmon.pid` check, `Init SSL without certificate database`, and `upsnotify` notification warnings. These did not prevent successful service startup. No additional changes were made solely to suppress these messages.
+
+**Validation boundary:** NUT service operation and UPS status queries were verified. An actual UPS-triggered shutdown, guest shutdown ordering, and host restart after power restoration have **not** been tested. A successful `upsc` status query does not independently prove every aspect of authenticated monitoring or forced-shutdown signaling.
+
+**Useful read-only checks:**
+
+```bash
+upsc ups@192.168.10.10 ups.status
+systemctl is-enabled nut-monitor
+systemctl is-active nut-monitor
+systemctl status nut-monitor --no-pager -l
+journalctl -u nut-monitor --no-pager -n 50
+```
+
+Do **not** use `upsmon -c fsd` as a routine health check: it requests a forced-shutdown sequence.
+
+The NAS-side six-minute on-battery timer and intended shutdown ordering are documented in `architecture/storage/nas-prod-01.md`; those settings were not reverified during this client deployment.
+
 ### PBS Backup and Retired VM 103
 
 **Active PBS:** Unraid Docker `proxmox-backup-server` at `192.168.30.16:8007`, datastore `nas-backups`; cluster storage ID `pbs-prod-01` preserved. PBS datastore is bound directly from `/mnt/zfs-mirror/backups/pbs` on Unraid. The cluster backup job `backup-54015f90-26e5` runs at 02:00, selects all existing guests, and still contains a harmless exclusion for VM 103.
@@ -140,6 +213,7 @@ Cluster membership is for unified management and operational flexibility. Automa
 5. Enabled VLAN-aware `vmbr0`; applied package updates and rebooted into kernel `7.0.14-28-pve`.
 6. Corrected a roughly six-hour clock error: Chrony initially had unresolved NTP sources, causing web/API `401 Authentication failed`. `chronyc refresh` populated sources and the clock synchronized; verified stable after reboot.
 7. Migrated VM 105 back from node 03, verified Immich and NAS storage, completed a fresh PBS backup, and confirmed the existing Uptime Kuma host monitor reports UP.
+8. Installed `nut-client` 2.8.1-5; staged the established `pve-prod-01` NUT configuration over SSH; installed protected configuration files; corrected the NUT systemd tmpfiles pre-start command via a drop-in; verified UPS status `OL` and an active monitoring service; removed temporary credential-bearing copies.
 
 ### Historical Hardware — Superseded
 

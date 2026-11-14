@@ -3,17 +3,17 @@
 **Host:** nas-prod-01  
 **OS:** Unraid 7.3.2 (verified by live MCP October 30, 2026)  
 **Chassis:** Rosewill RSV-L4412U (4U, 12-bay)  
-**Last Updated:** 2026-11-05
+**Last Updated:** 2026-11-13 (NUT client inventory updated; NAS storage verification retains its original dates)
 
 ---
 
 ## Network Interfaces
 
-| Interface | Type | IP | VLAN | Purpose |
+|Interface|Type|IP|VLAN|Purpose|
 |---|---|---|---|---|
-| eth0 (onboard 2.5GbE) | br0 bridge | 192.168.10.10/24 | 10 — Management | Unraid web UI only |
-| eth1 (X710 Port 2, 10GbE) | Direct | 192.168.30.16/24 | 30 — Services | NFS exports, Plex traffic, PBS Docker TCP 8007, verified Unraid GraphQL HTTPS access from AI Observer |
-| eth2 (X710 Port 1, 10GbE) | Unconfigured | 10.0.0.x/30 (Phase 3) | None | Point-to-point DAC to pve-prod-01 |
+|eth0 (onboard 2.5GbE)|br0 bridge|192.168.10.10/24|10 — Management|Unraid web UI only|
+|eth1 (X710 Port 2, 10GbE)|Direct|192.168.30.16/24|30 — Services|NFS exports, Plex traffic, PBS Docker TCP 8007, verified Unraid GraphQL HTTPS access from AI Observer|
+|eth2 (X710 Port 1, 10GbE)|Unconfigured|10.0.0.x/30 (Phase 3)|None|Point-to-point DAC to pve-prod-01|
 
 ---
 
@@ -21,19 +21,24 @@
 
 **Current status (verified October 31, 2026):** Array `STARTED`; dual parity valid after completed reconstruction. All five array devices report `DISK_OK` with 0 Unraid disk errors via the read-only Homelab Unraid MCP. This incident is **resolved**; the replaced SAS-to-SATA breakout cable is the probable, not conclusively proven, root cause.
 
-| Role | Drive | Size | Serial | Verified status |
+|Role|Drive|Size|Serial|Verified status|
 |---|---|---|---|---|
-| Parity 1 | WD Red Pro (WD121KFBX-68EF5N0) | 12TB | `AAHKXP9H` | `DISK_OK` |
-| Parity 2 | WD Red Pro (WD121KFBX-68EF5N0) | 12TB | `2AH2JSWY` | `DISK_OK` |
-| Disk 1 | Seagate IronWolf (ST6000VN0033) | 6TB | `ZAD97T6M` | `DISK_OK` |
-| Disk 2 | Seagate IronWolf (ST6000VN0033) | 6TB | `ZAD97RT0` | `DISK_OK` |
-| Disk 3 | WD Red Pro (WD121KFBX-68EF5N0) | 12TB | `5PK7HDXF` | `DISK_OK` |
+|Parity 1|WD Red Pro (WD121KFBX-68EF5N0)|12TB|`AAHKXP9H`|`DISK_OK`|
+|Parity 2|WD Red Pro (WD121KFBX-68EF5N0)|12TB|`2AH2JSWY`|`DISK_OK`|
+|Disk 1|Seagate IronWolf (ST6000VN0033)|6TB|`ZAD97T6M`|`DISK_OK`|
+|Disk 2|Seagate IronWolf (ST6000VN0033)|6TB|`ZAD97RT0`|`DISK_OK`|
+|Disk 3|WD Red Pro (WD121KFBX-68EF5N0)|12TB|`5PK7HDXF`|`DISK_OK`|
 
 - **Configuration:** 2 parity + 3 XFS data disks. The third data disk is **installed and in service**, not a planned expansion.
+    
 - **Usable data capacity:** approximately 24 TB decimal (about 22 TiB), before filesystem overhead; parity disks do not contribute to share capacity.
+    
 - **Filesystem:** XFS on each array data disk; parity devices do not contain mounted data filesystems.
+    
 - **Historical parity sync:** March 11, 2026, 19h 28m, 0 errors; this describes the earlier configuration, not the current recovery.
+    
 - **Current recovery:** Simultaneous Parity 1 and Disk 3 reconstruction completed October 31, 2026, in approximately 20h 18m (73,119 seconds), with 0 reported errors. After completion, Unraid displayed valid parity and green status for both disks. MCP subsequently reported `DISK_OK` for all five array drives.
+    
 
 ---
 
@@ -44,23 +49,28 @@
 **Recovery performed:**
 
 1. Shut down `nas-prod-01` and physically replaced the suspected SAS-to-SATA breakout cable.
+    
 2. Removed the 14 TB Seagate from Parity 1 and reinstalled the original 12 TB WD Red Pro, serial `AAHKXP9H`.
+    
 3. Reassigned the existing 12 TB WD Red Pro, serial `5PK7HDXF`, to Disk 3. The user confirmed this was an established data-disk role, not a newly commissioned empty disk.
+    
 4. Started the array and accepted Unraid's recovery operation for both assignments. The syslog recorded `md: recovery thread: recon P D3 ...`, confirming simultaneous reconstruction of Parity 1 and Disk 3.
+    
 5. Reconstruction completed with 0 reported errors, restoring valid parity and `DISK_OK` status for both slots.
+    
 
 **Post-recovery verification (October 31):**
 
-| Check | Result |
+|Check|Result|
 |---|---|
-| Unraid array / parity | Array `STARTED`; valid parity; Parity 1, Parity 2, Disk 1, Disk 2 and Disk 3 all `DISK_OK`, 0 reported disk errors |
-| Disk 3 mount | `/dev/md3p1` mounted as XFS at `/mnt/disk3` read/write; approximately 2.2 TB used; `appdata`, `data`, and `isos` directories visible |
-| Directory traversal | `find /mnt/disk3 -xdev -print > /dev/null` returned exit code `0` |
-| Parity 1 SMART | Overall-health `PASSED`; fresh short self-test completed without error; 0 reallocated, pending, or offline-uncorrectable sectors |
-| Disk 3 SMART | Overall-health `PASSED`; fresh short self-test completed without error; 0 reallocated, pending, or offline-uncorrectable sectors |
-| Parity 1 SATA CRC history | Attribute 199 = **454**, unchanged in post-recovery check |
-| Disk 3 SATA CRC history | Attribute 199 = **29**, unchanged in post-recovery check |
-| New connection errors | No matching new SATA reset, `ICRC`, or block-I/O communication errors observed in the reviewed post-replacement syslog |
+|Unraid array / parity|Array `STARTED`; valid parity; Parity 1, Parity 2, Disk 1, Disk 2 and Disk 3 all `DISK_OK`, 0 reported disk errors|
+|Disk 3 mount|`/dev/md3p1` mounted as XFS at `/mnt/disk3` read/write; approximately 2.2 TB used; `appdata`, `data`, and `isos` directories visible|
+|Directory traversal|`find /mnt/disk3 -xdev -print > /dev/null` returned exit code `0`|
+|Parity 1 SMART|Overall-health `PASSED`; fresh short self-test completed without error; 0 reallocated, pending, or offline-uncorrectable sectors|
+|Disk 3 SMART|Overall-health `PASSED`; fresh short self-test completed without error; 0 reallocated, pending, or offline-uncorrectable sectors|
+|Parity 1 SATA CRC history|Attribute 199 = **454**, unchanged in post-recovery check|
+|Disk 3 SATA CRC history|Attribute 199 = **29**, unchanged in post-recovery check|
+|New connection errors|No matching new SATA reset, `ICRC`, or block-I/O communication errors observed in the reviewed post-replacement syslog|
 
 **Filesystem context:** Before the reassignment, a direct Unassigned Devices mount of physical Disk 3 (`/dev/sdf1`) failed at 23:31 CDT on October 30 with XFS metadata corruption messages. Unraid's emulated `/dev/md3p1` filesystem had mounted cleanly. After Disk 3 reconstruction, `/dev/md3p1` again mounted normally and its directory tree traversed without reported errors. The earlier physical-mount warning is historical evidence, **not an active unresolved array incident**.
 
@@ -76,30 +86,35 @@
 
 ## Pool — ZFS Mirror (zfs-mirror)
 
-| Role | Drive | Size |
+|Role|Drive|Size|
 |---|---|---|
-| Mirror disk 1 | WD Red Plus (WD40EFRX) | 4TB |
-| Mirror disk 2 | WD Red Plus (WD40EFPX) | 4TB |
+|Mirror disk 1|WD Red Plus (WD40EFRX)|4TB|
+|Mirror disk 2|WD Red Plus (WD40EFPX)|4TB|
 
 - **Usable:** ~3.68TB
+    
 - **Filesystem:** ZFS mirror
+    
 - **Snapshots:** ZnapZend — daily kept 7 days, weekly kept 30 days on photos and backups datasets (historically documented; retention not reverified during the PBS incident)
+    
 - **Health checked 2026-10-30:** `zpool status -v` reported pool and both mirror members `ONLINE`, zero READ/WRITE/CKSUM errors, and no known data errors.
+    
 
 ---
 
 ## Shares
 
-| Share | Pool | Path | Purpose |
+|Share|Pool|Path|Purpose|
 |---|---|---|---|
-| data | Parity Array | /mnt/user/data | Single share for all media and downloads — required for hardlinks. Contains `media/` and `downloads/` as subfolders. |
-| appdata | Parity Array | /mnt/user/appdata | Docker/app config (NAS perspective) |
-| isos | Parity Array | /mnt/user/isos | Proxmox ISO images |
-| photos | ZFS Mirror | /mnt/user/photos | Immich library |
-| backups | ZFS Mirror | /mnt/user/backups | PBS backups, Docker stacks, Docker appdata |
-| system | ZFS Mirror | /mnt/user/system | Unraid system share (location confirmed; contents not reverified) |
+|data|Parity Array|/mnt/user/data|Single share for all media and downloads — required for hardlinks. Contains `media/` and `downloads/` as subfolders.|
+|appdata|Parity Array|/mnt/user/appdata|Docker/app config (NAS perspective)|
+|isos|Parity Array|/mnt/user/isos|Proxmox ISO images|
+|photos|ZFS Mirror|/mnt/user/photos|Immich library|
+|backups|ZFS Mirror|/mnt/user/backups|PBS backups, Docker stacks, Docker appdata|
+|system|ZFS Mirror|/mnt/user/system|Unraid system share (location confirmed; contents not reverified)|
 
 ### data share folder structure
+
 ```
 data/
 ├── media/
@@ -124,6 +139,7 @@ data/
 ```
 
 ### backups share folder structure
+
 ```
 /mnt/user/backups/
 ├── pbs/                    ← PBS Docker datastore, direct path /mnt/zfs-mirror/backups/pbs (owned by uid 34 — do not touch)
@@ -142,10 +158,15 @@ data/
 ### NFS Exports
 
 - **Exported shares:** `data`, `appdata`, `isos`, `photos`, `backups`
+    
 - **Security:** Private — rules for 192.168.30.0/24 and 10.0.0.0/30 with `no_root_squash`
+    
 - **Protocol:** NFSv3 (Unraid Max Server Protocol set to NFSv3)
+    
 - **Permissions:** `nobody:users`, chmod `a=,a+rX,u+w,g+w`
+    
 - **SMB:** Disabled on all shares (NFS only)
+    
 
 > **Note:** The `data` share is mounted on docker-prod-01 as a single NFSv3 mount at `/data`. This is required for hardlinks and atomic moves to work correctly across media and downloads. See `architecture/decisions-log.md` for rationale.
 
@@ -157,20 +178,20 @@ data/
 
 **Container configuration:** Privileged disabled, timezone `America/Chicago`, image tag `latest`, auto-start enabled; Extra Parameters: `--restart unless-stopped --memory=2g --mount type=tmpfs,destination=/run --stop-signal=SIGHUP`. Persistent paths:
 
-| Host path | Container path | Purpose |
+|Host path|Container path|Purpose|
 |---|---|---|
-| `/mnt/user/appdata/pbs/etc` | `/etc/proxmox-backup` | PBS configuration and sensitive secrets |
-| `/mnt/user/appdata/pbs/logs` | `/var/log/proxmox-backup` | PBS logs |
-| `/mnt/user/appdata/pbs/lib` | `/var/lib/proxmox-backup` | PBS state |
-| `/mnt/zfs-mirror/backups/pbs` | `/backups` | Existing PBS datastore, direct ZFS |
+|`/mnt/user/appdata/pbs/etc`|`/etc/proxmox-backup`|PBS configuration and sensitive secrets|
+|`/mnt/user/appdata/pbs/logs`|`/var/log/proxmox-backup`|PBS logs|
+|`/mnt/user/appdata/pbs/lib`|`/var/lib/proxmox-backup`|PBS state|
+|`/mnt/zfs-mirror/backups/pbs`|`/backups`|Existing PBS datastore, direct ZFS|
 
-**Validated:** The old VM 103 is stopped. Existing snapshots were visible (7 groups / 91 snapshots at initial registration). A November 5 manual backup and targeted integrity verification of CT 100 passed, as did both nodes' 02:00 scheduled backup jobs; a file-level restore of `/etc/hostname` succeeded. No isolated full VM/CT restore, post-migration GC/prune/weekly verify execution, or storage mount-order boot test has been completed. The container was still reported RUNNING with auto-start enabled during follow-up live Unraid inspection.
+**Validated:** The old VM 103 was stopped at the time of the November 5 verification and was subsequently deleted before the November 13 Proxmox node replacement. Existing snapshots were visible (7 groups / 91 snapshots at initial registration). A November 5 manual backup and targeted integrity verification of CT 100 passed, as did both nodes' 02:00 scheduled backup jobs; a file-level restore of `/etc/hostname` succeeded. No isolated full VM/CT restore, post-migration GC/prune/weekly verify execution, or storage mount-order boot test has been completed. The container was still reported RUNNING with auto-start enabled during follow-up live Unraid inspection.
 
 **Authentication and alerts:** PVE uses dedicated PBS API token `pve-backup@pbs!pve-cluster` (token and parent least privilege on `nas-backups`). Authentik OIDC remains shared with Proxmox; client secret rotated and interactive logins tested across PBS and both PVE nodes. Local `admin@pbs` password was changed from the default. The Discord webhook test message was delivered; matcher configured for warning/error. Do not record tokens or client secrets in Markdown.
 
 **Maintenance:** Daily pruning 3 last / 7 daily / 4 weekly / 3 monthly; GC Saturday 04:00; verification Saturday 05:00, skip verified if younger than 30 days. Operator's target is ~500 GB for PBS, as a **soft budget**, not a configured quota.
 
-**Lifecycle risks:** The image is explicitly unofficial/unmaintained and may lag official Proxmox security updates; no new image update was advertised by Unraid on November 5. Update via Unraid Docker image recreation, preserving `/mnt/user/appdata/pbs` and datastore mounts, and monitor new releases. Avoid running the retired VM concurrently. Verify startup ordering after the ZFS pool mount and determine whether to restrict Host-network access to TCP 8007 on the management VLAN. The operator accepted the risk of foregoing a migration-time protective ZFS snapshot and is willing to recreate the datastore if unrecoverable.
+**Lifecycle risks:** The image is explicitly unofficial/unmaintained and may lag official Proxmox security updates; no new image update was advertised by Unraid on November 5. Update via Unraid Docker image recreation, preserving `/mnt/user/appdata/pbs` and datastore mounts, and monitor new releases. Avoid running the retired VM concurrently (VM 103 has since been deleted). Verify startup ordering after the ZFS pool mount and determine whether to restrict Host-network access to TCP 8007 on the management VLAN. The operator accepted the risk of foregoing a migration-time protective ZFS snapshot and is willing to recreate the datastore if unrecoverable.
 
 ### PBS NFS Filesystem and October 2026 Incident — Historical
 
@@ -178,7 +199,7 @@ data/
 
 **Verified storage topology (October 30):**
 
-```text
+```
 PBS pbs-prod-01:/mnt/backups/pbs
   -> NFSv3 mount 192.168.30.16:/mnt/user/backups at /mnt/backups
   -> Unraid /mnt/user/backups (fuse.shfs)
@@ -191,9 +212,13 @@ The `backups` share is configured with `shareUseCache="only"`, `shareCachePool="
 **Current mount/export observations (not changes):**
 
 - Unraid export: `/mnt/user/backups`, `fsid=101`, `async`, `no_subtree_check`, and `no_root_squash`; permitted networks include 192.168.30.0/24, 192.168.10.0/24, and 10.0.0.0/30.
+    
 - PBS client mount: NFSv3 with `soft,timeo=30,retrans=3` and systemd automount, configured in `/etc/fstab` on PBS.
+    
 - Unraid FUSE mount: `fuse.shfs` at `/mnt/user` with `fuse_remember="330"` (also visible as `remember=330` in the `shfs` process arguments).
+    
 - **Settings → Global Share Settings → Permit exclusive shares = No.** This setting remains unchanged.
+    
 
 **Incident evidence:** The long-running PBS proxy held a stale descriptor to `/mnt/backups/pbs/.lock`, and backup operations failed with `ESTALE` and client connection resets. The underlying ZFS lock file's timestamps dated to March 18 and the Unraid `shfs` process had run since July 28. The original invalidation event was not proven; do not record FUSE as a conclusively established root cause.
 
@@ -215,11 +240,11 @@ SSH is enabled on nas-prod-01. All SSH sessions authenticate as `root`.
 
 `/root/.ssh/authorized_keys` contains dedicated backup keys for each Docker host. These keys are used exclusively by the nightly rsync backup scripts — they are not interactive login keys.
 
-| Key | Host | Purpose |
-|-----|------|---------|
-| `backup@docker-prod-01` | docker-prod-01 | Nightly rsync backup script |
-| `backup@auth-prod-01` | auth-prod-01 | Nightly rsync backup script |
-| `backup@immich-prod-01` | immich-prod-01 | Nightly rsync backup script |
+|Key|Host|Purpose|
+|---|---|---|
+|`backup@docker-prod-01`|docker-prod-01|Nightly rsync backup script|
+|`backup@auth-prod-01`|auth-prod-01|Nightly rsync backup script|
+|`backup@immich-prod-01`|immich-prod-01|Nightly rsync backup script|
 
 Key location on each host: `/root/.ssh/backup_rsa`  
 Target IP used by rsync scripts: `192.168.30.16` (VLAN 30 data interface — not the management IP)
@@ -241,39 +266,106 @@ The Homelab Unraid ChatGPT plugin connects through its own outbound OpenAI Secur
 
 ## Docker Containers
 
-| Container | IP | Purpose |
+|Container|IP|Purpose|
 |---|---|---|
-| plex | 192.168.30.2 | Plex Media Server — bound to eth1 (VLAN 30) |
-| proxmox-backup-server | Host networking, 192.168.30.16:8007 | PBS 4.2.0 image `ayufan/proxmox-backup-server:latest` — direct ZFS datastore |
+|plex|192.168.30.2|Plex Media Server — bound to eth1 (VLAN 30)|
+|proxmox-backup-server|Host networking, 192.168.30.16:8007|PBS 4.2.0 image `ayufan/proxmox-backup-server:latest` — direct ZFS datastore|
 
 - **iGPU passthrough:** /dev/dri → Intel Raptor Lake-S UHD Graphics (QuickSync)
+    
 - **Hardware transcoding:** enabled — HEVC encoding set to "HEVC sources only"
+    
 - **Media path:** /data → /mnt/user/data (data share)
+    
 - **Appdata:** /mnt/user/appdata/plex
+    
 
 ---
 
 ## UPS & Graceful Shutdown
 
-- **UPS:** Tripp-Lite SMART1500LCDXL connected via USB-B cable to nas-prod-01
-- **NUT plugin:** dmacias/Network UPS Tools, NUT 2.8.4
-- **NUT mode:** Netserver — nas-prod-01 is the NUT server, Proxmox nodes connect as clients
-- **Driver:** usbhid-ups (auto-detected), port: auto
-- **UPS confirmed:** On Line, 100% battery, 34 min runtime at 15% load (225 VA), 1500VA nominal
-- **Shutdown timer:** 6 minutes on battery before initiating shutdown sequence
-- **Shutdown order:** Proxmox nodes receive NUT signal and shut down VMs/LXCs then hypervisor → NAS shuts down last
-- **NUT clients:** pve-prod-01, pve-prod-02 — configured in Phase 3
+**Architecture:** The Tripp-Lite UPS is connected to `nas-prod-01` by USB. Unraid operates the NUT server, while all three Proxmox nodes act as network monitoring clients.
+
+|Setting|Configuration|
+|---|---|
+|**UPS**|Tripp-Lite SMART1500LCDXL|
+|**Connection**|USB-B cable to `nas-prod-01`|
+|**NUT plugin**|dmacias/Network UPS Tools|
+|**Previously documented server version**|NUT 2.8.4|
+|**NUT server mode**|Netserver|
+|**UPS driver**|`usbhid-ups`, port `auto`|
+|**NUT server address**|`192.168.10.10`|
+|**UPS identifier**|`ups`|
+|**Client endpoint**|`ups@192.168.10.10`|
+|**Documented NAS shutdown timer**|Six minutes on battery|
+
+**Previously documented UPS readings:** On Line, 100% charge, approximately 34 minutes estimated runtime at 15% load (225 VA), and 1500 VA nominal. These are historical observations, not current performance guarantees.
+
+**November 13, 2026 client deployment:**
+
+|Proxmox node|Management IP|NUT role|Verification|
+|---|---|---|---|
+|`pve-prod-01`|`192.168.10.11`|Existing secondary network client|NUT service running; UPS queries succeeded|
+|`pve-prod-02`|`192.168.10.12`|Secondary network client|`OL`, enabled/active monitoring, successful startup|
+|`pve-prod-03`|`192.168.10.13`|Secondary network client|`OL`, enabled/active monitoring, successful startup|
+
+Both newly installed Proxmox clients use `nut-client` 2.8.1-5 and the established `pve-prod-01` monitoring configuration.
+
+**Client configuration:**
+
+- `/etc/nut/nut.conf`: `MODE=netclient`.
+    
+- `/etc/nut/upsmon.conf`: `MONITOR` for `ups@192.168.10.10`, power value `1`, secondary role, and protected credentials.
+    
+- Shutdown command: `/sbin/shutdown -h +0`.
+    
+- `POLLFREQ 5`, `MINSUPPLIES 1`, `HOSTSYNC 15`, `DEADTIME 15`, `FINALDELAY 5`.
+    
+- `POWERDOWNFLAG "/etc/killpower"`.
+    
+- The monitoring credentials are intentionally not recorded in documentation.
+    
+
+On nodes 02 and 03, `nut-monitor.service` required a local systemd drop-in because the installed Debian NUT unit referenced a missing tmpfiles configuration. The drop-in uses the installed `/usr/lib/tmpfiles.d/nut-client.conf`. Both nodes subsequently reported successful service startup and `ExecStartPre` exit status `0/SUCCESS`.
+
+No authentication-denied or connection-loss errors were observed in the reviewed startup journals. Temporary copies of the configuration containing credentials were removed after installation.
+
+**Intended shutdown sequence:**
+
+1. The NAS detects utility power loss through its USB-connected UPS.
+    
+2. The documented NUT policy waits six minutes on battery before initiating the shutdown process.
+    
+3. Proxmox NUT clients are expected to receive the forced-shutdown signal.
+    
+4. Each Proxmox host initiates local shutdown, including its configured VM and LXC shutdown sequence.
+    
+5. Unraid is intended to shut down after the Proxmox clients.
+    
+
+**Verification boundary:** The six-minute server-side delay and complete shutdown ordering were not reverified on Unraid during the November 13 client deployment. Service health and successful `OL` queries have been verified, but actual UPS-triggered client shutdown, guest shutdown completion, NAS-last sequencing, and restart after power restoration remain **untested**.
+
+Do not intentionally trigger a forced-shutdown event on the production UPS as a routine connectivity or service-health test. Any end-to-end test should have a reviewed maintenance plan, confirmed backups, an acceptable guest shutdown window, and a recovery procedure.
+
+**Operational references:**
+
+- `architecture/compute/pve-prod-02.md` — Dell NUT client configuration and systemd workaround.
+    
+- `architecture/compute/pve-prod-03.md` — Lenovo NUT client configuration and systemd workaround.
+    
+- `inventory.md` — current three-node UPS client inventory.
+    
 
 ---
 
 ## Plugins Installed
 
-| Plugin              | Purpose                     |
-| ------------------- | --------------------------- |
-| NUT                 | UPS graceful shutdown       |
-| ZFS Master          | ZFS pool management UI      |
-| ZnapZend            | ZFS snapshot scheduling     |
-| Intel-GPU-TOP       | iGPU monitoring             |
-| Dynamix System Temp | CPU/board temp monitoring   |
-| Unassigned Devices  | External drive management   |
-| Fix Common Problems | Configuration health checks |
+|Plugin|Purpose|
+|---|---|
+|NUT|UPS graceful shutdown|
+|ZFS Master|ZFS pool management UI|
+|ZnapZend|ZFS snapshot scheduling|
+|Intel-GPU-TOP|iGPU monitoring|
+|Dynamix System Temp|CPU/board temp monitoring|
+|Unassigned Devices|External drive management|
+|Fix Common Problems|Configuration health checks|
