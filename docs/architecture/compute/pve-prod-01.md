@@ -1,7 +1,7 @@
 
 # pve-prod-01 — Primary Proxmox Node
 
-**Role:** Primary Proxmox node — runs all primary VMs and LXCs  
+**Role:** Primary Proxmox node — hosts primary infrastructure VMs and LXCs  
 **Status:** Active  
 **Last Updated:** 2026-11-13
 
@@ -63,20 +63,51 @@
 ### Apt Repositories
 
 - Enterprise repos removed: `pve-enterprise.sources`, `ceph.sources`
-    
 - No-subscription repo added: `pve-no-subscription` (trixie)
-    
 - Subscription nag popup removed from proxmoxlib.js
-    
 
 ### Cluster
 
-- Member of cluster `homelab-v3`
-    
-- Node ID: 0x00000001
-    
-- QDevice configured — pi-prod-01 (192.168.10.20) acts as tiebreaker
-    
+**Cluster:** `homelab-v3`  
+**Status:** Active and quorate  
+**Configuration version:** 7  
+**Quorum model:** Three voting Proxmox nodes, one vote each; two votes required for quorum  
+**External QDevice:** Not configured  
+**Proxmox HA:** Not enabled
+
+The current three-node cluster configuration was verified through the read-only Homelab Proxmox integration on November 13, 2026.
+
+| Node | Node ID | Management IP | Votes | State |
+|---|---|---|---|---|
+| pve-prod-01 | 1 | 192.168.10.11 | 1 | Online |
+| pve-prod-02 | 2 | 192.168.10.12 | 1 | Online |
+| pve-prod-03 | 3 | 192.168.10.13 | 1 | Online |
+
+All three nodes are members of the same Corosync cluster.
+
+The cluster maintains quorum with any two of its three voting members available. One node can become unavailable without causing the remaining two nodes to lose quorum, assuming those nodes can continue communicating.
+
+**QDevice history:**
+
+The original two-node cluster used a Corosync QDevice on `pi-prod-01` (192.168.10.20) as an external quorum tiebreaker.
+
+That QDevice was removed before `pve-prod-03` joined the cluster in November 2026. The third Proxmox node now provides the additional vote directly.
+
+The Raspberry Pi is no longer involved in Proxmox quorum decisions. Its availability is not a requirement for cluster quorum.
+
+**High-availability distinction:**
+
+A healthy three-node quorum protects cluster coordination but does not provide automatic guest failover.
+
+- Proxmox HA policies are not enabled.
+- Guest disks primarily reside on node-local storage.
+- Failure of a Proxmox host does not automatically migrate or restart its guests on another host.
+- Recovery from a host failure requires an appropriate manual recovery or restore procedure.
+- Planned migrations and centralized management remain supported cluster capabilities.
+
+The HA architecture has not been implemented or validated for automatic workload recovery.
+
+See `architecture/compute/pve-prod-02.md`, `architecture/compute/pve-prod-03.md`, and `architecture/decisions-log.md` for related architecture and quorum decisions.
 
 ### Storage
 
@@ -341,13 +372,9 @@ ZFS RAID-1 mirror selected during Proxmox installer. Both NVMe drives appear in 
 ### Issues Encountered
 
 - PVE 9 uses `.sources` apt format instead of `.list` — enterprise repo cleanup required targeting `pve-enterprise.sources` and `ceph.sources`
-    
 - MS-A2 initially connected to a 1GbE switch port (ports 1–16) — moved to 2.5GbE port (ports 17–24), confirmed 2500Mb/s
-    
 - local-lvm ghost entry present after install — removed with `pvesm remove local-lvm`
-    
 - local-zfs storage entry lost at one point — re-added with `pvesm add zfspool`
-    
 
 ---
 
@@ -356,8 +383,6 @@ ZFS RAID-1 mirror selected during Proxmox installer. Both NVMe drives appear in 
 The MS-A2 has two 2.5GbE RJ45 ports:
 
 - **igc** (Intel I226-V) — primary port, selected for management interface. Better Linux driver support, more reliable at 2.5GbE.
-    
 - **r8169** (Realtek) — secondary port, no cable connected.
-    
 
 During Proxmox install, igc was selected as the management NIC. Only one cable runs from the MS-A2 to the switch — single VLAN-aware bridge (vmbr0) handles all traffic.
