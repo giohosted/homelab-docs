@@ -1,0 +1,5094 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/services/infra/ai-observer/">
+      
+      
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>AI Observer — Proxmox, Unraid, Komodo & UniFi MCP with OpenAI Secure MCP Tunnels - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ai-observer-proxmox-unraid-komodo-unifi-mcp-with-openai-secure-mcp-tunnels" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AI Observer — Proxmox, Unraid, Komodo &amp; UniFi MCP with OpenAI Secure MCP Tunnels
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verified-infrastructure-as-code-coverage-november-6-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Infrastructure-as-Code Coverage — November 6, 2026
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#request-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request Flow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#component-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Component Inventory
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observer-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Observer VM
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Observer VM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#virtual-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      Virtual Hardware
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operating-system-and-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operating System and Network
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operating-system-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operating System Security
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxmox-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox MCP
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Proxmox MCP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#container-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      Container Security
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcp-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-api-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox API Permissions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tls-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      TLS Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-proxmox-mcp-tool-inventory-84-read-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Proxmox MCP Tool Inventory — 84 Read Tools
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-mcp-exclusions-and-read-only-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox MCP Exclusions and Read-Only Policy
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unraid-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unraid MCP
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unraid MCP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deployment-and-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment and Implementation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-transport-and-tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      API, Transport, and TLS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-exposed-mcp-tools-26" class="md-nav__link">
+    <span class="md-ellipsis">
+      Currently Exposed MCP Tools — 26
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#available-upstream-but-not-exposed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Upstream but NOT Exposed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#komodo-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      Komodo MCP
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Komodo MCP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deployment-and-verified-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment and Verified Connectivity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#komodo-mcp-authentication-and-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      Komodo MCP Authentication and Security
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-resource-inventory-and-chatgpt-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Resource Inventory and ChatGPT Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-host-periphery-deployment-ai-observer-phase-3-verified-november-1-2026-cst" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-host Periphery Deployment — AI Observer Phase 3 (Verified November 1, 2026 CST)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exposed-komodo-mcp-tools-40" class="md-nav__link">
+    <span class="md-ellipsis">
+      Exposed Komodo MCP Tools — 40
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#explicitly-excluded-komodo-tools-8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explicitly Excluded Komodo Tools — 8
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unifi-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      UniFi MCP
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="UniFi MCP">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deployment-and-source-pinning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment and Source Pinning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentication-read-only-policy-and-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication, Read-Only Policy, and Limitations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-unifi-mcp-and-live-chatgpt-test-november-5-2026-cst" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified UniFi MCP and Live ChatGPT Test — November 5, 2026 (CST)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openai-secure-mcp-tunnel" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI Secure MCP Tunnel
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenAI Secure MCP Tunnel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deployment_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tunnel-identities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tunnel Identities
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Service Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#protected-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Protected Configuration Files
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version-controlled-tunnel-configuration-verified-november-6-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version-Controlled Tunnel Configuration (Verified November 6, 2026)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-and-firewall" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network and Firewall
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network and Firewall">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-api-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox API Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unraid-graphql-api-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unraid GraphQL API Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#komodo-core-https-api-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Komodo Core HTTPS API Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unifi-site-manager-and-network-api-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      UniFi Site Manager and Network API Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#openai-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI Connectivity
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chatgpt-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      ChatGPT Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ChatGPT Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugins" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plugins
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Verification
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-mcp-audit-november-1-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox MCP Audit — November 1, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unraid-mcp-verification-october-30-2026-cdt" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unraid MCP Verification — October 30, 2026 (CDT)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#komodo-mcp-verification-november-1-2026-cst" class="md-nav__link">
+    <span class="md-ellipsis">
+      Komodo MCP Verification — November 1, 2026 (CST)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-host-komodo-verification-november-1-2026-cst" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-host Komodo Verification — November 1, 2026 (CST)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unifi-mcp-verification-november-5-2026-cst" class="md-nav__link">
+    <span class="md-ellipsis">
+      UniFi MCP Verification — November 5, 2026 (CST)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-live-query" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Live Query
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backup-and-recovery-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup and Recovery Status
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backup and Recovery Status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-vm-backup-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox VM Backup Coverage
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-and-credential-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration and Credential Recovery
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operations-and-maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operations and Maintenance
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Operations and Maintenance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#management-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management Approach
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcp-stacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Stacks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tunnel-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tunnel Client
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basic-read-only-health-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Read-Only Health Checks
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Boundaries
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planned-extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Planned Extensions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="ai-observer-proxmox-unraid-komodo-unifi-mcp-with-openai-secure-mcp-tunnels">AI Observer — Proxmox, Unraid, Komodo &amp; UniFi MCP with OpenAI Secure MCP Tunnels<a class="headerlink" href="#ai-observer-proxmox-unraid-komodo-unifi-mcp-with-openai-secure-mcp-tunnels" title="Permanent link">&para;</a></h1>
+<p><strong>Role:</strong> AI-assisted, read-only infrastructure monitoring and diagnostics<br />
+<strong>Host:</strong> observer-prod-01 (192.168.30.17)<br />
+<strong>Proxmox Host:</strong> pve-prod-01 (192.168.10.11)<br />
+<strong>Proxmox VMID:</strong> 107<br />
+<strong>Status:</strong> Active — Proxmox, Unraid, Komodo and UniFi integrations verified end-to-end<br />
+<strong>Last Updated:</strong> 2026-11-06</p>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>AI Observer provides controlled access to Homelab v3 infrastructure from AI assistants, initially ChatGPT, through Model Context Protocol (MCP).</p>
+<p>The observer runs on a dedicated Ubuntu virtual machine rather than sharing a Docker host with production applications. This separates AI integration services from existing infrastructure workloads and provides an independent security boundary.</p>
+<p><strong>Implemented and end-to-end verified integrations:</strong></p>
+<ul>
+<li><strong>Proxmox MCP:</strong> Read-only monitoring of the Homelab v3 Proxmox cluster; deployed server version <code>0.5.1</code>, <strong>84 read tools</strong>.</li>
+<li><strong>Unraid MCP:</strong> Read-only monitoring of <code>nas-prod-01</code> over the Unraid GraphQL API; Rust MCP <code>0.6.3</code>, <strong>26 read tools</strong>.</li>
+<li><strong>Komodo MCP:</strong> Read-only monitoring of Docker on <code>docker-prod-01</code>, <code>immich-prod-01</code>, and <code>auth-prod-01</code> through the same Komodo Core; MCP <code>1.5.0</code>, Komodo Core/Periphery <code>2.3.4</code>, <strong>40 read tools</strong> with eight explicit exclusions.</li>
+<li><strong>UniFi MCP:</strong> <code>ry-ops/unifi-mcp-server</code> <code>2.1.0</code> (pinned commit <code>e13d0e22dce1b6a498edc5982d78bd589073d44c</code>) through UniFi Site Manager and Network API, <strong>55 read tools</strong> with <code>UNIFI_READ_ONLY=true</code>.</li>
+<li><strong>OpenAI Secure MCP Tunnels:</strong> Four separate outbound native systemd services, each with its own tunnel ID, restricted runtime credential, configuration, and health port.</li>
+<li><strong>ChatGPT plugins:</strong> <code>Homelab Proxmox</code>, <code>Homelab Unraid</code>, <code>Homelab Komodo</code>, and <code>Homelab UniFi</code>; all four connected and exercised using live read-only tool calls. <strong>Total discovered: 205 read tools, zero write tools.</strong></li>
+</ul>
+<p>The Proxmox integration was verified October 29–30 and its compiled version/tool inventory rechecked November 1, 2026. The Unraid integration was deployed and verified October 30, 2026. Komodo integration and its third tunnel were verified end-to-end November 1, 2026. <strong>AI Observer Phase 3 multi-host extension was also implemented and verified November 1, 2026 (CST):</strong> Periphery on <code>immich-prod-01</code> and <code>auth-prod-01</code>, three Komodo servers reporting <code>Ok</code>, both existing application stacks recognized, and live read-only MCP queries across hosts. No extra MCP instance or OpenAI tunnel was required. <strong>AI Observer Phase 4 UniFi</strong> was deployed and verified November 5, 2026 (CST): the UDM-SE (<code>UDMPROSE</code>, UniFi OS <code>5.1.35</code>, Network <code>10.6.109</code>) is reachable through a fourth, separately restricted MCP container and OpenAI tunnel. ChatGPT successfully called <code>unifi_health</code> and <code>get_site_status</code>; at verification the site had <strong>3/3 devices online and 30 connected clients (13 wired / 17 wireless)</strong>. These counts are point-in-time observations, not permanent inventory.</p>
+<h3 id="verified-infrastructure-as-code-coverage-november-6-2026">Verified Infrastructure-as-Code Coverage — November 6, 2026<a class="headerlink" href="#verified-infrastructure-as-code-coverage-november-6-2026" title="Permanent link">&para;</a></h3>
+<p>The private <code>giohosted/homelab-infra</code> repository is shared across the participating Docker hosts. On <code>observer-prod-01</code>, <code>/opt/stacks</code> was confirmed clean and synchronized with <code>origin/main</code> after push of <strong><code>9887296</code></strong> (<code>Add AI Observer tunnel systemd units and config templates</code>). Earlier verified commit <strong><code>6502c59</code></strong> (<code>Add read-only Komodo and UniFi MCP deployments</code>) registered UniFi upstream source as a Git submodule pinned to <code>e13d0e22dce1b6a498edc5982d78bd589073d44c</code>. Proxmox and Unraid MCP Compose definitions were already tracked. This establishes repository coverage of all four MCP deployment definitions and their tunnel templates; it does <strong>not</strong> prove runtime re-deployment or disaster recovery.</p>
+<p>The repository now also contains <code>observer/tunnel-client/</code> with <strong>four sanitized YAML examples</strong> and <strong>four copied, verified systemd service units</strong>. The examples retain local ports and protected credential <em>file paths</em>, but their <code>tunnel_id</code> and <code>channel</code> values are placeholders. <code>/etc</code> holds the active configurations, and protected keys, MCP <code>.env</code> files, the shared tunnel binary and runtime state are <strong>not</strong> included in Git. Pulling the shared repository onto another Docker host copies these inert files; it does not install systemd units, create credentials, or start tunnels.</p>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<h3 id="request-flow">Request Flow<a class="headerlink" href="#request-flow" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ChatGPT
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  |-- Homelab Proxmox plugin -- OpenAI outbound tunnel: homelab-proxmox
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  |     tunnel-client.service -&gt; 127.0.0.1:8080/mcp
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  |     Proxmox MCP -&gt; HTTPS 192.168.10.11:8006 -&gt; homelab-v3 cluster
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  |
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  |-- Homelab Unraid plugin -- OpenAI outbound tunnel: homelab-unraid
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  |     tunnel-client-unraid.service -&gt; 127.0.0.1:8082/mcp
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  |     Unraid MCP -&gt; verified HTTPS nas-prod-01.local:443 (192.168.30.16)
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  |     -&gt; nas-prod-01 GraphQL API
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  |
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  |-- Homelab Komodo plugin -- OpenAI outbound tunnel: homelab-komodo
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  |     tunnel-client-komodo.service -&gt; 127.0.0.1:8084/mcp
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  |     Komodo MCP -&gt; HTTPS komodo.giohosted.com (192.168.30.11)
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  |     -&gt; Komodo Core on docker-prod-01
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  |        |-- local Periphery -&gt; Docker on docker-prod-01
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  |        |-- outbound WSS from Periphery on immich-prod-01 (192.168.30.14)
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  |        `-- outbound WSS from Periphery on auth-prod-01 (192.168.30.13)
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  |
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  `-- Homelab UniFi plugin -- OpenAI outbound tunnel: homelab-unifi
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        tunnel-client-unifi.service -&gt; 127.0.0.1:8086/mcp
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        UniFi MCP -&gt; HTTPS api.ui.com (Site Manager + Network cloud connector)
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        -&gt; UDM-SE / UniFi Network 10.6.109
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>All four MCP services and tunnel clients run on:
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>observer-prod-01 (192.168.30.17, VLAN 30, Proxmox VMID 107)
+</code></pre></div>
+<p>All four MCP HTTP listeners are published <strong>only to loopback on the observer host</strong>. Within the Docker network, the containerized MCP services bind to container interfaces. Each tunnel uses its own localhost health endpoint, protected OpenAI runtime key, and independent systemd unit. All tunnel processes run as the restricted <code>tunnel-client</code> Linux account using one installed binary.</p>
+<p>No public MCP hostname, Traefik route, port forwarding, or inbound internet firewall rule is required. The dedicated Komodo MCP talks to the existing Komodo Core HTTPS endpoint; it does not require a second Docker socket or privileged observer access.</p>
+<h3 id="component-inventory">Component Inventory<a class="headerlink" href="#component-inventory" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+<th>Location / endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Observer VM</td>
+<td>Ubuntu Server 26.04.1 LTS</td>
+<td><code>observer-prod-01</code>, VM 107 on <code>pve-prod-01</code></td>
+</tr>
+<tr>
+<td>Proxmox MCP</td>
+<td>mattoddie/proxmox-mcp <strong>0.5.1</strong></td>
+<td><code>/opt/stacks/proxmox-mcp/</code>, <code>127.0.0.1:8080/mcp</code></td>
+</tr>
+<tr>
+<td>Proxmox MCP health</td>
+<td>HTTP</td>
+<td><code>127.0.0.1:8080/health</code></td>
+</tr>
+<tr>
+<td>Proxmox tunnel</td>
+<td>OpenAI tunnel-client 0.0.18</td>
+<td><code>tunnel-client.service</code>, <code>127.0.0.1:8081/readyz</code></td>
+</tr>
+<tr>
+<td>Proxmox tunnel configuration</td>
+<td>YAML + key + bearer file</td>
+<td><code>/etc/tunnel-client/</code></td>
+</tr>
+<tr>
+<td>Proxmox ChatGPT plugin</td>
+<td>Homelab Proxmox</td>
+<td>84 read tools</td>
+</tr>
+<tr>
+<td>Unraid MCP</td>
+<td>dinglebear-ai/unraid-rmcp <strong>0.6.3</strong></td>
+<td><code>/opt/stacks/unraid-mcp/</code>, <code>127.0.0.1:8082/mcp</code></td>
+</tr>
+<tr>
+<td>Unraid tunnel</td>
+<td>OpenAI tunnel-client 0.0.18</td>
+<td><code>tunnel-client-unraid.service</code>, <code>127.0.0.1:8083/readyz</code></td>
+</tr>
+<tr>
+<td>Unraid tunnel configuration</td>
+<td>YAML + key + bearer file</td>
+<td><code>/etc/tunnel-client-unraid/</code></td>
+</tr>
+<tr>
+<td>Unraid ChatGPT plugin</td>
+<td>Homelab Unraid</td>
+<td>26 read tools</td>
+</tr>
+<tr>
+<td>Komodo MCP</td>
+<td>MP-Tool/komodo-mcp-server <strong>1.5.0</strong></td>
+<td><code>/opt/stacks/komodo-mcp/</code>, <code>127.0.0.1:8084/mcp</code></td>
+</tr>
+<tr>
+<td>Komodo MCP readiness</td>
+<td>HTTP</td>
+<td><code>127.0.0.1:8084/ready</code></td>
+</tr>
+<tr>
+<td>Komodo tunnel</td>
+<td>OpenAI tunnel-client 0.0.18</td>
+<td><code>tunnel-client-komodo.service</code>, <code>127.0.0.1:8085/readyz</code></td>
+</tr>
+<tr>
+<td>Komodo tunnel configuration</td>
+<td>YAML + runtime key, no MCP bearer</td>
+<td><code>/etc/tunnel-client-komodo/</code></td>
+</tr>
+<tr>
+<td>Komodo ChatGPT plugin</td>
+<td>Homelab Komodo</td>
+<td>40 read tools</td>
+</tr>
+<tr>
+<td>UniFi MCP</td>
+<td>ry-ops/unifi-mcp-server <strong>2.1.0</strong> / pinned <code>e13d0e2</code></td>
+<td><code>/opt/stacks/unifi-mcp/</code>, <code>127.0.0.1:8086/mcp</code></td>
+</tr>
+<tr>
+<td>UniFi tunnel</td>
+<td>OpenAI tunnel-client 0.0.18</td>
+<td><code>tunnel-client-unifi.service</code>, <code>127.0.0.1:8087/readyz</code></td>
+</tr>
+<tr>
+<td>UniFi tunnel configuration</td>
+<td>YAML + restricted runtime key; no local MCP bearer</td>
+<td><code>/etc/tunnel-client-unifi/</code></td>
+</tr>
+<tr>
+<td>UniFi ChatGPT plugin</td>
+<td>Homelab UniFi</td>
+<td>55 read tools</td>
+</tr>
+<tr>
+<td>UniFi upstream</td>
+<td>UniFi OS <strong>5.1.35</strong>, Network <strong>10.6.109</strong></td>
+<td>UDM-SE (<code>UDMPROSE</code>) through <code>https://api.ui.com</code></td>
+</tr>
+<tr>
+<td>Komodo Core</td>
+<td>Komodo <strong>2.3.4</strong></td>
+<td><code>docker-prod-01</code>, <code>https://komodo.giohosted.com</code></td>
+</tr>
+<tr>
+<td>Local Periphery</td>
+<td>Komodo <strong>2.3.4</strong></td>
+<td><code>docker-prod-01</code>, internal <code>komodo-backend</code> network</td>
+</tr>
+<tr>
+<td>Immich Periphery</td>
+<td>Komodo <strong>2.3.4</strong></td>
+<td><code>immich-prod-01</code> (<code>192.168.30.14</code>), outbound WSS; no published agent port</td>
+</tr>
+<tr>
+<td>Authentik Periphery</td>
+<td>Komodo <strong>2.3.4</strong></td>
+<td><code>auth-prod-01</code> (<code>192.168.30.13</code>), outbound WSS; no published agent port</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Important distinction:</strong> OpenAI Secure MCP Tunnel is separate from the homelab's application-oriented Cloudflare Tunnel deployment on <code>docker-prod-01</code>; it is not a general-purpose public reverse proxy.</p>
+<h2 id="observer-vm">Observer VM<a class="headerlink" href="#observer-vm" title="Permanent link">&para;</a></h2>
+<h3 id="virtual-hardware">Virtual Hardware<a class="headerlink" href="#virtual-hardware" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VM name</td>
+<td>observer-prod-01</td>
+</tr>
+<tr>
+<td>VM ID</td>
+<td>107</td>
+</tr>
+<tr>
+<td>Proxmox node</td>
+<td>pve-prod-01</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td>2 vCPU, x86-64-v3</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td>2 GiB</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>20 GiB</td>
+</tr>
+<tr>
+<td>Disk storage</td>
+<td>local-zfs</td>
+</tr>
+<tr>
+<td>Machine</td>
+<td>q35</td>
+</tr>
+<tr>
+<td>Firmware</td>
+<td>OVMF / UEFI</td>
+</tr>
+<tr>
+<td>Disk controller</td>
+<td>VirtIO SCSI</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>VirtIO, vmbr0, VLAN tag 30</td>
+</tr>
+<tr>
+<td>QEMU guest agent</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Start at boot</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Startup delay</td>
+<td>90 seconds</td>
+</tr>
+</tbody>
+</table>
+<p>The allocation and Proxmox settings were verified through the live Homelab Proxmox integration.</p>
+<h3 id="operating-system-and-network">Operating System and Network<a class="headerlink" href="#operating-system-and-network" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OS</td>
+<td>Ubuntu Server 26.04.1 LTS</td>
+</tr>
+<tr>
+<td>Hostname</td>
+<td>observer-prod-01</td>
+</tr>
+<tr>
+<td>Static IP</td>
+<td>192.168.30.17/24</td>
+</tr>
+<tr>
+<td>VLAN</td>
+<td>30 — Services</td>
+</tr>
+<tr>
+<td>Gateway</td>
+<td>192.168.30.1</td>
+</tr>
+<tr>
+<td>Primary DNS</td>
+<td>192.168.30.10</td>
+</tr>
+<tr>
+<td>Secondary DNS</td>
+<td>192.168.30.15</td>
+</tr>
+<tr>
+<td>Administration</td>
+<td>SSH</td>
+</tr>
+<tr>
+<td>Primary user</td>
+<td>gio</td>
+</tr>
+</tbody>
+</table>
+<h3 id="operating-system-security">Operating System Security<a class="headerlink" href="#operating-system-security" title="Permanent link">&para;</a></h3>
+<p>The observer was configured with SSH key-based authentication.</p>
+<p>SSH password authentication, keyboard-interactive authentication, and direct root SSH login were disabled.</p>
+<p>The VM uses a dedicated service account, <code>tunnel-client</code>, for the OpenAI tunnel daemon. This account has a noninteractive shell and no Docker group membership.</p>
+<p>Docker is administered separately with elevated privileges when needed.</p>
+<hr />
+<h2 id="proxmox-mcp">Proxmox MCP<a class="headerlink" href="#proxmox-mcp" title="Permanent link">&para;</a></h2>
+<h3 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h3>
+<p><strong>Project:</strong> <a href="https://github.com/mattoddie/proxmox-mcp">https://github.com/mattoddie/proxmox-mcp</a><br />
+<strong>Docker image:</strong> <code>ghcr.io/mattoddie/proxmox-mcp:latest</code><br />
+<strong>Compiled running server version:</strong> <code>0.5.1</code> (verified November 1, 2026 with <code>/proxmox-mcp version</code>)<br />
+<strong>Container:</strong> <code>proxmox-mcp</code><br />
+<strong>Compose:</strong> <code>/opt/stacks/proxmox-mcp/compose.yaml</code><br />
+<strong>Environment:</strong> <code>/opt/stacks/proxmox-mcp/.env</code></p>
+<p>The Compose file is maintained in the private <code>homelab-infra</code> GitHub repository.</p>
+<p>The <code>.env</code> file is excluded from Git and contains the Proxmox connection settings and MCP authentication secret.</p>
+<p>The <code>latest</code> image tag was deliberately selected for CLI-managed updates.</p>
+<h3 id="container-security">Container Security<a class="headerlink" href="#container-security" title="Permanent link">&para;</a></h3>
+<p>The deployed Compose configuration includes:</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Restart policy</td>
+<td>unless-stopped</td>
+</tr>
+<tr>
+<td>Published listener</td>
+<td>127.0.0.1:8080:8080</td>
+</tr>
+<tr>
+<td>Read-only root filesystem</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Linux capabilities</td>
+<td>All dropped</td>
+</tr>
+<tr>
+<td>No new privileges</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Memory limit</td>
+<td>256 MiB</td>
+</tr>
+<tr>
+<td>Process limit</td>
+<td>100</td>
+</tr>
+</tbody>
+</table>
+<p>No Docker socket is mounted into the Proxmox MCP container.</p>
+<h3 id="mcp-configuration">MCP Configuration<a class="headerlink" href="#mcp-configuration" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Configured Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PROXMOX_URL</td>
+<td><a href="https://192.168.10.11:8006/">https://192.168.10.11:8006</a></td>
+</tr>
+<tr>
+<td>PROXMOX_TOKEN_ID</td>
+<td>observer@pve!proxmox-mcp</td>
+</tr>
+<tr>
+<td>PROXMOX_TLS_FINGERPRINT</td>
+<td>Configured; value stored securely</td>
+</tr>
+<tr>
+<td>PROXMOX_DEFAULT_NODE</td>
+<td>pve-prod-01</td>
+</tr>
+<tr>
+<td>PROXMOX_ALLOW_WRITES</td>
+<td>false</td>
+</tr>
+<tr>
+<td>PROXMOX_ALLOW_DELETES</td>
+<td>false</td>
+</tr>
+<tr>
+<td>PROXMOX_ALLOW_EXEC</td>
+<td>false</td>
+</tr>
+<tr>
+<td>MCP_TRANSPORT</td>
+<td>http</td>
+</tr>
+<tr>
+<td>MCP_HTTP_PORT</td>
+<td>8080</td>
+</tr>
+<tr>
+<td>MCP_AUTH_TOKEN</td>
+<td>Configured; secret excluded from documentation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Enabled toolsets:</strong></p>
+<p><code>cluster,nodes,vms,containers,agent,snapshots,storage,backup,tasks</code></p>
+<h3 id="proxmox-api-permissions">Proxmox API Permissions<a class="headerlink" href="#proxmox-api-permissions" title="Permanent link">&para;</a></h3>
+<p>A dedicated Proxmox account was created:</p>
+<p><strong>Account:</strong> <code>observer@pve</code><br />
+<strong>API token:</strong> <code>observer@pve!proxmox-mcp</code><br />
+<strong>Assigned role:</strong> PVEAuditor<br />
+<strong>ACL path:</strong> <code>/</code></p>
+<p>Verified effective privileges include audit and inspection permissions such as:</p>
+<ul>
+<li>
+<p>Sys.Audit</p>
+</li>
+<li>
+<p>VM.Audit</p>
+</li>
+<li>
+<p>VM.GuestAgent.Audit</p>
+</li>
+<li>
+<p>Datastore.Audit</p>
+</li>
+<li>
+<p>Pool.Audit</p>
+</li>
+<li>
+<p>Mapping.Audit</p>
+</li>
+<li>
+<p>SDN.Audit</p>
+</li>
+</ul>
+<p>The account does not have administrative write permissions.</p>
+<p>Token privilege separation is disabled because the token belongs to a dedicated read-only account. This does not grant privileges beyond the account's existing permissions.</p>
+<p>The API token is stored in Bitwarden and on the observer host in its protected environment configuration.</p>
+<h3 id="tls-verification">TLS Verification<a class="headerlink" href="#tls-verification" title="Permanent link">&para;</a></h3>
+<p>The MCP server connects to the Proxmox API using HTTPS and a pinned SHA-256 certificate fingerprint.</p>
+<p>The fingerprint was obtained from the Proxmox node certificate interface.</p>
+<p>TLS certificate verification remains enabled through fingerprint validation rather than being globally disabled.</p>
+<hr />
+<h3 id="verified-proxmox-mcp-tool-inventory-84-read-tools">Verified Proxmox MCP Tool Inventory — 84 Read Tools<a class="headerlink" href="#verified-proxmox-mcp-tool-inventory-84-read-tools" title="Permanent link">&para;</a></h3>
+<p>The running container reported <strong><code>proxmox-mcp 0.5.1</code></strong> from <code>sudo docker exec proxmox-mcp /proxmox-mcp version</code> on November 1, 2026. The installed ChatGPT Homelab Proxmox plugin exposes <strong>84 tools, all classified Read</strong>, with no write, delete, or execution tools. The nine toolsets below match <code>PROXMOX_TOOLSETS=cluster,nodes,vms,containers,agent,snapshots,storage,backup,tasks</code> in the documented configuration. These are <strong>discovered capabilities</strong>, not proof that all 84 upstream API calls have individually succeeded.</p>
+<table>
+<thead>
+<tr>
+<th>Toolset</th>
+<th style="text-align: right;">Read tools</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cluster</code></td>
+<td style="text-align: right;">11</td>
+<td>Cluster, version, quorum, nodes, guests, metric configuration, logs, schedule simulation</td>
+</tr>
+<tr>
+<td><code>nodes</code></td>
+<td style="text-align: right;">25</td>
+<td>Node status, journals, network, services, package updates, ACME/certificates, time</td>
+</tr>
+<tr>
+<td><code>vms</code></td>
+<td style="text-align: right;">7</td>
+<td>QEMU VM identity, configuration, status, metrics and feature/migration checks</td>
+</tr>
+<tr>
+<td><code>containers</code></td>
+<td style="text-align: right;">7</td>
+<td>LXC inventory, configurations, interfaces, stats and feature/migration checks</td>
+</tr>
+<tr>
+<td><code>agent</code></td>
+<td style="text-align: right;">5</td>
+<td>Read-only QEMU guest-agent information, networking, users, storage and memory</td>
+</tr>
+<tr>
+<td><code>snapshots</code></td>
+<td style="text-align: right;">3</td>
+<td>List and inspect guest snapshots, including cluster-wide snapshot inventory</td>
+</tr>
+<tr>
+<td><code>storage</code></td>
+<td style="text-align: right;">14</td>
+<td>Storage inventories, disk/SMART, volumes, ZFS, LVM and available templates</td>
+</tr>
+<tr>
+<td><code>backup</code></td>
+<td style="text-align: right;">8</td>
+<td>Jobs, backup listings, defaults, coverage, and read-only prune preview</td>
+</tr>
+<tr>
+<td><code>tasks</code></td>
+<td style="text-align: right;">4</td>
+<td>Task inventory, task details, logs and read-only waiting on task status</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td style="text-align: right;"><strong>84</strong></td>
+<td><strong>Currently exposed through ChatGPT</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exact exposed names (as discovered November 1, 2026):</strong></p>
+<p><strong><code>cluster</code> (11):</strong>
+- <code>proxmox_get_cluster_config</code>
+- <code>proxmox_get_cluster_log</code>
+- <code>proxmox_get_cluster_options</code>
+- <code>proxmox_get_cluster_status</code>
+- <code>proxmox_get_next_vmid</code>
+- <code>proxmox_get_version</code>
+- <code>proxmox_list_guests</code>
+- <code>proxmox_list_metric_servers</code>
+- <code>proxmox_list_nodes</code>
+- <code>proxmox_list_resources</code>
+- <code>proxmox_simulate_schedule</code></p>
+<p><strong><code>nodes</code> (25):</strong>
+- <code>proxmox_get_acme_account</code>
+- <code>proxmox_get_acme_challenge_schema</code>
+- <code>proxmox_get_acme_plugin</code>
+- <code>proxmox_get_node_certificates</code>
+- <code>proxmox_get_node_config</code>
+- <code>proxmox_get_node_dns</code>
+- <code>proxmox_get_node_hosts</code>
+- <code>proxmox_get_node_journal</code>
+- <code>proxmox_get_node_netstat</code>
+- <code>proxmox_get_node_network_interface</code>
+- <code>proxmox_get_node_package_versions</code>
+- <code>proxmox_get_node_report</code>
+- <code>proxmox_get_node_stats</code>
+- <code>proxmox_get_node_status</code>
+- <code>proxmox_get_node_subscription</code>
+- <code>proxmox_get_node_syslog</code>
+- <code>proxmox_get_node_time</code>
+- <code>proxmox_get_package_changelog</code>
+- <code>proxmox_list_acme_accounts</code>
+- <code>proxmox_list_acme_directories</code>
+- <code>proxmox_list_acme_plugins</code>
+- <code>proxmox_list_node_network</code>
+- <code>proxmox_list_node_repositories</code>
+- <code>proxmox_list_node_services</code>
+- <code>proxmox_list_node_updates</code></p>
+<p><strong><code>vms</code> (7):</strong>
+- <code>proxmox_check_vm_feature</code>
+- <code>proxmox_check_vm_migration</code>
+- <code>proxmox_get_vm</code>
+- <code>proxmox_get_vm_cloudinit</code>
+- <code>proxmox_get_vm_config</code>
+- <code>proxmox_get_vm_stats</code>
+- <code>proxmox_list_vms</code></p>
+<p><strong><code>containers</code> (7):</strong>
+- <code>proxmox_check_container_feature</code>
+- <code>proxmox_check_container_migration</code>
+- <code>proxmox_get_container</code>
+- <code>proxmox_get_container_config</code>
+- <code>proxmox_get_container_interfaces</code>
+- <code>proxmox_get_container_stats</code>
+- <code>proxmox_list_containers</code></p>
+<p><strong><code>agent</code> (5):</strong>
+- <code>proxmox_get_guest_filesystems</code>
+- <code>proxmox_get_guest_info</code>
+- <code>proxmox_get_guest_memory_blocks</code>
+- <code>proxmox_get_guest_network</code>
+- <code>proxmox_get_guest_users</code></p>
+<p><strong><code>snapshots</code> (3):</strong>
+- <code>proxmox_get_snapshot</code>
+- <code>proxmox_list_all_snapshots</code>
+- <code>proxmox_list_snapshots</code></p>
+<p><strong><code>storage</code> (14):</strong>
+- <code>proxmox_get_disk_smart</code>
+- <code>proxmox_get_storage</code>
+- <code>proxmox_get_storage_stats</code>
+- <code>proxmox_get_volume</code>
+- <code>proxmox_get_zfs_pool</code>
+- <code>proxmox_list_appliance_templates</code>
+- <code>proxmox_list_directory_mounts</code>
+- <code>proxmox_list_disks</code>
+- <code>proxmox_list_lvm</code>
+- <code>proxmox_list_lvm_thin</code>
+- <code>proxmox_list_storage</code>
+- <code>proxmox_list_storage_content</code>
+- <code>proxmox_list_zfs_pools</code>
+- <code>proxmox_scan_storage</code></p>
+<p><strong><code>backup</code> (8):</strong>
+- <code>proxmox_get_backup_config</code>
+- <code>proxmox_get_backup_job</code>
+- <code>proxmox_get_vzdump_defaults</code>
+- <code>proxmox_list_backup_files</code>
+- <code>proxmox_list_backup_jobs</code>
+- <code>proxmox_list_backups</code>
+- <code>proxmox_list_unbacked_guests</code>
+- <code>proxmox_preview_backup_prune</code></p>
+<p><strong><code>tasks</code> (4):</strong>
+- <code>proxmox_get_task</code>
+- <code>proxmox_get_task_log</code>
+- <code>proxmox_list_tasks</code>
+- <code>proxmox_wait_for_task</code></p>
+<h3 id="proxmox-mcp-exclusions-and-read-only-policy">Proxmox MCP Exclusions and Read-Only Policy<a class="headerlink" href="#proxmox-mcp-exclusions-and-read-only-policy" title="Permanent link">&para;</a></h3>
+<p>The <a href="https://github.com/mattoddie/proxmox-mcp/blob/v0.5.1/docs/tools.md">deployed-version tool reference</a> and <a href="https://github.com/mattoddie/proxmox-mcp/blob/v0.5.1/docs/configuration.md">v0.5.1 configuration reference</a> describe 19 upstream toolsets and 300+ potential tools across capability levels. <strong>Do not conflate upstream availability with deployed registration.</strong> This deployment enables only the nine groups listed above. The remaining <strong>ten entire toolsets</strong> are not registered:</p>
+<table>
+<thead>
+<tr>
+<th>Disabled toolset</th>
+<th>Scope of withheld capabilities / reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>access</code></td>
+<td>Users, roles, tokens, ACLs, realms and MFA; sensitive identity metadata and unnecessary for operational monitoring</td>
+</tr>
+<tr>
+<td><code>firewall</code></td>
+<td>Datacenter/node/guest firewall rules and management; privileged security configuration and unnecessary detailed disclosure</td>
+</tr>
+<tr>
+<td><code>ha</code></td>
+<td>HA configuration and resource management; not included in current observer monitoring scope</td>
+</tr>
+<tr>
+<td><code>sdn</code></td>
+<td>SDN zones, VNets, IPAM, routing/management metadata; unnecessary detailed network configuration</td>
+</tr>
+<tr>
+<td><code>ceph</code></td>
+<td>Ceph topology and management; not required for deployed storage observability</td>
+</tr>
+<tr>
+<td><code>pools</code></td>
+<td>Proxmox resource pool listings and changes; not part of current monitoring scope</td>
+</tr>
+<tr>
+<td><code>replication</code></td>
+<td>Replication jobs, logs and operations; not part of current monitoring scope</td>
+</tr>
+<tr>
+<td><code>notifications</code></td>
+<td>Notification targets, matchers, and management; endpoints can contain sensitive configuration</td>
+</tr>
+<tr>
+<td><code>hardware</code></td>
+<td>Host PCI/USB/device mappings; out of current scope</td>
+</tr>
+<tr>
+<td><code>raw</code></td>
+<td>General Proxmox API request escape hatch; explicitly excluded to prevent bypassing curated tool safety boundaries</td>
+</tr>
+</tbody>
+</table>
+<p>Within the <strong>nine enabled toolsets</strong>, tools marked write/delete/exec in upstream v0.5.1 are <strong>also not registered</strong> because <code>PROXMOX_ALLOW_WRITES=false</code>, <code>PROXMOX_ALLOW_DELETES=false</code>, and <code>PROXMOX_ALLOW_EXEC=false</code>. Consequently, start/stop/reconfigure/clone/migrate guests, create/delete snapshots or backups, run guest commands, edit networking/storage, and other changes are unavailable. The underlying <code>observer@pve!proxmox-mcp</code> identity retains <code>PVEAuditor</code> privileges, providing an independent upstream read-only boundary.</p>
+<p>With v0.5.1 the upstream default <code>all</code> would expose more tools than this deployment; the existing explicit toolset policy intentionally limits information disclosure, prompt/tool complexity and blast radius. <strong>No inference of 300+ locally deployed tools is valid.</strong> A new upstream release or change to <code>PROXMOX_TOOLSETS</code> requires an exact <code>tools/list</code> audit, not only a version check. Read operations may still disclose sensitive infrastructure metadata (for example node reports, certificates, network details, VM configurations or logs); do not paste raw outputs into untrusted services.</p>
+<hr />
+<h2 id="unraid-mcp">Unraid MCP<a class="headerlink" href="#unraid-mcp" title="Permanent link">&para;</a></h2>
+<h3 id="deployment-and-implementation">Deployment and Implementation<a class="headerlink" href="#deployment-and-implementation" title="Permanent link">&para;</a></h3>
+<p><strong>Project:</strong> <a href="https://github.com/dinglebear-ai/unraid">dinglebear-ai/unraid</a> — Rust server under <code>unraid-rs/</code><br />
+<strong>Image:</strong> <code>ghcr.io/dinglebear-ai/unraid-rmcp:latest</code><br />
+<strong>Deployed binary version (verified):</strong> <code>unraid-rmcp 0.6.3</code><br />
+<strong>Container:</strong> <code>unraid-mcp</code><br />
+<strong>Compose file:</strong> <code>/opt/stacks/unraid-mcp/compose.yaml</code><br />
+<strong>Environment/credentials:</strong> <code>/opt/stacks/unraid-mcp/.env</code> (mode 0600; excluded from Git)<br />
+<strong>Persistent named volume:</strong> <code>unraid-mcp_unraid-mcp-data</code> (mounted at <code>/data</code>)<br />
+<strong>MCP transport:</strong> Streamable HTTP with bearer-token authentication<br />
+<strong>Published port:</strong> <code>127.0.0.1:8082:40010/tcp</code></p>
+<p>The <code>latest</code> tag is intentional for operator-controlled CLI updates; it does <strong>not</strong> automatically pull new releases. The original, outdated <code>ghcr.io/dinglebear-ai/runraid:latest</code> image ran v0.2.3 and lacked the required CA-bundle support. The correct Rust image is <code>ghcr.io/dinglebear-ai/unraid-rmcp:latest</code>.</p>
+<p>The current Compose stack uses <code>restart: unless-stopped</code>, <code>no-new-privileges:true</code>, a 384 MiB memory limit, a 100-process limit, bounded JSON log retention (10 MiB × 3), and an explicitly localhost-bound published port. The read-only API configuration and MCP allowlist are the substantive privilege controls. No Unraid Docker socket or NAS filesystem is mounted into the container. This stack is not hardened identically to the Proxmox MCP stack; an earlier read-only-container configuration blocked writing runtime logs under <code>/data</code> and was removed.</p>
+<h3 id="api-transport-and-tls">API, Transport, and TLS<a class="headerlink" href="#api-transport-and-tls" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Implemented value / role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UNRAID_API_URL</code></td>
+<td><code>https://nas-prod-01.local/graphql</code></td>
+</tr>
+<tr>
+<td><code>extra_hosts</code></td>
+<td><code>nas-prod-01.local:192.168.30.16</code> (container-local name resolution)</td>
+</tr>
+<tr>
+<td><code>UNRAID_API_KEY</code></td>
+<td>Dedicated Unraid GraphQL key in protected <code>.env</code>; not documented in plaintext</td>
+</tr>
+<tr>
+<td><code>UNRAID_API_CA_BUNDLE</code></td>
+<td><code>/certs/unraid.crt</code></td>
+</tr>
+<tr>
+<td>Host certificate path</td>
+<td><code>/etc/unraid-mcp/unraid.crt</code>, mounted read-only into container</td>
+</tr>
+<tr>
+<td><code>UNRAID_API_SKIP_TLS_VERIFY</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>UNRAID_RMCP_HOST</code> / <code>PORT</code></td>
+<td><code>0.0.0.0</code> / <code>40010</code> inside container; Docker exposes only <code>127.0.0.1:8082</code></td>
+</tr>
+<tr>
+<td><code>UNRAID_RMCP_AUTH_MODE</code></td>
+<td><code>bearer</code></td>
+</tr>
+<tr>
+<td><code>UNRAID_RMCP_TOKEN</code></td>
+<td>MCP client authentication token in <code>.env</code>; separate protected copy for tunnel Authorization header</td>
+</tr>
+<tr>
+<td><code>UNRAID_RMCP_PROJECTION</code></td>
+<td><code>atomic</code></td>
+</tr>
+<tr>
+<td><code>UNRAID_RMCP_ENABLED_TOOLS</code></td>
+<td>Explicit 26-action read-only allowlist (below)</td>
+</tr>
+</tbody>
+</table>
+<p>Unraid uses a self-signed server certificate (<code>CN=nas-prod-01.local</code>). The observed SHA-256 fingerprint was <code>67:F9:8F:19:E4:D9:10:51:95:4E:38:55:2D:F7:BA:78:14:49:54:7A:3D:EC:F6:18:2E:59:E9:52:67:CC:DB:9C</code>. The certificate was checked directly against the NAS and the accessible Services interface; startup logs reported <code>trusting extra CA certificates from bundle count=1</code>. A successful authenticated GraphQL query then confirmed the connection works <strong>with</strong> certificate verification enabled. Revalidate identity before replacing this certificate.</p>
+<p>The API key was created with 14 <code>READ_ANY</code> permissions and no write grants: <code>ARRAY</code>, <code>DASHBOARD</code>, <code>DISK</code>, <code>DISPLAY</code>, <code>DOCKER</code>, <code>INFO</code>, <code>LOGS</code>, <code>ME</code>, <code>NETWORK</code>, <code>NOTIFICATIONS</code>, <code>ONLINE</code>, <code>SERVICES</code>, <code>SHARE</code>, <code>VARS</code>. This key is an upstream read-only boundary; it is independent of the MCP action filter. The bearer-token MCP authentication mode does not by itself guarantee read-only capabilities, so maintain the explicit allowlist as well.</p>
+<h3 id="currently-exposed-mcp-tools-26">Currently Exposed MCP Tools — 26<a class="headerlink" href="#currently-exposed-mcp-tools-26" title="Permanent link">&para;</a></h3>
+<p>The 26 atomic tools below were verified through local MCP <code>tools/list</code> and in ChatGPT's connected plugin view on October 30, 2026. All appear under the plugin's <strong>Read</strong> category; zero write tools were exposed. Tool discovery and one end-to-end <code>unraid_info</code> invocation were verified, <strong>not</strong> every individual action's upstream API permission.</p>
+<table>
+<thead>
+<tr>
+<th>MCP tool</th>
+<th>Read-only purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unraid_array</code></td>
+<td>Array state, capacity, parity status, and disk summary</td>
+</tr>
+<tr>
+<td><code>unraid_disk</code></td>
+<td>Details for one disk by ID</td>
+</tr>
+<tr>
+<td><code>unraid_disks</code></td>
+<td>Disk inventory and SMART/temperature summaries</td>
+</tr>
+<tr>
+<td><code>unraid_docker</code></td>
+<td>Docker container inventory and state</td>
+</tr>
+<tr>
+<td><code>unraid_docker_logs</code></td>
+<td>Read Docker container log lines</td>
+</tr>
+<tr>
+<td><code>unraid_help</code></td>
+<td>Help for the currently enabled actions</td>
+</tr>
+<tr>
+<td><code>unraid_info</code></td>
+<td>Unraid release, kernel, CPU, and RAM</td>
+</tr>
+<tr>
+<td><code>unraid_log_file</code></td>
+<td>Read an available log file by path</td>
+</tr>
+<tr>
+<td><code>unraid_log_files</code></td>
+<td>List available log files</td>
+</tr>
+<tr>
+<td><code>unraid_me</code></td>
+<td>Identity associated with the authenticated API key</td>
+</tr>
+<tr>
+<td><code>unraid_metrics</code></td>
+<td>CPU, memory, and temperature metrics</td>
+</tr>
+<tr>
+<td><code>unraid_network</code></td>
+<td>Network URLs and address information</td>
+</tr>
+<tr>
+<td><code>unraid_network_interfaces</code></td>
+<td>Detailed network interface information</td>
+</tr>
+<tr>
+<td><code>unraid_notifications</code></td>
+<td>Read notifications and warning summaries</td>
+</tr>
+<tr>
+<td><code>unraid_online</code></td>
+<td>API reachability/online status</td>
+</tr>
+<tr>
+<td><code>unraid_parity_history</code></td>
+<td>Historical parity check results</td>
+</tr>
+<tr>
+<td><code>unraid_plugins</code></td>
+<td>Installed community plugin inventory</td>
+</tr>
+<tr>
+<td><code>unraid_server</code></td>
+<td>Unraid server identity and reachability metadata</td>
+</tr>
+<tr>
+<td><code>unraid_services</code></td>
+<td>Unraid system service status</td>
+</tr>
+<tr>
+<td><code>unraid_shares</code></td>
+<td>Share inventory, capacity, and placement configuration</td>
+</tr>
+<tr>
+<td><code>unraid_status</code></td>
+<td>Local Rust MCP server status/observability</td>
+</tr>
+<tr>
+<td><code>unraid_system_time</code></td>
+<td>System time and timezone details</td>
+</tr>
+<tr>
+<td><code>unraid_ups</code></td>
+<td>UPS devices and readings</td>
+</tr>
+<tr>
+<td><code>unraid_ups_config</code></td>
+<td>UPS monitoring configuration</td>
+</tr>
+<tr>
+<td><code>unraid_vars</code></td>
+<td>Unraid variables and configuration metadata</td>
+</tr>
+<tr>
+<td><code>unraid_vms</code></td>
+<td>Unraid VM inventory and state</td>
+</tr>
+</tbody>
+</table>
+<h3 id="available-upstream-but-not-exposed">Available Upstream but NOT Exposed<a class="headerlink" href="#available-upstream-but-not-exposed" title="Permanent link">&para;</a></h3>
+<p><strong>Canonical action names</strong> below are from the Rust server's <a href="https://github.com/dinglebear-ai/unraid/blob/main/unraid-rs/src/mcp/schemas.rs"><code>ACTIONS</code> list</a>. Atomic tool names add the prefix <code>unraid_</code>. This is a snapshot of the upstream source reviewed alongside deployed version 0.6.3; check release changes before modifying the allowlist.</p>
+<p><strong>Additional read-scope actions not exposed — 35:</strong></p>
+<p><code>registration</code>, <code>flash</code>, <code>rclone</code>, <code>remote_access</code>, <code>connect</code>, <code>installed_unraid_plugins</code>, <code>is_sso_enabled</code>, <code>public_oidc_providers</code>, <code>oidc_providers</code>, <code>oidc_configuration</code>, <code>api_keys</code>, <code>api_key_possible_roles</code>, <code>api_key_possible_permissions</code>, <code>get_available_auth_actions</code>, <code>get_api_key_creation_form_schema</code>, <code>config</code>, <code>settings</code>, <code>display</code>, <code>customization</code>, <code>internal_boot_context</code>, <code>owner</code>, <code>servers</code>, <code>is_fresh_install</code>, <code>public_theme</code>, <code>time_zone_options</code>, <code>assignable_disks</code>, <code>plugin_install_operations</code>, <code>cloud</code>, <code>api_key</code>, <code>oidc_provider</code>, <code>ups_device_by_id</code>, <code>plugin_install_operation</code>, <code>validate_oidc_session</code>, <code>get_permissions_for_roles</code>, <code>preview_effective_permissions</code>
+Some are potentially useful for future observability (<code>registration</code>, <code>flash</code>, <code>assignable_disks</code>, <code>installed_unraid_plugins</code>, <code>ups_device_by_id</code>, <code>plugin_install_operations</code>). Others could reveal sensitive configuration, access details, API-key identities, OIDC authentication information, or remote configuration (<code>api_keys</code>, <code>api_key</code>, <code>servers</code>, <code>rclone</code>, <code>remote_access</code>, <code>connect</code>, and other identity/settings endpoints). They are <strong>not</strong> currently enabled, and the current read-only API key may lack permission for some of them. Do not confuse a read-scope label with a guarantee that the returned data is non-sensitive.</p>
+<p><strong>Write/admin-scope actions not exposed — 83:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Not exposed (canonical action names)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Array and parity operations (10)</td>
+<td><code>array_set_state</code>, <code>array_add_disk_to_array</code>, <code>array_remove_disk_from_array</code>, <code>array_mount_array_disk</code>, <code>array_unmount_array_disk</code>, <code>array_clear_array_disk_statistics</code>, <code>parity_check_start</code>, <code>parity_check_pause</code>, <code>parity_check_resume</code>, <code>parity_check_cancel</code></td>
+</tr>
+<tr>
+<td>VM control (7)</td>
+<td><code>vm_start</code>, <code>vm_stop</code>, <code>vm_pause</code>, <code>vm_resume</code>, <code>vm_force_stop</code>, <code>vm_reboot</code>, <code>vm_reset</code></td>
+</tr>
+<tr>
+<td>Docker lifecycle and organization (21)</td>
+<td><code>docker_start</code>, <code>docker_stop</code>, <code>docker_restart</code>, <code>docker_pause</code>, <code>docker_unpause</code>, <code>docker_update_container</code>, <code>docker_remove_container</code>, <code>docker_update_containers</code>, <code>docker_update_all_containers</code>, <code>docker_create_folder</code>, <code>docker_create_folder_with_items</code>, <code>docker_set_folder_children</code>, <code>docker_delete_entries</code>, <code>docker_move_entries_to_folder</code>, <code>docker_move_items_to_position</code>, <code>docker_rename_folder</code>, <code>docker_update_view_preferences</code>, <code>docker_update_autostart_configuration</code>, <code>refresh_docker_digests</code>, <code>reset_docker_template_mappings</code>, <code>sync_docker_template_paths</code></td>
+</tr>
+<tr>
+<td>Notifications and alert state (9)</td>
+<td><code>delete_archived_notifications</code>, <code>archive_notification</code>, <code>create_notification</code>, <code>archive_notifications</code>, <code>unarchive_notifications</code>, <code>unread_notification</code>, <code>archive_all</code>, <code>unarchive_all</code>, <code>notify_if_unique</code></td>
+</tr>
+<tr>
+<td>API keys and Connect identity (8)</td>
+<td><code>api_key_create</code>, <code>api_key_add_role</code>, <code>api_key_remove_role</code>, <code>api_key_delete</code>, <code>api_key_update</code>, <code>update_server_identity</code>, <code>connect_sign_out</code>, <code>connect_sign_in</code></td>
+</tr>
+<tr>
+<td>Settings, network access, UPS, and UI (10)</td>
+<td><code>customization_set_locale</code>, <code>customization_set_theme</code>, <code>configure_ups</code>, <code>update_system_time</code>, <code>update_temperature_config</code>, <code>setup_remote_access</code>, <code>enable_dynamic_remote_access</code>, <code>update_api_settings</code>, <code>update_settings</code>, <code>update_ssh_settings</code></td>
+</tr>
+<tr>
+<td>Plugins and onboarding (14)</td>
+<td><code>unraid_plugins_install_plugin</code>, <code>unraid_plugins_install_language</code>, <code>onboarding_complete_onboarding</code>, <code>onboarding_reset_onboarding</code>, <code>onboarding_bypass_onboarding</code>, <code>onboarding_clear_onboarding_override</code>, <code>onboarding_close_onboarding</code>, <code>onboarding_open_onboarding</code>, <code>onboarding_resume_onboarding</code>, <code>onboarding_refresh_internal_boot_context</code>, <code>onboarding_set_onboarding_override</code>, <code>onboarding_create_internal_boot_pool</code>, <code>add_plugin</code>, <code>remove_plugin</code></td>
+</tr>
+<tr>
+<td>Remote backups (3)</td>
+<td><code>rclone_create_r_clone_remote</code>, <code>rclone_delete_r_clone_remote</code>, <code>initiate_flash_backup</code></td>
+</tr>
+<tr>
+<td>Other (1)</td>
+<td><code>recalculate_overview</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>None of the 83 write/admin actions is part of the deployed MCP allowlist.</strong> All operational changes to the array, parity, Docker containers, VMs, plugins, settings, API keys, and remote access remain excluded. In addition, the upstream Unraid key lacks write permissions.</p>
+<p><strong>References and expansion policy:</strong></p>
+<ul>
+<li><a href="https://github.com/dinglebear-ai/unraid/blob/main/unraid-rs/README.md#mcp-tool-reference">Rust MCP tool reference</a> — documented query and management capabilities.</li>
+<li><a href="https://github.com/dinglebear-ai/unraid/blob/main/unraid-rs/src/mcp/schemas.rs">Canonical action names and scope classification</a> — source of truth for action availability and read/write classification.</li>
+<li><a href="https://github.com/dinglebear-ai/unraid/blob/main/unraid-rs/src/mcp/tool_filter.rs">MCP selector/allowlist implementation</a> — controls exposure and fail-closed validation for unknown selectors.</li>
+<li>Additional read tools require an explicit requirement, sensitivity and upstream-permission review, controlled Compose change, container recreation, exact <code>tools/list</code> comparison, and live read-only test. The operator must authorize any consequential capability expansion. Do not enable writes merely to make troubleshooting easier.</li>
+<li><code>UNRAID_RMCP_ENABLED_TOOLS</code> restricts exposed MCP actions. It does not change the <code>runraid</code> command-line client's capabilities. Keep the dedicated Unraid key read-only and never put its value in documentation.</li>
+</ul>
+<hr />
+<h2 id="komodo-mcp">Komodo MCP<a class="headerlink" href="#komodo-mcp" title="Permanent link">&para;</a></h2>
+<h3 id="deployment-and-verified-connectivity">Deployment and Verified Connectivity<a class="headerlink" href="#deployment-and-verified-connectivity" title="Permanent link">&para;</a></h3>
+<p><strong>Project:</strong> <a href="https://github.com/MP-Tool/komodo-mcp-server">MP-Tool/komodo-mcp-server</a><br />
+<strong>Image:</strong> <code>ghcr.io/mp-tool/komodo-mcp-server:latest</code><br />
+<strong>Deployed MCP version:</strong> <code>1.5.0</code> (verified via <code>/ready</code> and live <code>komodo_health_check</code>)<br />
+<strong>Komodo Core version:</strong> <code>2.3.4</code><br />
+<strong>Container:</strong> <code>komodo-mcp</code><br />
+<strong>Compose:</strong> <code>/opt/stacks/komodo-mcp/compose.yaml</code><br />
+<strong>Protected environment:</strong> <code>/opt/stacks/komodo-mcp/.env</code>, owned by <code>gio:gio</code> with mode <code>0600</code> at deployment<br />
+<strong>Local MCP endpoint:</strong> <code>http://127.0.0.1:8084/mcp</code>, Docker published only on loopback (<code>127.0.0.1:8084:8000/tcp</code>)<br />
+<strong>Readiness:</strong> <code>http://127.0.0.1:8084/ready</code><br />
+<strong>Komodo API:</strong> <code>https://komodo.giohosted.com</code> (resolved to <code>192.168.30.11</code> from observer at verification)</p>
+<p>The image uses a manually managed mutable <code>latest</code> tag; it does not automatically update. The Compose security settings are <code>restart: unless-stopped</code>, <code>no-new-privileges:true</code>, <code>cap_drop: [ALL]</code>, <code>pids_limit: 100</code>, <code>mem_limit: 384m</code>, and bounded JSON logs (10 MiB × 3). No Docker socket is mounted into the observer MCP container. <strong>Komodo Core and its local Periphery remain on <code>docker-prod-01</code>, not the observer; additional Periphery agents run on <code>immich-prod-01</code> and <code>auth-prod-01</code>.</strong></p>
+<p>A dedicated Komodo user, <code>ai-observer-komodo</code>, holds Read permissions for monitored resources and Logs permissions for Server, Stack and Deployment. It is not an administrator and has no Inspect, Terminal, Attach, Processes, or create privileges. Its dedicated API key named <code>ai-observer-mcp</code> and secret are stored in the observer's protected <code>.env</code>; <strong>do not publish them</strong>. The local MCP queries Komodo Core over HTTPS with these credentials; the ChatGPT tool calls do not contact Docker directly.</p>
+<h3 id="komodo-mcp-authentication-and-security">Komodo MCP Authentication and Security<a class="headerlink" href="#komodo-mcp-authentication-and-security" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Implemented value / purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MCP_TRANSPORT</code></td>
+<td><code>http</code></td>
+</tr>
+<tr>
+<td><code>MCP_PORT</code></td>
+<td><code>8000</code> (in container)</td>
+</tr>
+<tr>
+<td><code>MCP_BIND_HOST</code></td>
+<td><code>0.0.0.0</code> inside the container; host publication is loopback only</td>
+</tr>
+<tr>
+<td><code>MCP_AUTH_ENABLED</code></td>
+<td><code>false</code> — intentional for this deployment; no separate bearer header on local MCP</td>
+</tr>
+<tr>
+<td><code>MCP_SECRET_SCRUB_ENABLED</code></td>
+<td><code>true</code>; best-effort output scrubbing only</td>
+</tr>
+<tr>
+<td><code>MCP_TOOLS_EXCLUDED_TOOLS</code></td>
+<td>Eight explicitly withheld tools listed below</td>
+</tr>
+<tr>
+<td><code>LOG_LEVEL</code></td>
+<td><code>info</code></td>
+</tr>
+<tr>
+<td>OpenAI tunnel MCP Authorization header</td>
+<td><strong>Not configured</strong>, unlike Proxmox and Unraid</td>
+</tr>
+</tbody>
+</table>
+<p>In the deployed upstream implementation, anonymous HTTP MCP clients are restricted to its read-only tool scope; write/manage/operate tools were not discovered. This <strong>does not authenticate local MCP callers</strong>: any process/user able to access observer loopback port <code>8084</code> may invoke exposed read tools. Localhost binding, the dedicated non-admin upstream account, disabled writes, selected tool exclusions, the observer OS boundary, and private OpenAI tunnel are distinct protections. A tool being labelled <strong>Read</strong> does not mean its output cannot include private information. Retained <code>*_info</code> tools can return whole resource configurations; operators deliberately chose to retain them for troubleshooting. Logs, scripts, network configuration, variables and metadata should always be reviewed before external sharing. Upstream scrubbing is defense-in-depth, <strong>not</strong> a guarantee that every secret will be removed.</p>
+<h3 id="current-resource-inventory-and-chatgpt-verification">Current Resource Inventory and ChatGPT Verification<a class="headerlink" href="#current-resource-inventory-and-chatgpt-verification" title="Permanent link">&para;</a></h3>
+<p>At the <strong>initial November 1 verification</strong>, the dedicated account retrieved one server (<code>docker-prod-01</code>, <code>Ok</code>) and <strong>26 Docker containers</strong>; a resource-count audit found <strong>9 stacks, 3 procedures, 1 builder</strong> and none of the other queried resource types. These were historical checkpoints. <strong>After Phase 3 extension</strong>, a live ChatGPT check returned <strong>three servers</strong> (<code>docker-prod-01</code>, <code>immich-prod-01</code>, <code>auth-prod-01</code>), all <code>Ok</code> on Periphery <code>2.3.4</code>, and <strong>11 registered stacks</strong> in aggregate, including <code>immich</code> and <code>authentik</code>, both running. Host container listings and the Immich server logs were also accessible through the existing <code>Homelab Komodo</code> plugin. The tool inventory remains <strong>exactly 40 Read / zero Write</strong> with eight deliberate exclusions; counts are observations, not permanent targets.</p>
+<h3 id="multi-host-periphery-deployment-ai-observer-phase-3-verified-november-1-2026-cst">Multi-host Periphery Deployment — AI Observer Phase 3 (Verified November 1, 2026 CST)<a class="headerlink" href="#multi-host-periphery-deployment-ai-observer-phase-3-verified-november-1-2026-cst" title="Permanent link">&para;</a></h3>
+<p><strong>Scope:</strong> Existing Komodo Core on <code>docker-prod-01</code> now manages three independent Docker hosts; the one <code>komodo-mcp</code> container and one <code>homelab-komodo</code> OpenAI tunnel on <code>observer-prod-01</code> remain unchanged. An administrator can manage hosts through the Komodo web UI with appropriate Komodo permissions. <strong>ChatGPT remains read-only</strong> through the restricted <code>ai-observer-komodo</code> identity and the MCP tool exclusions.</p>
+<table>
+<thead>
+<tr>
+<th>Komodo server</th>
+<th>Host IP</th>
+<th>Periphery / connectivity</th>
+<th>Komodo stack registered</th>
+<th>Observed state</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docker-prod-01</code></td>
+<td><code>192.168.30.11</code></td>
+<td>Existing local Periphery <code>2.3.4</code>, internal Docker network</td>
+<td>Existing stacks</td>
+<td><code>Ok</code></td>
+</tr>
+<tr>
+<td><code>immich-prod-01</code></td>
+<td><code>192.168.30.14</code></td>
+<td>Periphery <code>2.3.4</code>, outbound <code>wss://komodo.giohosted.com</code></td>
+<td><code>immich</code></td>
+<td><code>Ok</code>; stack running after separate Immich incident recovery</td>
+</tr>
+<tr>
+<td><code>auth-prod-01</code></td>
+<td><code>192.168.30.13</code></td>
+<td>Periphery <code>2.3.4</code>, outbound <code>wss://komodo.giohosted.com</code></td>
+<td><code>authentik</code></td>
+<td><code>Ok</code>; stack running</td>
+</tr>
+</tbody>
+</table>
+<p>On <strong>both remote hosts</strong>, the implemented deployment is a dedicated Docker Compose service, <code>komodo-periphery</code>, using <code>ghcr.io/moghtech/komodo-periphery:2</code>, <code>init: true</code> and <code>restart: unless-stopped</code>, with bounded JSON logging. The configuration is at <code>/opt/stacks/komodo-periphery/compose.yaml</code>; its permanent identity material is under <code>/opt/appdata/komodo/periphery/keys/</code> (<code>periphery.key</code>, <code>periphery.pub</code>, <code>core.pub</code>; root-owned, private). Periphery binds the Docker socket, read-only <code>/proc</code> and <code>/opt/stacks</code> into its own container; <code>PERIPHERY_ROOT_DIRECTORY=/opt</code>. The <code>:2</code> tag retains the Komodo v2 major line, but is not an immutable patch version.</p>
+<table>
+<thead>
+<tr>
+<th>Agent setting</th>
+<th>Verified value on both remote hosts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PERIPHERY_CORE_ADDRESS</code></td>
+<td><code>wss://komodo.giohosted.com</code> (Traefik on <code>192.168.30.11</code>)</td>
+</tr>
+<tr>
+<td><code>PERIPHERY_CONNECT_AS</code></td>
+<td>The host's exact name (<code>immich-prod-01</code> / <code>auth-prod-01</code>)</td>
+</tr>
+<tr>
+<td><code>PERIPHERY_SERVER_ENABLED</code></td>
+<td><code>false</code> — outbound-only mode</td>
+</tr>
+<tr>
+<td>Published host TCP port 8120</td>
+<td><strong>None</strong> (<code>8120/tcp</code> in Docker output is an exposed container port, not a published host mapping)</td>
+</tr>
+<tr>
+<td>TLS certificate verification</td>
+<td>Enabled (<code>core_tls_insecure_skip_verify=false</code>)</td>
+</tr>
+<tr>
+<td><code>PERIPHERY_CORE_PUBLIC_KEYS</code></td>
+<td><code>file:/config/keys/core.pub</code></td>
+</tr>
+<tr>
+<td><code>PERIPHERY_DISABLE_TERMINALS</code></td>
+<td><code>false</code> — authorized Komodo admins can use server terminals</td>
+</tr>
+<tr>
+<td><code>PERIPHERY_DISABLE_CONTAINER_TERMINALS</code></td>
+<td><code>false</code> — authorized Komodo admins can use container terminals</td>
+</tr>
+</tbody>
+</table>
+<p>Registration used a <strong>separate, non-privileged onboarding key per new host</strong>, entered through a temporary root-owned mode <code>0600</code> file outside Git. After successful enrollment, the <code>PERIPHERY_ONBOARDING_KEY_FILE</code> environment entry and temporary bind mount were removed, each Periphery container was recreated and <strong>reconnected with <code>onboarding_key: None</code></strong>, the temporary file/directory were deleted, and the onboarding keys were revoked in Komodo Settings. <strong>Never remove the permanent keys folder casually</strong>, and never place an onboarding key, private key or Docker <code>.env</code> in Obsidian, Git or chat.</p>
+<p>The existing application Compose projects were imported using Komodo <strong>Files on Server</strong>, with no application redeployment:</p>
+<table>
+<thead>
+<tr>
+<th>Stack</th>
+<th>Server</th>
+<th>Run Directory</th>
+<th>File Paths</th>
+<th>Project Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>immich</code></td>
+<td><code>immich-prod-01</code></td>
+<td><code>/opt/stacks/immich</code></td>
+<td><code>compose.yaml</code></td>
+<td><code>immich</code></td>
+</tr>
+<tr>
+<td><code>authentik</code></td>
+<td><code>auth-prod-01</code></td>
+<td><code>/opt/stacks/authentik</code></td>
+<td><code>compose.yaml</code></td>
+<td><code>authentik</code></td>
+</tr>
+</tbody>
+</table>
+<p>Both project names, run directories and file paths were checked against running containers' <code>com.docker.compose.project*</code> labels <strong>before</strong> registration. No Komodo Deploy/Update action was needed. The new Periphery agents have highly privileged Docker-socket access on their <em>own</em> hosts, so restrict Komodo administrator accounts, keys, Core exposure and upstream permissions. The read-only ChatGPT integration does <strong>not</strong> gain admin, terminal, exec or write rights by adding hosts.</p>
+<p><strong>Verification:</strong> From <code>immich-prod-01</code> and <code>auth-prod-01</code>, HTTPS returned HTTP <code>200</code> with verified TLS and a WebSocket upgrade probe to <code>/ws/periphery?server=&lt;hostname&gt;</code> returned <code>101</code>. Agent logs showed successful onboarding and subsequent normal logins without the onboarding keys. Live <code>komodo_server_list</code>, <code>komodo_stack_list</code>, <code>komodo_container_list</code> and <code>komodo_container_logs</code> through ChatGPT confirmed the resulting inventory. The separate Immich main-server incident was reported fixed and live checks showed <code>immich_server</code> running; this record does <strong>not</strong> attribute an unverified root cause or recovery procedure to that incident.</p>
+<p>See <code>runbooks/ai-observer-operations.md</code> for remote agent checks and lifecycle management, and the existing <code>immich.md</code> / <code>authentik.md</code> service documents for local Compose paths.</p>
+<h3 id="exposed-komodo-mcp-tools-40">Exposed Komodo MCP Tools — 40<a class="headerlink" href="#exposed-komodo-mcp-tools-40" title="Permanent link">&para;</a></h3>
+<p>The exact ChatGPT-discovered tool inventory is grouped below. All entries are <strong>tool names</strong>, not guarantees of success for every resource or permission.</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th style="text-align: right;">Count</th>
+<th>Tool names</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Connectivity / server</td>
+<td style="text-align: right;">4</td>
+<td><code>komodo_health_check</code>, <code>komodo_server_list</code>, <code>komodo_server_info</code>, <code>komodo_server_stats</code></td>
+</tr>
+<tr>
+<td>Containers and logs</td>
+<td style="text-align: right;">3</td>
+<td><code>komodo_container_list</code>, <code>komodo_container_logs</code>, <code>komodo_container_search_logs</code></td>
+</tr>
+<tr>
+<td>Stacks and deployments</td>
+<td style="text-align: right;">3</td>
+<td><code>komodo_stack_list</code>, <code>komodo_deployment_list</code>, <code>komodo_deployment_info</code></td>
+</tr>
+<tr>
+<td>Builds, repositories and builders</td>
+<td style="text-align: right;">7</td>
+<td><code>komodo_build_list</code>, <code>komodo_build_info</code>, <code>komodo_build_logs</code>, <code>komodo_repo_list</code>, <code>komodo_repo_info</code>, <code>komodo_builder_list</code>, <code>komodo_builder_info</code></td>
+</tr>
+<tr>
+<td>Procedures and actions</td>
+<td style="text-align: right;">4</td>
+<td><code>komodo_procedure_list</code>, <code>komodo_procedure_info</code>, <code>komodo_action_list</code>, <code>komodo_action_info</code></td>
+</tr>
+<tr>
+<td>Alerts / updates / resource sync</td>
+<td style="text-align: right;">6</td>
+<td><code>komodo_alerter_list</code>, <code>komodo_alerter_info</code>, <code>komodo_update_list</code>, <code>komodo_update_info</code>, <code>komodo_resource_sync_list</code>, <code>komodo_resource_sync_info</code></td>
+</tr>
+<tr>
+<td>Docker objects and Swarm</td>
+<td style="text-align: right;">8</td>
+<td><code>komodo_docker_image_list</code>, <code>komodo_docker_network_list</code>, <code>komodo_docker_network_inspect</code>, <code>komodo_docker_volume_list</code>, <code>komodo_swarm_list</code>, <code>komodo_swarm_info</code>, <code>komodo_swarm_nodes_list</code>, <code>komodo_swarm_services_list</code></td>
+</tr>
+<tr>
+<td>Identities, variables and tags</td>
+<td style="text-align: right;">5</td>
+<td><code>komodo_user_list_api_keys</code>, <code>komodo_variable_list</code>, <code>komodo_variable_info</code>, <code>komodo_tag_list</code>, <code>komodo_tag_info</code></td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td style="text-align: right;"><strong>40</strong></td>
+<td><strong>All exposed as Read in ChatGPT; zero write tools</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>komodo_container_logs</code> and <code>komodo_container_search_logs</code> remain intentionally enabled for useful diagnostics. <code>komodo_server_info</code>, <code>komodo_procedure_info</code>, and <code>komodo_builder_info</code> also remain enabled following the operator's explicit decision; these could reveal detailed connection or procedure configuration. <code>komodo_user_list_api_keys</code> returns key metadata, not a verified secret dump; review actual outputs carefully.</p>
+<h3 id="explicitly-excluded-komodo-tools-8">Explicitly Excluded Komodo Tools — 8<a class="headerlink" href="#explicitly-excluded-komodo-tools-8" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Excluded tool</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>komodo_container_inspect</code></td>
+<td>Full Docker Inspect may return plaintext <code>Config.Env</code>, including Cloudflare and WireGuard secrets; confirmed in local audit.</td>
+</tr>
+<tr>
+<td><code>komodo_exec</code></td>
+<td>Arbitrary commands / execution path; outside the approved read-only model.</td>
+</tr>
+<tr>
+<td><code>komodo_docker_image_inspect</code></td>
+<td>Image configuration and labels could contain credentials.</td>
+</tr>
+<tr>
+<td><code>komodo_docker_volume_inspect</code></td>
+<td>Volume driver options could contain credential or endpoint information.</td>
+</tr>
+<tr>
+<td><code>komodo_docker_image_history</code></td>
+<td>Image build-step history may contain embedded secrets.</td>
+</tr>
+<tr>
+<td><code>komodo_stack_info</code></td>
+<td>Full stack/Compose configuration; local audit showed redaction, but operator elected not to rely on best-effort scrub for full Compose details.</td>
+</tr>
+<tr>
+<td><code>komodo_toml_export_all</code></td>
+<td>Bulk export of Komodo configuration; excessive disclosure surface.</td>
+</tr>
+<tr>
+<td><code>komodo_toml_export_resources</code></td>
+<td>Resource configuration export; excessive disclosure surface.</td>
+</tr>
+</tbody>
+</table>
+<p>Additionally, the upstream MCP's anonymous-HTTP read-only policy and dedicated non-admin Komodo account prevent exposure/use of management, deployment, destructive, and execution tools. The eight exclusions are <strong>read-surface restrictions</strong>, not the complete list of upstream write tools. Re-check all 40 names, exclusions, and upstream account permissions after updating the MCP image or changing configuration.</p>
+<hr />
+<h2 id="unifi-mcp">UniFi MCP<a class="headerlink" href="#unifi-mcp" title="Permanent link">&para;</a></h2>
+<h3 id="deployment-and-source-pinning">Deployment and Source Pinning<a class="headerlink" href="#deployment-and-source-pinning" title="Permanent link">&para;</a></h3>
+<p><strong>Project:</strong> <a href="https://github.com/ry-ops/unifi-mcp-server">ry-ops/unifi-mcp-server</a><br />
+<strong>Project version:</strong> <code>2.1.0</code> (<code>pyproject.toml</code>)<br />
+<strong>Exact deployed source revision:</strong> <code>e13d0e22dce1b6a498edc5982d78bd589073d44c</code> (October 31, 2026)<br />
+<strong>Container:</strong> <code>unifi-mcp</code><br />
+<strong>Source-controlled Compose image:</strong> <code>homelab/unifi-mcp:latest</code> with a local <code>build:</code> definition (<code>context: .</code>, <code>dockerfile: Dockerfile</code>). <strong>Last previously verified running image tag:</strong> <code>homelab/unifi-mcp:ryops-e13d0e2</code>; the Compose edit was validated and committed, but no rebuild/recreation or new runtime image-tag verification was performed during the Git work. This is a locally built image, not an automatically updated registry release.<br />
+<strong>Compose:</strong> <code>/opt/stacks/unifi-mcp/compose.yaml</code><br />
+<strong>Source checkout:</strong> <code>/opt/stacks/unifi-mcp/source/</code> — tracked as the <code>unifi-mcp/source</code> Git submodule, not copied inline into the parent repository.<br />
+<strong>Dockerfile, <code>.dockerignore</code>, launcher:</strong> <code>/opt/stacks/unifi-mcp/</code><br />
+<strong>Credentials / policy:</strong> <code>/opt/stacks/unifi-mcp/.env</code> (<code>root:root</code>, <code>0600</code>); containing <code>UNIFI_API_KEY</code> and <code>UNIFI_READ_ONLY=true</code><br />
+<strong>MCP:</strong> <code>http://127.0.0.1:8086/mcp</code> on observer host; Python 3.12 with upstream <code>uv.lock</code> (<code>mcp</code> 1.30.0)<br />
+<strong>Upstream:</strong> UniFi Site Manager API / Network cloud connector at <code>https://api.ui.com</code></p>
+<p>The upstream <code>main.py</code> normally launches <strong>stdio</strong>. A separate custom <code>/opt/stacks/unifi-mcp/http_server.py</code> imports the upstream MCP instance and runs its native <strong>Streamable HTTP</strong> transport; no <code>mcp-proxy</code> container is needed. The launcher checks <code>uc.READ_ONLY</code> and refuses startup if the read-only flag is not active. It also enables explicit Host/Origin validation and sets <code>main.mcp.settings.host = "0.0.0.0"</code> <strong>inside the container</strong>. This final binding is necessary for Docker port publishing; the original <code>127.0.0.1</code> container bind caused host-side connection resets despite successful in-container calls. After correction, the host's <code>/</code> route returned the expected HTTP 404 and <code>/mcp</code> worked. <strong>Do not change the Docker host port publishing to <code>0.0.0.0</code>: it remains <code>127.0.0.1:8086:8000</code>.</strong></p>
+<p><strong>Verified Docker hardening:</strong> non-root container user UID <code>10001</code>, read-only root filesystem, all capabilities dropped, <code>no-new-privileges</code>, 64-process limit, 512 MiB memory limit, 16 MiB <code>/tmp</code> tmpfs, bounded JSON logging (10 MiB × 3), and no mounted Docker socket. The <code>.env</code> is read at container startup, not copied into the image; <code>.dockerignore</code> excludes secrets. Compose validation succeeded and the running container published only <code>127.0.0.1:8086</code>. The repository's subsequently validated Compose file adds <code>build:</code> and uses the local tag <code>homelab/unifi-mcp:latest</code>; that configuration-only change did <strong>not</strong> rebuild or restart the running container.</p>
+<h3 id="authentication-read-only-policy-and-limitations">Authentication, Read-Only Policy, and Limitations<a class="headerlink" href="#authentication-read-only-policy-and-limitations" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>UniFi cloud access:</strong> The dedicated <code>homelab-ai-observer-unifi</code> Site Manager API key was created with an operator-selected <strong>one-year expiration</strong>, stored in Bitwarden and injected through the root-only <code>.env</code>. The user selected the one-year expiration, superseding the original suggested one-month evaluation period. The exact expiration timestamp was not independently read back; verify it in UniFi Site Manager before rotation. API connectivity to <code>/v1/hosts</code> and the Network connector <code>/v1/info</code> returned HTTP <code>200</code>. Host model <code>UDMPROSE</code> and Network <code>10.6.109</code> were verified.</li>
+<li><strong>Scope:</strong> The deployment procedure selected Site Manager and Network application access for the UDM-SE. The exact persisted API-key scope/permission grants were <strong>not independently audited</strong> after creation; inspect them in UniFi Site Manager when reviewing permissions. UniFi's application API-key access has <strong>no independently verified read-only permission boundary</strong>. Treat this credential as potentially write-capable, even though the deployed MCP is restricted to read tools.</li>
+<li><strong>MCP boundary:</strong> <code>UNIFI_READ_ONLY=true</code> filters upstream API tool registration, and <code>http_server.py</code> fails closed when that flag is false. A Docker-based registration audit and a live Streamable HTTP <code>tools/list</code> both returned <strong>55 tools with <code>readOnlyHint=true</code> and zero non-read-only tools</strong>. This is tool exposure classification, not a guarantee that all possible API interactions or response data are harmless; re-audit on every source/SDK/config change.</li>
+<li><strong>Local MCP authentication:</strong> There is no dedicated local MCP bearer header or separate per-caller authentication at <code>127.0.0.1:8086/mcp</code>. Observer-local processes capable of reaching loopback may invoke the exposed read tools. Keep SSH/host access restricted and do not publish this listener to LAN or internet.</li>
+<li><strong>Sensitivity:</strong> Client records, MAC/IP addresses, SSIDs, firewall rules, networks, VPN and WAN configuration can be sensitive even when retrieved by GET. Do not publish full outputs or credentials. No UniFi write, reboot, port action, DNS, firewall or configuration mutation tool is currently exposed through ChatGPT.</li>
+</ul>
+<h3 id="verified-unifi-mcp-and-live-chatgpt-test-november-5-2026-cst">Verified UniFi MCP and Live ChatGPT Test — November 5, 2026 (CST)<a class="headerlink" href="#verified-unifi-mcp-and-live-chatgpt-test-november-5-2026-cst" title="Permanent link">&para;</a></h3>
+<ol>
+<li>From <code>observer-prod-01</code>, TLS verification of <code>api.ui.com</code> succeeded; unauthenticated <code>/v1/hosts</code> returned expected HTTP <code>401</code>.</li>
+<li>Authenticated <code>/v1/hosts</code> returned HTTP <code>200</code>, <strong>one connected UDM-SE</strong> (<code>UDMPROSE</code>). Authenticated Network connector <code>/v1/info</code> returned HTTP <code>200</code> and <strong>Network <code>10.6.109</code></strong>.</li>
+<li>Pinned ry-ops image built successfully; <code>UNIFI_READ_ONLY=true</code> registration audit and <strong>live MCP protocol</strong> <code>tools/list</code> both returned <strong>55 Read / 0 non-read-only</strong>. A local MCP <code>unifi_health</code> invocation passed cloud, Network API, console, site and read-only checks.</li>
+<li>Host networking was verified after the launcher correction: container bound <code>0.0.0.0:8000</code>, host binding stayed <code>127.0.0.1:8086</code>; root <code>/</code> returned HTTP <code>404</code> (expected); tunnel <code>doctor</code> returned <code>RESULT ok</code> (MCP <code>/mcp</code> returned HTTP <code>406</code> during the diagnostic, an acceptable content-negotiation response).</li>
+<li><code>tunnel-client-unifi.service</code> was confirmed <strong>active</strong>, tunnel <code>127.0.0.1:8087/readyz</code> returned HTTP <code>200</code> / <code>ready</code>, and the operator confirmed <strong>automatic startup enabled</strong>. The <code>Homelab UniFi</code> ChatGPT plugin discovered <strong>55 tools</strong>.</li>
+<li><strong>Live ChatGPT <code>unifi_health</code> and <code>get_site_status</code> succeeded</strong>: <code>ok=true</code>, <code>read_only=true</code>, console connected, default site discovered, UDM-SE Network <code>10.6.109</code>; <strong>3 devices online / 0 offline / 0 firmware-updatable</strong>, <strong>30 clients (13 wired, 17 wireless)</strong> at <code>2026-11-06T05:16:03Z</code> (<code>2026-11-05 23:16 CST</code>). Counts are point-in-time, not fixed site inventory. All 55 individual operations were <em>not</em> tested.</li>
+</ol>
+<p><strong>Not performed:</strong> A VM reboot, automatic all-four-tunnel reconnect exercise, and isolated VM restore/recovery test. The operator explicitly opted to skip recovery testing for this implementation. Neither tunnel <code>enabled</code> status nor current <code>ready</code> response is proof of successful recovery after reboot or restoration.</p>
+<hr />
+<h2 id="openai-secure-mcp-tunnel">OpenAI Secure MCP Tunnel<a class="headerlink" href="#openai-secure-mcp-tunnel" title="Permanent link">&para;</a></h2>
+<h3 id="deployment_1">Deployment<a class="headerlink" href="#deployment_1" title="Permanent link">&para;</a></h3>
+<p><strong>Project:</strong> <a href="https://github.com/openai/tunnel-client">https://github.com/openai/tunnel-client</a><br />
+<strong>Installed binary version:</strong> <code>0.0.18</code> (verified during initial deployment)<br />
+<strong>Installation directory:</strong> <code>/opt/tunnel-client/</code><br />
+<strong>Binary:</strong> <code>/opt/tunnel-client/tunnel-client</code><br />
+<strong>Service account:</strong> <code>tunnel-client</code> (noninteractive; not a member of the Docker group)</p>
+<p>The original official Linux AMD64 release and its SHA-256 checksum were verified at installation; the matching <code>cloudflared</code> companion and manifest were installed with it. All four native services reuse that one installed binary. A binary update can affect <strong>all four</strong> integrations.</p>
+<h3 id="tunnel-identities">Tunnel Identities<a class="headerlink" href="#tunnel-identities" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Integration</th>
+<th>Tunnel name</th>
+<th>Tunnel ID</th>
+<th>Local MCP target</th>
+<th>Readiness endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox</td>
+<td><code>homelab-proxmox</code></td>
+<td><code>tunnel_6aded6df36348191b926a1b2fed52974</code></td>
+<td><code>127.0.0.1:8080/mcp</code></td>
+<td><code>127.0.0.1:8081/readyz</code></td>
+</tr>
+<tr>
+<td>Unraid</td>
+<td><code>homelab-unraid</code></td>
+<td><code>tunnel_6ae54db66f7c8191a73960ac6eb77981</code></td>
+<td><code>127.0.0.1:8082/mcp</code></td>
+<td><code>127.0.0.1:8083/readyz</code></td>
+</tr>
+<tr>
+<td>Komodo</td>
+<td><code>homelab-komodo</code></td>
+<td><code>tunnel_6ae6e984758881919f5c308207bab3d3</code></td>
+<td><code>127.0.0.1:8084/mcp</code></td>
+<td><code>127.0.0.1:8085/readyz</code></td>
+</tr>
+<tr>
+<td>UniFi</td>
+<td><code>homelab-unifi</code></td>
+<td><code>tunnel_6aed5ddd030c8191bf32196220fd079b</code></td>
+<td><code>127.0.0.1:8086/mcp</code></td>
+<td><code>127.0.0.1:8087/readyz</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each of the four tunnels uses its own restricted OpenAI runtime API key with <strong>Tunnels Read + Use</strong>, not management privileges. The Komodo runtime key is named <code>homelab-komodo-tunnel</code> and was saved in Bitwarden. The Unraid runtime key and Unraid API key were saved in Bitwarden; separately retained Bitwarden storage of <code>UNRAID_RMCP_TOKEN</code> is <strong>not yet verified</strong>. Each tunnel has its own OpenAI identity, distinct from local MCP authentication.</p>
+<h3 id="service-configuration">Service Configuration<a class="headerlink" href="#service-configuration" title="Permanent link">&para;</a></h3>
+<p>All four tunnel processes are independent native systemd services. On November 6, the installed definitions for <strong>all four</strong> were read and copied into <code>homelab-infra</code>; their copied files matched the installed files byte-for-byte, and the unit directive and <code>ExecStart</code> audit passed:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Service unit files</td>
+<td><code>/etc/systemd/system/tunnel-client.service</code>, <code>/etc/systemd/system/tunnel-client-unraid.service</code>, <code>/etc/systemd/system/tunnel-client-komodo.service</code>, <code>/etc/systemd/system/tunnel-client-unifi.service</code></td>
+</tr>
+<tr>
+<td><code>User</code> / <code>Group</code></td>
+<td><code>tunnel-client:tunnel-client</code></td>
+</tr>
+<tr>
+<td><code>WorkingDirectory</code></td>
+<td><code>/opt/tunnel-client</code></td>
+</tr>
+<tr>
+<td><code>ExecStart</code></td>
+<td><code>/opt/tunnel-client/tunnel-client run --config /etc/&lt;respective-tunnel-directory&gt;/config.yaml</code></td>
+</tr>
+<tr>
+<td><code>Restart</code> / <code>RestartSec</code></td>
+<td><code>always</code> / <code>5</code> seconds</td>
+</tr>
+<tr>
+<td><code>NoNewPrivileges</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>UMask</code></td>
+<td><code>0077</code></td>
+</tr>
+<tr>
+<td><code>WantedBy</code></td>
+<td><code>multi-user.target</code></td>
+</tr>
+</tbody>
+</table>
+<p>On November 1, 2026, <code>tunnel-client-komodo.service</code> returned <code>active</code> and <code>enabled</code>, and <code>/readyz</code> returned HTTP 200 <code>ready</code>. The prior Proxmox/Unraid tunnels were previously verified operational. On November 5, the new UniFi tunnel was <code>active</code>, reported HTTP 200 <code>ready</code>, and its boot enablement was confirmed by the operator. <strong>No observer VM reboot or automatic four-tunnel recovery test was performed</strong>, per the operator's Phase 4 decision.</p>
+<h3 id="protected-configuration-files">Protected Configuration Files<a class="headerlink" href="#protected-configuration-files" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Purpose</th>
+<th>Ownership</th>
+<th>Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/etc/tunnel-client/</code></td>
+<td>Proxmox tunnel directory</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0750</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/config.yaml</code></td>
+<td>Proxmox tunnel YAML</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/openai-runtime.key</code></td>
+<td>Restricted OpenAI key</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client/mcp-authorization</code></td>
+<td>Proxmox MCP <code>Bearer</code> Authorization value</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/</code></td>
+<td>Unraid tunnel directory</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0750</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/config.yaml</code></td>
+<td>Unraid tunnel YAML</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/openai-runtime.key</code></td>
+<td>Restricted OpenAI key</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unraid/mcp-authorization</code></td>
+<td>Unraid MCP <code>Bearer</code> Authorization value</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-komodo/</code></td>
+<td>Komodo tunnel directory</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0750</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-komodo/config.yaml</code></td>
+<td>Komodo tunnel YAML</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-komodo/openai-runtime.key</code></td>
+<td>Restricted OpenAI key (<code>homelab-komodo-tunnel</code>)</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unifi/</code></td>
+<td>UniFi tunnel directory</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0750</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unifi/config.yaml</code></td>
+<td>UniFi tunnel YAML; <code>main</code> channel to loopback MCP</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+<tr>
+<td><code>/etc/tunnel-client-unifi/openai-runtime.key</code></td>
+<td>UniFi tunnel restricted OpenAI key (<code>homelab-unifi-tunnel</code>)</td>
+<td><code>root:tunnel-client</code></td>
+<td><code>0640</code></td>
+</tr>
+</tbody>
+</table>
+<p>Komodo's key file and YAML permissions were <strong>verified directly with <code>stat</code></strong>, and its key file was verified nonempty without displaying the value. <strong>There is intentionally no <code>/etc/tunnel-client-komodo/mcp-authorization</code> or <code>/etc/tunnel-client-unifi/mcp-authorization</code> file</strong>: <code>MCP_AUTH_ENABLED=false</code> on the local Komodo MCP, unlike the bearer-protected Proxmox and Unraid MCP servers. The ChatGPT plugin's <em>No authentication</em> setting describes the lack of separate ChatGPT OAuth; it does not impose local MCP authentication. Credentials are not embedded in unit files or committed to Git.</p>
+<h3 id="version-controlled-tunnel-configuration-verified-november-6-2026">Version-Controlled Tunnel Configuration (Verified November 6, 2026)<a class="headerlink" href="#version-controlled-tunnel-configuration-verified-november-6-2026" title="Permanent link">&para;</a></h3>
+<p><strong>Git repository:</strong> private <code>giohosted/homelab-infra</code>, branch <code>main</code>; local working copy <code>/opt/stacks</code> on <code>observer-prod-01</code>. Commit <code>9887296</code> was pushed and the local branch was verified in sync with <code>origin/main</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Integration</th>
+<th>Sanitized example in Git</th>
+<th>Copied systemd unit in Git</th>
+<th>Installed active YAML</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox</td>
+<td><code>observer/tunnel-client/config/proxmox.yaml.example</code></td>
+<td><code>observer/tunnel-client/systemd/tunnel-client.service</code></td>
+<td><code>/etc/tunnel-client/config.yaml</code></td>
+</tr>
+<tr>
+<td>Unraid</td>
+<td><code>observer/tunnel-client/config/unraid.yaml.example</code></td>
+<td><code>observer/tunnel-client/systemd/tunnel-client-unraid.service</code></td>
+<td><code>/etc/tunnel-client-unraid/config.yaml</code></td>
+</tr>
+<tr>
+<td>Komodo</td>
+<td><code>observer/tunnel-client/config/komodo.yaml.example</code></td>
+<td><code>observer/tunnel-client/systemd/tunnel-client-komodo.service</code></td>
+<td><code>/etc/tunnel-client-komodo/config.yaml</code></td>
+</tr>
+<tr>
+<td>UniFi</td>
+<td><code>observer/tunnel-client/config/unifi.yaml.example</code></td>
+<td><code>observer/tunnel-client/systemd/tunnel-client-unifi.service</code></td>
+<td><code>/etc/tunnel-client-unifi/config.yaml</code></td>
+</tr>
+</tbody>
+</table>
+<p>The YAML examples preserve the verified <code>config_version: 1</code>, localhost MCP targets (<code>8080</code>, <code>8082</code>, <code>8084</code>, <code>8086</code>), localhost readiness ports (<code>8081</code>, <code>8083</code>, <code>8085</code>, <code>8087</code>), logging settings, and restricted <code>file:/etc/...</code> credential references. They deliberately use <strong><code>REPLACE_WITH_TUNNEL_ID</code></strong> and <strong><code>REPLACE_WITH_CHANNEL</code></strong>; neither placeholder is a functioning tunnel identity. Proxmox and Unraid additionally reference <code>/etc/&lt;service&gt;/mcp-authorization</code>; Komodo and UniFi intentionally have no local MCP bearer header.</p>
+<p>The four <code>.service</code> files are inert copies of installed units (<code>User=tunnel-client</code>, <code>Group=tunnel-client</code>, <code>WorkingDirectory=/opt/tunnel-client</code>, <code>ExecStart=/opt/tunnel-client/tunnel-client run --config ...</code>, <code>Restart=always</code>, <code>RestartSec=5</code>, <code>NoNewPrivileges=true</code>, <code>UMask=0077</code>). They must be <strong>explicitly installed and reviewed</strong> during a future authorized rebuild. Running <code>git pull</code> on <code>docker-prod-01</code> or another host does not install units into <code>/etc/systemd/system/</code> or start services.</p>
+<p><strong>Git covers definitions, not secrets or an executable restoration:</strong> the four MCP <code>.env</code> files, <code>/etc/tunnel-client*/openai-runtime.key</code>, Proxmox/Unraid authorization files, live <code>/etc/tunnel-client*/config.yaml</code>, <code>/opt/tunnel-client/</code> binaries, the UniFi restricted runtime permissions, and valid API identities must be recovered or reestablished separately. Do not use the examples unchanged, accidentally expose credentials, or enable duplicated production tunnel identities. See <code>runbooks/ai-observer-operations.md</code> Section 18 for the as-yet-untested rebuild workflow.</p>
+<h2 id="network-and-firewall">Network and Firewall<a class="headerlink" href="#network-and-firewall" title="Permanent link">&para;</a></h2>
+<h3 id="proxmox-api-access">Proxmox API Access<a class="headerlink" href="#proxmox-api-access" title="Permanent link">&para;</a></h3>
+<p>The observer resides on VLAN 30, while Proxmox management resides on VLAN 10.</p>
+<p>The default Services-to-Management policy denies this traffic.</p>
+<p>A targeted UniFi firewall exception was implemented to permit only the required API connection.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rule name</td>
+<td>Allow Observer to Proxmox API</td>
+</tr>
+<tr>
+<td>Source</td>
+<td>192.168.30.17</td>
+</tr>
+<tr>
+<td>Destination</td>
+<td>192.168.10.11</td>
+</tr>
+<tr>
+<td>Destination port</td>
+<td>TCP 8006</td>
+</tr>
+<tr>
+<td>Action</td>
+<td>Allow</td>
+</tr>
+<tr>
+<td>Return traffic</td>
+<td>Automatically allowed</td>
+</tr>
+<tr>
+<td>Position</td>
+<td>Above Block Services to Mgmt</td>
+</tr>
+</tbody>
+</table>
+<p>This exception does not provide unrestricted access from VLAN 30 to VLAN 10.</p>
+<p>A connectivity test originally timed out before the rule was created. After the rule was implemented, the Proxmox API responded with HTTP 401 to an unauthenticated request, proving network reachability.</p>
+<p>Authenticated read-only API access was verified afterward.</p>
+<h3 id="unraid-graphql-api-access">Unraid GraphQL API Access<a class="headerlink" href="#unraid-graphql-api-access" title="Permanent link">&para;</a></h3>
+<p>The observer reaches Unraid over the Services VLAN at <code>192.168.30.16:443</code>, using hostname <code>nas-prod-01.local</code> and a verified certificate bundle. The API URL is <code>https://nas-prod-01.local/graphql</code>. The Unraid Docker container maps the hostname to the Services IP using <code>extra_hosts</code>, not a general DNS override.</p>
+<p>No additional inter-VLAN management firewall exception or public listener was introduced for Unraid. Read-only requests were authenticated successfully over this route. Do not broaden the observer's access to Management VLAN as part of Unraid troubleshooting.</p>
+<h3 id="komodo-core-https-api-access">Komodo Core HTTPS API Access<a class="headerlink" href="#komodo-core-https-api-access" title="Permanent link">&para;</a></h3>
+<p>The Komodo MCP container reaches existing Komodo Core at <code>https://komodo.giohosted.com</code>, resolving to <code>192.168.30.11</code> from the observer during setup. A local request completed with HTTP 200 and successful TLS verification. This is separate from the OpenAI control-plane outbound connection. The target server remains <code>docker-prod-01</code> on the Services VLAN; no direct Docker socket or privileged Docker API listener was added on the observer.</p>
+<h3 id="unifi-site-manager-and-network-api-access">UniFi Site Manager and Network API Access<a class="headerlink" href="#unifi-site-manager-and-network-api-access" title="Permanent link">&para;</a></h3>
+<p>The UniFi MCP container uses outbound HTTPS <code>api.ui.com:443</code>. Site Manager calls use <code>/v1/hosts</code>, while the Network application is reached through the cloud connector at <code>/v1/connector/consoles/{consoleId}/proxy/network/integration/v1/...</code>. The UDM-SE was online in UniFi Site Manager and the API successfully reported Network version <code>10.6.109</code>. The MCP automatically discovered the single console and default site.</p>
+<p>There is <strong>no direct Observer-to-Management VLAN firewall exception for UniFi</strong>, no locally hosted UniFi MCP listener available to the LAN, and no new UDM-SE inbound port forwarding. The architecture depends on UniFi remote access/Site Manager availability and the dedicated API key's permissions; API key scope is not independently confirmed read-only.</p>
+<h3 id="openai-connectivity">OpenAI Connectivity<a class="headerlink" href="#openai-connectivity" title="Permanent link">&para;</a></h3>
+<p>All four tunnel clients initiate outbound HTTPS traffic to OpenAI; none accepts inbound internet connections.</p>
+<table>
+<thead>
+<tr>
+<th>Traffic</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Observer → <code>api.openai.com:443</code></td>
+<td>Outbound Secure MCP Tunnel control plane</td>
+</tr>
+<tr>
+<td>Tunnel client → <code>127.0.0.1:8080</code></td>
+<td>Local Proxmox MCP requests</td>
+</tr>
+<tr>
+<td>Tunnel client → <code>127.0.0.1:8082</code></td>
+<td>Local Unraid MCP requests</td>
+</tr>
+<tr>
+<td>Tunnel client → <code>127.0.0.1:8084</code></td>
+<td>Local Komodo MCP requests</td>
+</tr>
+<tr>
+<td>Tunnel client → <code>127.0.0.1:8086</code></td>
+<td>Local UniFi MCP requests</td>
+</tr>
+<tr>
+<td>UniFi MCP → <code>api.ui.com:443</code></td>
+<td>UniFi Site Manager + Network cloud connector</td>
+</tr>
+<tr>
+<td>Proxmox MCP → <code>192.168.10.11:8006</code></td>
+<td>Proxmox HTTPS API via targeted UniFi firewall rule</td>
+</tr>
+<tr>
+<td>Unraid MCP → <code>192.168.30.16:443</code></td>
+<td>Verified TLS to Unraid GraphQL API</td>
+</tr>
+<tr>
+<td>Komodo MCP → <code>komodo.giohosted.com:443</code> (<code>192.168.30.11</code> at verification)</td>
+<td>Komodo Core HTTPS API</td>
+</tr>
+</tbody>
+</table>
+<p>No inbound port forward, public MCP reverse proxy, or broad Services-to-Management firewall exception was introduced for these integrations.</p>
+<h2 id="chatgpt-integration">ChatGPT Integration<a class="headerlink" href="#chatgpt-integration" title="Permanent link">&para;</a></h2>
+<h3 id="plugins">Plugins<a class="headerlink" href="#plugins" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Plugin</th>
+<th>Tunnel</th>
+<th style="text-align: right;">ChatGPT tool discovery</th>
+<th>MCP authentication to local target</th>
+<th>Live verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Homelab Proxmox</code></td>
+<td><code>homelab-proxmox</code></td>
+<td style="text-align: right;"><strong>84 Read / 0 Write</strong></td>
+<td>Tunnel injects protected MCP bearer header</td>
+<td><code>proxmox_get_cluster_status</code> succeeded</td>
+</tr>
+<tr>
+<td><code>Homelab Unraid</code></td>
+<td><code>homelab-unraid</code></td>
+<td style="text-align: right;"><strong>26 Read / 0 Write</strong></td>
+<td>Tunnel injects protected MCP bearer header</td>
+<td><code>unraid_info</code> succeeded</td>
+</tr>
+<tr>
+<td><code>Homelab Komodo</code></td>
+<td><code>homelab-komodo</code></td>
+<td style="text-align: right;"><strong>40 Read / 0 Write</strong></td>
+<td><strong>No local MCP bearer</strong>; upstream anonymous HTTP MCP read scope plus dedicated non-admin Komodo API key</td>
+<td><code>komodo_health_check</code> and <code>komodo_container_list</code> succeeded</td>
+</tr>
+<tr>
+<td><code>Homelab UniFi</code></td>
+<td><code>homelab-unifi</code></td>
+<td style="text-align: right;"><strong>55 Read / 0 Write</strong></td>
+<td>No local MCP bearer; <code>UNIFI_READ_ONLY=true</code> and fail-closed launcher; underlying UniFi API key potentially write-capable</td>
+<td><code>unifi_health</code> and <code>get_site_status</code> succeeded</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>4 outbound tunnels</strong></td>
+<td style="text-align: right;"><strong>205 Read / 0 Write</strong></td>
+<td>Per-integration controls</td>
+<td><strong>All four integrations end-to-end verified</strong></td>
+</tr>
+</tbody>
+</table>
+<p>All four private ChatGPT plugins use <strong>Connection: Tunnel</strong> and <strong>ChatGPT authentication option: No authentication</strong> (no separate end-user OAuth flow). For Proxmox and Unraid, their MCP servers nevertheless demand their own bearer tokens. For Komodo, the local MCP is deliberately unauthenticated (<code>MCP_AUTH_ENABLED=false</code>); it remains loopback-bound and is restricted by upstream anonymous-read scope and the dedicated non-admin Komodo user. <strong>UniFi also has no local MCP bearer</strong>, so observer-local callers can reach its 55 read tools; its underlying UniFi API key should not be presumed read-only. These controls are <strong>not equivalent</strong>: local processes may be able to query the Komodo and UniFi MCP endpoints without separate bearer headers.</p>
+<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
+<p>ChatGPT can select the relevant Homelab Proxmox, Homelab Unraid, Homelab Komodo, or Homelab UniFi plugin automatically when live infrastructure context is useful. The corresponding plugins may also be invoked explicitly.</p>
+<p>Representative read-only uses:</p>
+<ul>
+<li>Proxmox: inspect quorum and cluster status, guest and node health, storage capacity, backup job coverage, snapshots and task logs.</li>
+<li>Unraid: inspect array/parity/disk state, storage, shares, server status, metrics, container inventory and logs permitted by the 26-tool allowlist.</li>
+<li>Komodo: inspect containers, logs, stacks, and non-destructive resource metadata across <code>docker-prod-01</code>, <code>immich-prod-01</code> and <code>auth-prod-01</code> using the same exposed 40 read tools.</li>
+<li>UniFi: inspect device health, clients, networks/VLANs, Wi-Fi, firewall configuration, WAN/VPN status and ISP metrics through 55 read tools; redact client identifiers and network details when sharing.</li>
+</ul>
+<p><strong>Security:</strong> A Read label means the tool is classified as non-mutating; it is <strong>not a promise of non-sensitive output</strong>. Container logs, node reports, resources, procedure scripts, webhook configuration, API-key metadata and host or guest configurations may reveal operational or private information. Review data before sending it to additional services. No write/management tool is currently exposed through these four plugins.</p>
+<p>Documentation-first troubleshooting remains mandatory: consult the Markdown documentation in Google Drive and corroborate current state through the relevant live MCP integration.</p>
+<h2 id="implementation-verification">Implementation Verification<a class="headerlink" href="#implementation-verification" title="Permanent link">&para;</a></h2>
+<p><strong>Initial successful verification:</strong> 2026-10-30 UTC</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker Compose configuration validation</td>
+<td>Passed</td>
+</tr>
+<tr>
+<td>Proxmox MCP container health</td>
+<td>Healthy</td>
+</tr>
+<tr>
+<td>Proxmox MCP <code>/health</code></td>
+<td>HTTP 200, <code>{"status":"ok"}</code></td>
+</tr>
+<tr>
+<td>Authenticated local MCP tool call</td>
+<td>Passed</td>
+</tr>
+<tr>
+<td>Proxmox cluster-status retrieval</td>
+<td>Passed</td>
+</tr>
+<tr>
+<td>Tunnel-client configuration diagnostic</td>
+<td><code>RESULT ok</code></td>
+</tr>
+<tr>
+<td>Tunnel systemd service</td>
+<td>Enabled and running</td>
+</tr>
+<tr>
+<td>Tunnel <code>/readyz</code></td>
+<td>HTTP 200, <code>ready</code></td>
+</tr>
+<tr>
+<td>ChatGPT custom plugin connection</td>
+<td>Connected</td>
+</tr>
+<tr>
+<td>Live tool call directly from ChatGPT</td>
+<td>Passed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="proxmox-mcp-audit-november-1-2026">Proxmox MCP Audit — November 1, 2026<a class="headerlink" href="#proxmox-mcp-audit-november-1-2026" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Verification</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Container binary version</td>
+<td><code>0.5.1</code> verified with <code>sudo docker exec proxmox-mcp /proxmox-mcp version</code></td>
+</tr>
+<tr>
+<td>Live ChatGPT tool discovery</td>
+<td><strong>84 Read</strong>, <strong>0 Write</strong></td>
+</tr>
+<tr>
+<td>Configured toolsets</td>
+<td><code>cluster,nodes,vms,containers,agent,snapshots,storage,backup,tasks</code> (nine)</td>
+</tr>
+<tr>
+<td>Excluded upstream toolsets</td>
+<td>Ten: <code>access</code>, <code>firewall</code>, <code>ha</code>, <code>sdn</code>, <code>ceph</code>, <code>pools</code>, <code>replication</code>, <code>notifications</code>, <code>hardware</code>, <code>raw</code></td>
+</tr>
+<tr>
+<td>Write, delete, execution gates</td>
+<td>All disabled in documented config</td>
+</tr>
+<tr>
+<td>Reference version</td>
+<td><a href="https://github.com/mattoddie/proxmox-mcp/blob/v0.5.1/docs/tools.md">upstream v0.5.1 tools</a>, not future main branch</td>
+</tr>
+</tbody>
+</table>
+<p>The full 84-name inventory is recorded under <strong>Proxmox MCP</strong> above; tool discovery does not prove all 84 operations are authorized against Proxmox.</p>
+<h3 id="unraid-mcp-verification-october-30-2026-cdt">Unraid MCP Verification — October 30, 2026 (CDT)<a class="headerlink" href="#unraid-mcp-verification-october-30-2026-cdt" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Correct Rust image and binary</td>
+<td><code>ghcr.io/dinglebear-ai/unraid-rmcp:latest</code>, <code>unraid-rmcp 0.6.3</code></td>
+</tr>
+<tr>
+<td>Docker Compose configuration</td>
+<td>Validated</td>
+</tr>
+<tr>
+<td>Unraid container</td>
+<td>Healthy; <code>127.0.0.1:8082-&gt;40010/tcp</code></td>
+</tr>
+<tr>
+<td>CA bundle initialization</td>
+<td><code>trusting extra CA certificates from bundle count=1</code></td>
+</tr>
+<tr>
+<td>Local bearer-authenticated <code>unraid_info</code></td>
+<td>Passed; Unraid OS 7.3.2</td>
+</tr>
+<tr>
+<td>Local bearer-authenticated <code>unraid_array</code></td>
+<td>Passed; surfaced disabled first parity disk on October 30 (historical observation; storage incident resolved October 31)</td>
+</tr>
+<tr>
+<td>Exact local MCP tool inventory</td>
+<td>26 expected, 26 exposed, none missing/unexpected</td>
+</tr>
+<tr>
+<td>Unraid tunnel <code>doctor</code></td>
+<td><code>RESULT ok</code></td>
+</tr>
+<tr>
+<td>Unraid tunnel <code>/readyz</code></td>
+<td>Returned <code>ready</code></td>
+</tr>
+<tr>
+<td><code>tunnel-client-unraid.service</code></td>
+<td>Active and enabled at boot</td>
+</tr>
+<tr>
+<td>ChatGPT plugin discovery</td>
+<td>Connected; 26 read tools, zero write tools</td>
+</tr>
+<tr>
+<td>Live <code>unraid_info</code> from ChatGPT</td>
+<td>Passed (hostname <code>nas-prod-01</code>, Unraid 7.3.2)</td>
+</tr>
+</tbody>
+</table>
+<p>A healthy container, a ready tunnel, and connected-plugin discovery each check different layers. End-to-end verification was achieved through the live ChatGPT invocation. Full per-tool testing, automatic startup through an actual observer reboot, and recovery/restore testing remain outstanding.</p>
+<h3 id="komodo-mcp-verification-november-1-2026-cst">Komodo MCP Verification — November 1, 2026 (CST)<a class="headerlink" href="#komodo-mcp-verification-november-1-2026-cst" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Verification</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Container and MCP readiness</td>
+<td>Healthy <code>komodo-mcp</code>; <code>/ready</code> returned <code>ready:true</code></td>
+</tr>
+<tr>
+<td>MCP and Komodo versions</td>
+<td><code>1.5.0</code> / Core <code>2.3.4</code></td>
+</tr>
+<tr>
+<td>Local MCP calls</td>
+<td><code>komodo_health_check</code>, <code>komodo_server_list</code>, <code>komodo_container_list</code> succeeded</td>
+</tr>
+<tr>
+<td>Server inventory (initial check)</td>
+<td><code>docker-prod-01</code> state <code>Ok</code>; later expanded to three <code>Ok</code> servers (see multi-host verification below)</td>
+</tr>
+<tr>
+<td>Docker inventory</td>
+<td>26 containers returned</td>
+</tr>
+<tr>
+<td>Resource inventories</td>
+<td>9 stacks; 3 procedures; 1 builder; none of other queried types</td>
+</tr>
+<tr>
+<td>Tool audit</td>
+<td><strong>40 Read</strong>, zero Write; eight explicit exclusions</td>
+</tr>
+<tr>
+<td>Tunnel ID</td>
+<td><code>tunnel_6ae6e984758881919f5c308207bab3d3</code></td>
+</tr>
+<tr>
+<td>OpenAI runtime key</td>
+<td>Restricted <code>homelab-komodo-tunnel</code>, saved in Bitwarden; file verified nonempty</td>
+</tr>
+<tr>
+<td>Local tunnel diagnostic</td>
+<td><code>doctor --config /etc/tunnel-client-komodo/config.yaml</code> -&gt; <code>RESULT ok</code></td>
+</tr>
+<tr>
+<td>Systemd service</td>
+<td><code>tunnel-client-komodo.service</code> active and enabled</td>
+</tr>
+<tr>
+<td>Tunnel readiness</td>
+<td><code>127.0.0.1:8085/readyz</code> HTTP 200 <code>ready</code></td>
+</tr>
+<tr>
+<td>ChatGPT plugin discovery</td>
+<td><code>Homelab Komodo</code>: 40 Read tools</td>
+</tr>
+<tr>
+<td>Live ChatGPT tool calls</td>
+<td><code>komodo_health_check</code> returned configured/healthy; <code>komodo_container_list</code> returned 26 containers</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>doctor</code> result included an HTTP 400 reachability response from <code>/mcp</code>, accepted by the diagnostic as a valid reachability result; it was <strong>not</strong> used as proof of authenticated JSON-RPC. Successful MCP tool calls provide that proof. Full per-tool testing, cold-reboot recovery and isolated restore remain unverified.</p>
+<h3 id="multi-host-komodo-verification-november-1-2026-cst">Multi-host Komodo Verification — November 1, 2026 (CST)<a class="headerlink" href="#multi-host-komodo-verification-november-1-2026-cst" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Read-only verification</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>komodo_server_list</code></td>
+<td>Three registered servers, each state <code>Ok</code>, Periphery <code>2.3.4</code></td>
+</tr>
+<tr>
+<td><code>komodo_stack_list</code></td>
+<td><code>immich</code> on <code>immich-prod-01</code> and <code>authentik</code> on <code>auth-prod-01</code>, both running at final check; total 11 registered stacks at that point</td>
+</tr>
+<tr>
+<td><code>komodo_container_list</code></td>
+<td>Six containers visible on each of the new hosts (four application containers, <code>beszel-agent</code>, <code>komodo-periphery</code>); running at final check</td>
+</tr>
+<tr>
+<td><code>komodo_container_logs</code></td>
+<td>Remote Immich server logs retrievable through the existing read-only plugin</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>MCP remains 40 Read / 0 Write; no extra MCP/tunnel or Docker socket on observer; no Periphery agent port published on new hosts</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Qualification:</strong> During rollout, Komodo briefly showed the <code>immich</code> stack unhealthy and <code>immich_server</code> in Docker state <code>created</code>. Recovery was handled in a separate troubleshooting conversation. Subsequent live MCP calls confirmed <code>immich_server</code> running and the <code>immich</code> stack running. The exact incident cause and repair sequence were not established in this document and must not be inferred.</p>
+<h3 id="unifi-mcp-verification-november-5-2026-cst">UniFi MCP Verification — November 5, 2026 (CST)<a class="headerlink" href="#unifi-mcp-verification-november-5-2026-cst" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API key locally stored with root-only permissions</td>
+<td>Verified <code>.env</code> owner <code>root:root</code>, mode <code>0600</code>; one-year expiration reported by operator</td>
+</tr>
+<tr>
+<td>UniFi Site Manager <code>/v1/hosts</code></td>
+<td>HTTP <code>200</code>; <code>UDMPROSE</code> connected</td>
+</tr>
+<tr>
+<td>Network cloud connector <code>/v1/info</code></td>
+<td>HTTP <code>200</code>; application <code>10.6.109</code></td>
+</tr>
+<tr>
+<td>Pinned image and native HTTP launcher</td>
+<td>Built; upstream source unchanged; fixed container bind to <code>0.0.0.0:8000</code></td>
+</tr>
+<tr>
+<td>Container host listener</td>
+<td><code>127.0.0.1:8086</code>; <code>/</code> HTTP <code>404</code> expected</td>
+</tr>
+<tr>
+<td>Pre-start and live MCP <code>tools/list</code></td>
+<td>Exactly 55 read tools; zero tools not labeled read-only</td>
+</tr>
+<tr>
+<td>Local MCP <code>unifi_health</code></td>
+<td>Five checks PASS</td>
+</tr>
+<tr>
+<td>Fourth tunnel <code>doctor</code></td>
+<td><code>RESULT ok</code> (after fixing bind issue)</td>
+</tr>
+<tr>
+<td>Fourth tunnel systemd / readiness</td>
+<td><code>active</code>, boot enable confirmed, <code>127.0.0.1:8087/readyz</code> HTTP <code>200</code> <code>ready</code></td>
+</tr>
+<tr>
+<td>ChatGPT plugin discovery</td>
+<td><code>Homelab UniFi</code>, 55 tools</td>
+</tr>
+<tr>
+<td>Live ChatGPT <code>unifi_health</code> and <code>get_site_status</code></td>
+<td>Both succeeded; site 3/3 devices online, 30 connected clients (13 wired, 17 wireless)</td>
+</tr>
+</tbody>
+</table>
+<p>The ChatGPT test was observed at <code>2026-11-05 23:16 CST</code> (<code>2026-11-06T05:16:03Z</code>). A full VM reboot, restored-VM test, and automatic all-four-tunnel recovery check were <strong>not performed</strong>, by operator choice. Do not infer they passed from currently healthy services.</p>
+<h3 id="verified-live-query">Verified Live Query<a class="headerlink" href="#verified-live-query" title="Permanent link">&para;</a></h3>
+<p>The <code>proxmox_get_cluster_status</code> tool was successfully invoked through the local MCP endpoint and subsequently through ChatGPT's installed Homelab Proxmox plugin.</p>
+<p>The response identified:</p>
+<ul>
+<li>
+<p>Cluster: <code>homelab-v3</code></p>
+</li>
+<li>
+<p>Proxmox VE: 9.1.6</p>
+</li>
+<li>
+<p>Two Proxmox nodes online</p>
+</li>
+<li>
+<p>Cluster quorum present</p>
+</li>
+<li>
+<p>Live VM, container, storage, and resource information</p>
+</li>
+</ul>
+<p>This confirms the complete connection from ChatGPT through the tunnel, MCP server, and Proxmox API.</p>
+<hr />
+<h2 id="backup-and-recovery-status">Backup and Recovery Status<a class="headerlink" href="#backup-and-recovery-status" title="Permanent link">&para;</a></h2>
+<p><strong>Status: October 30 PBS backup task successful; archive integrity and restoration still require verification.</strong></p>
+<h3 id="proxmox-vm-backup-coverage">Proxmox VM Backup Coverage<a class="headerlink" href="#proxmox-vm-backup-coverage" title="Permanent link">&para;</a></h3>
+<p>The cluster has an enabled daily 02:00 Proxmox backup job targeting <code>pbs-prod-01</code>. It includes VM 107 and excludes the PBS server VM 103.</p>
+<p>During the October 29 incident, the VM 107 backup failed with a <code>connection reset</code>. PBS investigations confirmed an invalid, long-lived NFS datastore <code>.lock</code> file descriptor in the backup proxy, which returned <code>ESTALE</code>. The operator restarted <code>proxmox-backup-proxy</code> on October 30 at 00:55 CDT, restoring backup execution; the original event that invalidated the handle is not known.</p>
+<p>The <strong>October 30, 2026 scheduled VM 107 backup completed successfully</strong> on <code>pve-prod-01</code> at approximately 02:22 CDT; this was verified in its Proxmox task log. That task included the primary VM disk and EFI disk. This confirms a successful backup <em>task</em>, not a separately completed PBS snapshot-integrity check or restoration test.</p>
+<ul>
+<li>Successful VM 107 scheduled backup task: <strong>verified</strong> (October 30).</li>
+<li>Independent PBS snapshot-level integrity verification: <strong>pending</strong>.</li>
+<li>Safe isolated VM restoration and service validation: <strong>not performed; operator chose to skip recovery testing in Phase 4</strong>.</li>
+<li>Separate observer file-level backup: <strong>not implemented/verified</strong>.</li>
+</ul>
+<p>The earlier read-only Proxmox archive query returned zero visible snapshots even when PBS showed older backup groups; it is not definitive evidence of archive absence. Check PBS datastore Content directly for the new observer snapshot before claiming it is independently visible and verified.</p>
+<h3 id="configuration-and-credential-recovery">Configuration and Credential Recovery<a class="headerlink" href="#configuration-and-credential-recovery" title="Permanent link">&para;</a></h3>
+<p>The VM's configuration and credentials are spread across these locations:</p>
+<ul>
+<li><code>/opt/stacks/proxmox-mcp/compose.yaml</code>, <code>/opt/stacks/proxmox-mcp/.env</code> — Proxmox Compose and protected credentials.</li>
+<li><code>/opt/stacks/unraid-mcp/compose.yaml</code>, <code>/opt/stacks/unraid-mcp/.env</code> — Unraid Compose tracked in <code>homelab-infra</code>; protected credentials excluded from Git.</li>
+<li><code>/etc/unraid-mcp/unraid.crt</code> — Trusted Unraid certificate bundle.</li>
+<li><code>/opt/stacks/komodo-mcp/compose.yaml</code>, <code>/opt/stacks/komodo-mcp/.env</code> — Komodo MCP Compose tracked in <code>homelab-infra</code> (verified commit <code>6502c59</code>); dedicated Komodo API key/secret remain in excluded <code>.env</code>, and separate credential backup/recovery remains unverified.</li>
+<li><code>/opt/stacks/unifi-mcp/compose.yaml</code>, <code>/opt/stacks/unifi-mcp/.env</code>, <code>.dockerignore</code>, <code>Dockerfile</code>, <code>http_server.py</code>, and <code>source/</code> — UniFi Compose/build files and launcher tracked in <code>homelab-infra</code> (verified commit <code>6502c59</code>); <code>source/</code> is a Git submodule pinned to <code>e13d0e2</code>. The root-only one-year API key remains in excluded <code>.env</code>. Repository tracking is verified; independent backup and restore are not.</li>
+<li><code>/etc/tunnel-client/</code> — Proxmox tunnel YAML, restricted runtime key, protected MCP bearer Authorization header.</li>
+<li><code>/etc/tunnel-client-unraid/</code> — Unraid tunnel YAML, restricted runtime key, protected MCP bearer Authorization header.</li>
+<li><code>/etc/tunnel-client-komodo/</code> — Komodo tunnel YAML and restricted OpenAI runtime key (no local MCP bearer header).</li>
+<li><code>/etc/tunnel-client-unifi/</code> — UniFi tunnel YAML and restricted OpenAI runtime key (no local MCP bearer header).</li>
+<li><code>/etc/systemd/system/tunnel-client.service</code>, <code>tunnel-client-unraid.service</code>, <code>tunnel-client-komodo.service</code>, <code>tunnel-client-unifi.service</code> — Four installed native systemd units; verified copies are tracked under <code>/opt/stacks/observer/tunnel-client/systemd/</code>.</li>
+<li><code>/opt/tunnel-client/</code> — Shared tunnel-client binary, bundled cloudflared and release support files; not recovered from Git.</li>
+<li><code>/opt/stacks/observer/tunnel-client/config/*.yaml.example</code> — Four sanitized Git-tracked examples, <strong>not</strong> the active tunnel YAML or a substitute for runtime key recovery.</li>
+</ul>
+<p>Existing Docker-host rsync backup jobs must <strong>not</strong> be assumed to protect observer VM host configuration or credentials. The historical October 30 successful VM 107 PBS backup task does not establish that the <strong>November 1 Komodo or November 5 UniFi additions</strong> are in an intact, restorable backup. A fresh independently verified VM 107 backup and secure credential recovery remain unverified. <strong>The operator opted to skip Phase 4 reboot/recovery testing</strong>, and the earlier isolated restore exercise was also excluded; neither was completed or is evidence of recovery readiness. The two remote Periphery key directories also require protection by the hosts' applicable backup procedures; their backup coverage is not independently verified here.</p>
+<p>Keep credentials in approved secure storage (Bitwarden where verified), not in Git or Obsidian. The separately retained Unraid MCP bearer token remains an identified recovery-check item. See <code>runbooks/backup-schedule.md</code> for PBS and <code>runbooks/ai-observer-operations.md</code> for recovery.</p>
+<h2 id="operations-and-maintenance">Operations and Maintenance<a class="headerlink" href="#operations-and-maintenance" title="Permanent link">&para;</a></h2>
+<h3 id="management-approach">Management Approach<a class="headerlink" href="#management-approach" title="Permanent link">&para;</a></h3>
+<p>The observer is managed manually through SSH and the CLI. No Dockman instance is installed on <code>observer-prod-01</code>; the Dockman instance on <code>docker-prod-01</code> does not manage this observer's Docker engine. Docker Compose changes and service restarts require the operator's explicit authorization.</p>
+<h3 id="mcp-stacks">MCP Stacks<a class="headerlink" href="#mcp-stacks" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Integration</th>
+<th>Compose directory</th>
+<th>Expected container</th>
+<th>Update approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox</td>
+<td><code>/opt/stacks/proxmox-mcp/</code></td>
+<td><code>proxmox-mcp</code></td>
+<td>Operator-controlled pull and recreate, then verify version and all 84 tools</td>
+</tr>
+<tr>
+<td>Unraid</td>
+<td><code>/opt/stacks/unraid-mcp/</code></td>
+<td><code>unraid-mcp</code></td>
+<td>Operator-controlled pull and recreate, then verify TLS and all 26 tools</td>
+</tr>
+<tr>
+<td>Komodo</td>
+<td><code>/opt/stacks/komodo-mcp/</code></td>
+<td><code>komodo-mcp</code></td>
+<td>Operator-controlled pull and recreate, then verify upstream permissions and all 40 tools</td>
+</tr>
+<tr>
+<td>UniFi</td>
+<td><code>/opt/stacks/unifi-mcp/</code></td>
+<td><code>unifi-mcp</code></td>
+<td>Review source changes, rebuild pinned local image and recreate only UniFi; verify 55 read tools and cloud API</td>
+</tr>
+</tbody>
+</table>
+<p>The original three MCP images use mutable upstream <code>latest</code> tags, which <strong>do not automatically pull new releases</strong>. The committed UniFi Compose now uses <code>homelab/unifi-mcp:latest</code> and builds <strong>locally</strong> from the pinned upstream Git submodule; this tag is not a guarantee of automatic source updates. The running UniFi container was not rebuilt or recreated after this Git change, so its current image-tag state requires live verification before describing it as deployed. Keep the existing local image available for rollback when feasible. The Komodo MCP talks to existing Komodo Core over HTTPS rather than mounting a Docker socket or managing the host directly.</p>
+<h3 id="tunnel-client">Tunnel Client<a class="headerlink" href="#tunnel-client" title="Permanent link">&para;</a></h3>
+<p>The tunnel-client is managed by <strong>four independent systemd units</strong>: <code>tunnel-client.service</code>, <code>tunnel-client-unraid.service</code>, <code>tunnel-client-komodo.service</code>, and <code>tunnel-client-unifi.service</code>. They share one installed <code>/opt/tunnel-client/tunnel-client</code> binary, so an approved binary upgrade affects all four after restart. Review all four on upgrade and ensure each uses its respective restricted key and config.</p>
+<h3 id="basic-read-only-health-checks">Basic Read-Only Health Checks<a class="headerlink" href="#basic-read-only-health-checks" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Run on observer-prod-01</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">for</span><span class="w"> </span>dir<span class="w"> </span><span class="k">in</span><span class="w"> </span>proxmox-mcp<span class="w"> </span>unraid-mcp<span class="w"> </span>komodo-mcp<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="o">(</span><span class="nb">cd</span><span class="w"> </span><span class="s2">"/opt/stacks/</span><span class="nv">$dir</span><span class="s2">"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>ps<span class="o">)</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">done</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># UniFi stack directory is restricted (root:gio, 0750); use the absolute Compose path:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>/opt/stacks/unifi-mcp/compose.yaml<span class="w"> </span>ps
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>--max-time<span class="w"> </span><span class="m">5</span><span class="w"> </span>http://127.0.0.1:8080/health
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>--max-time<span class="w"> </span><span class="m">5</span><span class="w"> </span>http://127.0.0.1:8084/ready
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">for</span><span class="w"> </span>unit<span class="w"> </span><span class="k">in</span><span class="w"> </span>tunnel-client.service<span class="w"> </span>tunnel-client-unraid.service<span class="w"> </span>tunnel-client-komodo.service<span class="w"> </span>tunnel-client-unifi.service<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span>systemctl<span class="w"> </span>is-active<span class="w"> </span><span class="s2">"</span><span class="nv">$unit</span><span class="s2">"</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span>systemctl<span class="w"> </span>is-enabled<span class="w"> </span><span class="s2">"</span><span class="nv">$unit</span><span class="s2">"</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">done</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">for</span><span class="w"> </span>port<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">8081</span><span class="w"> </span><span class="m">8083</span><span class="w"> </span><span class="m">8085</span><span class="w"> </span><span class="m">8087</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span>curl<span class="w"> </span>-fsS<span class="w"> </span>--max-time<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="s2">"http://127.0.0.1:</span><span class="nv">$port</span><span class="s2">/readyz"</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">done</span>
+</code></pre></div>
+<p>Then perform a live read-only call to each plugin. Passing container and tunnel health alone does <strong>not</strong> verify upstream API credentials, permissions, or end-to-end ChatGPT access. Full troubleshooting, credential-rotation, and recovery steps are in <code>runbooks/ai-observer-operations.md</code>.</p>
+<h2 id="security-boundaries">Security Boundaries<a class="headerlink" href="#security-boundaries" title="Permanent link">&para;</a></h2>
+<p>The implemented defense-in-depth model has <strong>separate upstream identities, separate MCP surfaces, and separate outbound tunnels</strong>:</p>
+<ol>
+<li><strong>Upstream least privilege:</strong> Proxmox's <code>observer@pve</code> account uses <code>PVEAuditor</code>; Unraid uses 14 <code>READ_ANY</code> families and no write grants; Komodo uses dedicated non-admin <code>ai-observer-komodo</code> with Read and scoped Logs permissions, excluding Inspect/Terminal/Attach/Processes and creation. <strong>UniFi differs:</strong> its dedicated Site Manager / Network application API key is site/application-scoped by setup intention but <strong>not proven read-only</strong> at the API layer; protect and audit it accordingly.</li>
+<li><strong>MCP tools:</strong> Proxmox exposes 84 read tools from nine enabled toolsets, with write/delete/exec switches false; Unraid exposes an exact 26-tool read allowlist; Komodo exposes 40 read tools with eight sensitive tools explicitly excluded and upstream anonymous-HTTP read scope; UniFi registers 55 read tools only when <code>UNIFI_READ_ONLY=true</code>, enforced by a fail-closed launcher. <strong>205 Read / zero Write tools</strong> exposed across all four ChatGPT plugins at verification.</li>
+<li><strong>Network:</strong> All MCP endpoints are bound to observer loopback only, with no public MCP endpoint. The only targeted observer-to-Management firewall exception remains <code>192.168.30.17 → 192.168.10.11 TCP 8006</code> for Proxmox.</li>
+<li><strong>Tunnel:</strong> Four independent outbound OpenAI tunnels, each with a restricted Tunnels Read+Use runtime API key. All run as non-root <code>tunnel-client</code> with no Docker group membership.</li>
+<li><strong>MCP authentication difference:</strong> Proxmox and Unraid use local MCP bearer authentication supplied by protected tunnel headers. Komodo intentionally runs <code>MCP_AUTH_ENABLED=false</code>; <strong>UniFi also has no separate local bearer</strong>: eligible local processes on observer loopback are not individually authenticated. Restrict observer access and preserve the dedicated upstream permissions, read-only mode and tool exclusions.</li>
+<li><strong>Secrets:</strong> MCP <code>.env</code>, runtime key, and authorization files are excluded from Git. The Komodo and UniFi tunnels have <strong>no</strong> local MCP bearer-header files by design. No plaintext secrets are reproduced here.</li>
+<li><strong>Information exposure:</strong> Even non-mutating tools may return sensitive logs, host/network configuration, scripts, API-key metadata, or potentially secrets. Komodo's secret-scrubbing mechanism is best-effort; full Docker Inspect and Compose/TOML exports remain excluded. For retained detailed <code>*_info</code> tools, review actual output before sharing.</li>
+<li><strong>Operational separation:</strong> No Docker socket is mounted into any observer MCP container; the observer's Docker daemon is not remotely administered by Dockman or the Komodo MCP.</li>
+</ol>
+<p>Any change to upstream privileges, toolsets, local authentication, excluded tools, secret storage, or network exposure requires explicit review and post-change tool-inventory and end-to-end verification. No write automation is implemented.</p>
+<h2 id="planned-extensions">Planned Extensions<a class="headerlink" href="#planned-extensions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Integration / capability</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox MCP 0.5.1 / 84 read tools</td>
+<td><strong>Implemented and verified</strong></td>
+</tr>
+<tr>
+<td>Unraid MCP 0.6.3 / 26 read tools</td>
+<td><strong>Implemented and verified</strong></td>
+</tr>
+<tr>
+<td>Komodo MCP 1.5.0 / 40 read tools / eight exclusions</td>
+<td><strong>Implemented and verified</strong> across all three Komodo servers</td>
+</tr>
+<tr>
+<td>UniFi MCP 2.1.0 pinned revision / 55 read tools</td>
+<td><strong>Implemented and live verified</strong> November 5, 2026</td>
+</tr>
+<tr>
+<td>Four private ChatGPT plugins / four outbound secure tunnels</td>
+<td><strong>Implemented and end-to-end verified</strong></td>
+</tr>
+<tr>
+<td>Periphery on <code>immich-prod-01</code> and <code>auth-prod-01</code>, with stacks adopted</td>
+<td><strong>Implemented and live verified</strong>; outbound WSS, no public agent listener</td>
+</tr>
+<tr>
+<td>Codex usage through these tunnels</td>
+<td>Not yet verified</td>
+</tr>
+<tr>
+<td>Proxmox, Unraid, Komodo, or UniFi write operations</td>
+<td>Deferred, not authorized</td>
+</tr>
+<tr>
+<td>Automated maintenance and remediation</td>
+<td>Deferred</td>
+</tr>
+<tr>
+<td>Fresh observer backup including Nov 1 Komodo and Nov 5 UniFi additions; credential recovery</td>
+<td><strong>Not independently verified</strong></td>
+</tr>
+<tr>
+<td>Observer reboot/tunnel startup recovery</td>
+<td><strong>Not performed — operator opted to skip Phase 4 recovery test</strong></td>
+</tr>
+<tr>
+<td>Isolated observer restore exercise</td>
+<td><strong>Not performed; excluded from this Phase 3 scope</strong>; recovery readiness remains unproven</td>
+</tr>
+</tbody>
+</table>
+<p>No elevated permissions should be introduced for convenience. Revisit information disclosure whenever enabling additional ostensibly read-only tools.</p>
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><code>architecture/network/ip-addresses.md</code> — Observer IP allocation.</p>
+</li>
+<li>
+<p><code>architecture/network/firewall-rules.md</code> — Targeted Proxmox API firewall exception.</p>
+</li>
+<li>
+<p><code>architecture/compute/pve-prod-01.md</code> — Observer VM guest inventory.</p>
+</li>
+<li>
+<p><code>architecture/decisions-log.md</code> — AI Observer security and architecture decisions.</p>
+</li>
+<li>
+<p><code>runbooks/ai-observer-operations.md</code> — Operations, maintenance, troubleshooting, and recovery procedures.</p>
+</li>
+<li>
+<p><code>architecture/storage/nas-prod-01.md</code> — Unraid NAS configuration, current array inventory, and resolved October 2026 parity/Disk 3 connection incident.</p>
+</li>
+<li>
+<p><code>runbooks/git-workflow.md</code> — Version control and credentials workflow.</p>
+</li>
+<li>
+<p><code>runbooks/updating-containers.md</code> — Docker Compose update practices.</p>
+</li>
+<li>
+<p><code>runbooks/backup-schedule.md</code> — Backup coverage and verification.</p>
+</li>
+<li>
+<p><code>services/infra/dockman.md</code> — Local Docker management separation.</p>
+</li>
+<li><code>services/media/immich.md</code> — Remote Periphery deployment and adopted Immich Compose stack.</li>
+<li><code>services/infra/authentik.md</code> — Remote Periphery deployment and adopted Authentik Compose stack.</li>
+</ul>
+<p><strong>Source repositories:</strong></p>
+<ul>
+<li>
+<p><code>homelab-docs</code> — Obsidian infrastructure documentation.</p>
+</li>
+<li>
+<p><code>homelab-infra</code> — Docker Compose infrastructure, pinned UniFi source submodule, and sanitized AI Observer tunnel/systemd recovery templates (verified commits <code>6502c59</code>, <code>9887296</code>).</p>
+</li>
+</ul>
+<hr />
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>AI Observer runs independently on VM 107 and is <strong>not</strong> a general-purpose production Docker host.</li>
+<li>OpenAI Secure MCP Tunnel does not replace existing homelab Cloudflare Tunnel or Traefik.</li>
+<li>The four installed integrations intentionally expose <strong>read-only MCP tools</strong>: Proxmox <strong>84</strong>, Unraid <strong>26</strong>, Komodo <strong>40</strong>, and UniFi <strong>55</strong>, all discovered in ChatGPT (<strong>205 Read / 0 Write</strong>). UniFi's upstream API key is a separate potentially write-capable boundary. Tool discovery is not proof of every individual upstream query's success.</li>
+<li>Proxmox compiled binary <code>0.5.1</code> was verified November 1, 2026, and upstream tool classifications were checked against the <strong>v0.5.1</strong> reference, not just current <code>main</code>.</li>
+<li>Komodo intentionally has an unauthenticated <strong>local</strong> MCP endpoint (read-only scope, localhost only); its dedicated non-admin upstream API credentials and eight tool exclusions are critical security controls. No credential output should be assumed safe solely because secret scrubbing is enabled. Remote Periphery Docker socket access belongs to Komodo administration, <strong>not</strong> ChatGPT.</li>
+<li>The October 30 observer VM backup task succeeded historically. A protected backup containing the <strong>November 1 Komodo and November 5 UniFi changes</strong>, integrity validation, and credential-recovery checks remain unverified. The operator chose <strong>not</strong> to perform observer reboot/recovery testing for Phase 4; the isolated restore exercise was also not performed.</li>
+<li>Update authoritative docs after verified implementations; preserve explicit distinction between implemented, planned and unresolved work.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>

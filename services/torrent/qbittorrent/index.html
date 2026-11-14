@@ -1,0 +1,3779 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/services/torrent/qbittorrent/">
+      
+      
+        <link rel="prev" href="../../books/shelfmark/">
+      
+      
+        <link rel="next" href="../gluetun/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>qBittorrent - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#qbittorrent" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              qBittorrent
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Port Forwarding
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#download-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Download Categories
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Download Categories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#category-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Category Management
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arr-download-client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      ARR Download Client Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ARR Download Client Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shelfmark-download-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shelfmark Download Client
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Settings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#november-2026-seeding-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 2026 Seeding Change
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seeding-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Seeding Policies
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Seeding Policies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arr-torrent-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      ARR Torrent Cleanup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ebook-and-audiobook-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ebook and Audiobook Cleanup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#myanonamouse-mam-exception" class="md-nav__link">
+    <span class="md-ellipsis">
+      MyAnonamouse (MAM) Exception
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-file-retention-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      Important File-Retention Behavior
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Config File
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Directory Structure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Directory Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#download-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Download Data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permissions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Troubleshooting
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardlinks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardlinks
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hardlinks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-the-single-nfs-mount-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why the Single NFS Mount Matters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arr-hardlink-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      ARR Hardlink Workflow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify-hardlinks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Hardlinks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#books-and-audiobooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Books and Audiobooks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nfs-reliability-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      NFS Reliability Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-torrents-errored-or-download-speed-is-zero" class="md-nav__link">
+    <span class="md-ellipsis">
+      All Torrents Errored or Download Speed Is Zero
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webui-not-reachable-bad-gateway" class="md-nav__link">
+    <span class="md-ellipsis">
+      WebUI Not Reachable / Bad Gateway
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#listening-port-not-matching-vpn-forwarded-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      Listening Port Not Matching VPN-Forwarded Port
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#torrent-stops-seeding-after-one-hour" class="md-nav__link">
+    <span class="md-ellipsis">
+      Torrent Stops Seeding After One Hour
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mam-torrent-not-seeding-long-enough" class="md-nav__link">
+    <span class="md-ellipsis">
+      MAM Torrent Not Seeding Long Enough
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#completed-download-missing-from-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Completed Download Missing From Library
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-changes-reverting-after-restart" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Changes Reverting After Restart
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#november-2026-audit-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 2026 Audit Findings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="November 2026 Audit Findings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configured-but-awaiting-live-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configured but Awaiting Live Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-follow-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optional Follow-Up
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Port Forwarding
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#download-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Download Categories
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Download Categories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#category-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Category Management
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arr-download-client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      ARR Download Client Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ARR Download Client Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shelfmark-download-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shelfmark Download Client
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Settings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#november-2026-seeding-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 2026 Seeding Change
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seeding-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Seeding Policies
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Seeding Policies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arr-torrent-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      ARR Torrent Cleanup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ebook-and-audiobook-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ebook and Audiobook Cleanup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#myanonamouse-mam-exception" class="md-nav__link">
+    <span class="md-ellipsis">
+      MyAnonamouse (MAM) Exception
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-file-retention-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      Important File-Retention Behavior
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Config File
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Directory Structure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Directory Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#download-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Download Data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permissions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#permission-troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission Troubleshooting
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardlinks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hardlinks
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hardlinks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-the-single-nfs-mount-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why the Single NFS Mount Matters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arr-hardlink-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      ARR Hardlink Workflow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify-hardlinks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Hardlinks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#books-and-audiobooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Books and Audiobooks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nfs-reliability-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      NFS Reliability Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-torrents-errored-or-download-speed-is-zero" class="md-nav__link">
+    <span class="md-ellipsis">
+      All Torrents Errored or Download Speed Is Zero
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webui-not-reachable-bad-gateway" class="md-nav__link">
+    <span class="md-ellipsis">
+      WebUI Not Reachable / Bad Gateway
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#listening-port-not-matching-vpn-forwarded-port" class="md-nav__link">
+    <span class="md-ellipsis">
+      Listening Port Not Matching VPN-Forwarded Port
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#torrent-stops-seeding-after-one-hour" class="md-nav__link">
+    <span class="md-ellipsis">
+      Torrent Stops Seeding After One Hour
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mam-torrent-not-seeding-long-enough" class="md-nav__link">
+    <span class="md-ellipsis">
+      MAM Torrent Not Seeding Long Enough
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#completed-download-missing-from-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Completed Download Missing From Library
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-changes-reverting-after-restart" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Changes Reverting After Restart
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#november-2026-audit-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 2026 Audit Findings
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="November 2026 Audit Findings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configured-but-awaiting-live-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configured but Awaiting Live Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-follow-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optional Follow-Up
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="qbittorrent">qBittorrent<a class="headerlink" href="#qbittorrent" title="Permanent link">&para;</a></h1>
+<p><strong>Role:</strong> Torrent client — runs inside Gluetun VPN network namespace<br />
+<strong>Host:</strong> docker-prod-01 (192.168.30.11)<br />
+<strong>Image:</strong> <code>lscr.io/linuxserver/qbittorrent:latest</code><br />
+<strong>Version:</strong> 5.3.0 (verified November 2026)<br />
+<strong>Compose:</strong> <code>/opt/stacks/torrent/compose.yaml</code><br />
+<strong>Appdata:</strong> <code>/opt/appdata/qbittorrent/</code><br />
+<strong>URL:</strong> <code>https://qbittorrent.giohosted.com</code><br />
+<strong>Last Updated:</strong> 2026-11-09</p>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>qBittorrent is the torrent client for media downloads across the ARR stack and Shelfmark.</p>
+<p>It runs inside Gluetun's network namespace, meaning it has no independent Docker network identity. Torrent traffic routes through the ProtonVPN WireGuard tunnel, and Gluetun provides the VPN connectivity and network-level protection.</p>
+<p>If Gluetun's VPN connectivity is lost, its firewall rules are intended to prevent qBittorrent from leaking torrent traffic through the normal network connection.</p>
+<p>qBittorrent is responsible for:</p>
+<ul>
+<li>Downloading torrents submitted by Sonarr, Radarr, and Shelfmark.</li>
+<li>Organizing downloads using categories and save paths.</li>
+<li>Maintaining torrent data for active downloads and seeding.</li>
+<li>Using the VPN-forwarded listening port supplied by Gluetun.</li>
+<li>Providing the WebUI and API used by the ARR applications and qBitrr.</li>
+</ul>
+<p><strong>Seeding-policy management is delegated to qBitrr.</strong> qBittorrent's former native global 60-minute seeding rule was disabled in November 2026 to prevent interference with tracker-specific seeding requirements.</p>
+<p>See <code>services/torrent/gluetun.md</code> for VPN and network architecture details.</p>
+<p>See <code>services/torrent/qbitrr.md</code> for automated torrent health monitoring, search, recovery, and seeding policies.</p>
+<hr />
+<h2 id="network">Network<a class="headerlink" href="#network" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Network mode</td>
+<td><code>service:gluetun</code> — shares Gluetun's network namespace</td>
+</tr>
+<tr>
+<td>WebUI port</td>
+<td><code>8080</code></td>
+</tr>
+<tr>
+<td>WebUI URL</td>
+<td><code>https://qbittorrent.giohosted.com</code></td>
+</tr>
+<tr>
+<td>Reverse proxy</td>
+<td>Traefik routes through Gluetun</td>
+</tr>
+<tr>
+<td>Network interface</td>
+<td><code>tun0</code> — VPN tunnel interface</td>
+</tr>
+<tr>
+<td>VPN provider</td>
+<td>ProtonVPN</td>
+</tr>
+<tr>
+<td>VPN protocol</td>
+<td>WireGuard</td>
+</tr>
+<tr>
+<td>Torrent listening port</td>
+<td>Dynamic — updated using Gluetun's port-forwarding script</td>
+</tr>
+<tr>
+<td>UPnP / NAT-PMP</td>
+<td>Disabled in qBittorrent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="network-architecture">Network Architecture<a class="headerlink" href="#network-architecture" title="Permanent link">&para;</a></h3>
+<p>qBittorrent does not have its own network presence on the Docker <code>proxy</code> network.</p>
+<p>Instead:</p>
+<ol>
+<li>Gluetun establishes the ProtonVPN WireGuard tunnel.</li>
+<li>qBittorrent shares Gluetun's network namespace.</li>
+<li>Gluetun's firewall protects torrent traffic from bypassing the VPN.</li>
+<li>A Gluetun-side script obtains and configures the forwarded listening port.</li>
+<li>Traefik exposes the qBittorrent WebUI through Gluetun.</li>
+<li>Sonarr, Radarr, Shelfmark, and qBitrr communicate with qBittorrent using <code>http://gluetun:8080</code>.</li>
+</ol>
+<p><strong>Important:</strong> Do not change qBittorrent's network interface binding from <code>tun0</code> without evaluating the VPN security implications.</p>
+<h3 id="port-forwarding">Port Forwarding<a class="headerlink" href="#port-forwarding" title="Permanent link">&para;</a></h3>
+<p>qBittorrent does not independently request port forwarding from the local router.</p>
+<p>Instead, Gluetun manages VPN port forwarding through ProtonVPN.</p>
+<p>The port-forwarding script is located at:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/opt/appdata/gluetun/scripts/qbit-set-port.sh
+</code></pre></div>
+<p>The script updates qBittorrent's listening port through its WebUI API.</p>
+<p><strong>UPnP/NAT-PMP being disabled in qBittorrent does not mean VPN port forwarding is disabled.</strong> These are separate mechanisms.</p>
+<hr />
+<h2 id="download-categories">Download Categories<a class="headerlink" href="#download-categories" title="Permanent link">&para;</a></h2>
+<p>Categories must match the values configured in Sonarr, Radarr, Shelfmark, and qBitrr.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Save Path</th>
+<th>Managed By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sonarr-tv</code></td>
+<td><code>/data/downloads/tv</code></td>
+<td>Sonarr-TV / qBitrr</td>
+</tr>
+<tr>
+<td><code>sonarr-anime</code></td>
+<td><code>/data/downloads/anime</code></td>
+<td>Sonarr-Anime / qBitrr</td>
+</tr>
+<tr>
+<td><code>radarr-1080</code></td>
+<td><code>/data/downloads/movies/1080p</code></td>
+<td>Radarr-1080 / qBitrr</td>
+</tr>
+<tr>
+<td><code>radarr-4k</code></td>
+<td><code>/data/downloads/movies/4k</code></td>
+<td>Radarr-4K / qBitrr</td>
+</tr>
+<tr>
+<td><code>ebooks</code></td>
+<td><code>/data/downloads/books/ebooks/downloads</code></td>
+<td>Shelfmark / qBitrr</td>
+</tr>
+<tr>
+<td><code>audiobooks</code></td>
+<td><code>/data/downloads/books/audiobooks/downloads</code></td>
+<td>Shelfmark / qBitrr</td>
+</tr>
+</tbody>
+</table>
+<h3 id="category-management">Category Management<a class="headerlink" href="#category-management" title="Permanent link">&para;</a></h3>
+<p>The four ARR categories correspond to separate qBitrr application instances.</p>
+<p>The two book categories are configured under qBitrr's <code>qBit.ManagedCategories</code> setting:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">ManagedCategories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"audiobooks"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ebooks"</span><span class="p">]</span>
+</code></pre></div>
+<p>These allow qBitrr to manage audiobook and ebook torrents without requiring dedicated Sonarr or Radarr instances.</p>
+<p>Category names and paths should remain consistent across qBittorrent and the services that submit downloads.</p>
+<hr />
+<h2 id="arr-download-client-configuration">ARR Download Client Configuration<a class="headerlink" href="#arr-download-client-configuration" title="Permanent link">&para;</a></h2>
+<p>All four ARR instances connect to qBittorrent using:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Host</td>
+<td><code>gluetun</code></td>
+</tr>
+<tr>
+<td>Port</td>
+<td><code>8080</code></td>
+</tr>
+<tr>
+<td>Username</td>
+<td><code>admin</code></td>
+</tr>
+<tr>
+<td>Password</td>
+<td>Stored in the existing protected configuration</td>
+</tr>
+<tr>
+<td>Client type</td>
+<td>qBittorrent</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Host must be <code>gluetun</code>, not <code>qbittorrent</code>.</strong></p>
+<p>qBittorrent shares Gluetun's network namespace, and port 8080 is accessible through Gluetun.</p>
+<table>
+<thead>
+<tr>
+<th>ARR Instance</th>
+<th>Category</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sonarr-TV</td>
+<td><code>sonarr-tv</code></td>
+</tr>
+<tr>
+<td>Sonarr-Anime</td>
+<td><code>sonarr-anime</code></td>
+</tr>
+<tr>
+<td>Radarr-1080</td>
+<td><code>radarr-1080</code></td>
+</tr>
+<tr>
+<td>Radarr-4K</td>
+<td><code>radarr-4k</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="shelfmark-download-client">Shelfmark Download Client<a class="headerlink" href="#shelfmark-download-client" title="Permanent link">&para;</a></h3>
+<p>Shelfmark connects to the same qBittorrent instance using:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>http://gluetun:8080/
+</code></pre></div>
+<p>Shelfmark assigns:</p>
+<ul>
+<li><code>ebooks</code> to ebook torrents.</li>
+<li><code>audiobooks</code> to audiobook torrents.</li>
+</ul>
+<p>Shelfmark manages file import and hardlink creation. qBitrr manages the configured torrent seeding and cleanup policies.</p>
+<p>See <code>services/books/shelfmark.md</code> for complete ebook and audiobook workflows.</p>
+<hr />
+<h2 id="key-settings">Key Settings<a class="headerlink" href="#key-settings" title="Permanent link">&para;</a></h2>
+<p>The following settings reflect the existing deployment documentation and confirmed November 2026 changes. Settings not individually retested during the audit should be reconfirmed in the WebUI before consequential troubleshooting.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Default save path</td>
+<td><code>/data/downloads</code></td>
+<td>Settings → Downloads</td>
+</tr>
+<tr>
+<td>Network interface</td>
+<td><code>tun0</code></td>
+<td>Settings → Advanced</td>
+</tr>
+<tr>
+<td>UPnP / NAT-PMP</td>
+<td>Disabled</td>
+<td>Settings → Connection</td>
+</tr>
+<tr>
+<td>Torrent listening port</td>
+<td>Dynamically set by Gluetun script</td>
+<td>Settings → Connection</td>
+</tr>
+<tr>
+<td>Incomplete torrent folder</td>
+<td>Disabled</td>
+<td>Settings → Downloads</td>
+</tr>
+<tr>
+<td>DHT</td>
+<td>Enabled</td>
+<td>Settings → BitTorrent</td>
+</tr>
+<tr>
+<td>Peer Exchange</td>
+<td>Enabled</td>
+<td>Settings → BitTorrent</td>
+</tr>
+<tr>
+<td>Global upload speed limit</td>
+<td>350,000 KiB/s (historically documented)</td>
+<td>Settings → Speed</td>
+</tr>
+<tr>
+<td>Maximum upload slots per torrent</td>
+<td>5 (historically documented)</td>
+<td>Settings → Connection / BitTorrent</td>
+</tr>
+<tr>
+<td>Native global seeding time limit</td>
+<td>Disabled</td>
+<td>Settings → BitTorrent</td>
+</tr>
+<tr>
+<td>Seeding cleanup management</td>
+<td>qBitrr</td>
+<td><code>/opt/appdata/qbitrr/config.toml</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="november-2026-seeding-change">November 2026 Seeding Change<a class="headerlink" href="#november-2026-seeding-change" title="Permanent link">&para;</a></h3>
+<p>Previously, qBittorrent had a native global 60-minute seeding stop rule.</p>
+<p><strong>That rule was disabled during the November 2026 qBitrr optimization.</strong></p>
+<p>The old global limit could interfere with MAM torrents that must remain seeding beyond one hour.</p>
+<p>The intended architecture is:</p>
+<ul>
+<li>qBittorrent performs downloading and seeding.</li>
+<li>qBitrr evaluates managed torrent categories and applicable tracker policies.</li>
+<li>qBitrr controls the configured automatic torrent cleanup.</li>
+</ul>
+<p>Do not re-enable qBittorrent's global 60-minute rule without reviewing its impact on private-tracker requirements.</p>
+<hr />
+<h2 id="seeding-policies">Seeding Policies<a class="headerlink" href="#seeding-policies" title="Permanent link">&para;</a></h2>
+<h3 id="overview_1">Overview<a class="headerlink" href="#overview_1" title="Permanent link">&para;</a></h3>
+<p>qBitrr manages the seeding policies for the four ARR instances and the two book categories.</p>
+<table>
+<thead>
+<tr>
+<th>Torrent Type</th>
+<th>Intended Policy</th>
+<th>Verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sonarr-TV</td>
+<td>One-hour seeding limit</td>
+<td>Configuration verified</td>
+</tr>
+<tr>
+<td>Sonarr-Anime</td>
+<td>One-hour seeding limit</td>
+<td>Configuration verified</td>
+</tr>
+<tr>
+<td>Radarr-1080</td>
+<td>One-hour seeding limit</td>
+<td>Configuration verified</td>
+</tr>
+<tr>
+<td>Radarr-4K</td>
+<td>One-hour seeding limit</td>
+<td>Configuration verified</td>
+</tr>
+<tr>
+<td>Public ebooks</td>
+<td>One-hour seeding limit</td>
+<td>Configuration verified</td>
+</tr>
+<tr>
+<td>Public audiobooks</td>
+<td>One-hour seeding limit</td>
+<td>End-to-end verified</td>
+</tr>
+<tr>
+<td>MyAnonamouse torrents</td>
+<td>Minimum 14 days AND 1.0 upload ratio</td>
+<td>Configured; live verification pending</td>
+</tr>
+</tbody>
+</table>
+<h3 id="arr-torrent-cleanup">ARR Torrent Cleanup<a class="headerlink" href="#arr-torrent-cleanup" title="Permanent link">&para;</a></h3>
+<p>All four ARR instances use the following qBitrr seeding configuration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">MaxUploadRatio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">MaxSeedingTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3600</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">RemoveTorrent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+</code></pre></div>
+<p>These values are configured in each ARR instance's <code>[Torrent.SeedingMode]</code> section.</p>
+<p>The intended behavior is time-based cleanup after approximately one hour of seeding, subject to Qbitrr's applicable processing and removal conditions.</p>
+<h3 id="ebook-and-audiobook-cleanup">Ebook and Audiobook Cleanup<a class="headerlink" href="#ebook-and-audiobook-cleanup" title="Permanent link">&para;</a></h3>
+<p>The managed book categories use:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">[qBit.CategorySeeding]</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">MaxUploadRatio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">MaxSeedingTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3600</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">RemoveTorrent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+</code></pre></div>
+<p>For public torrents, this provides the default one-hour seeding policy.</p>
+<h3 id="myanonamouse-mam-exception">MyAnonamouse (MAM) Exception<a class="headerlink" href="#myanonamouse-mam-exception" title="Permanent link">&para;</a></h3>
+<p>MAM torrents have additional private-tracker requirements.</p>
+<p>The tracker-specific configuration in qBitrr is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">[[qBit.Trackers]]</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">Name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MyAnonamouse"</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">URI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"myanonamouse.net"</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">Priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">MaxUploadRatio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">MaxSeedingTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1209600</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">HitAndRunMode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"and"</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">MinSeedRatio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">MinSeedingTimeDays</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">14</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="n">TrackerUpdateBuffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3600</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">AddTrackerIfMissing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="n">RemoveIfExists</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</code></pre></div>
+<p><strong>Policy intent:</strong></p>
+<ul>
+<li>Require at least 14 days of seeding.</li>
+<li>Require a minimum upload ratio of 1.0.</li>
+<li>Use AND logic so both requirements are satisfied.</li>
+<li>Protect matching MAM torrents from the normal public-torrent cleanup policy.</li>
+<li>Allow for delayed tracker-statistics updates.</li>
+</ul>
+<p><strong>Verification limitation:</strong> The configuration parses correctly and qBitrr workers initialize successfully, but a live MAM torrent has not yet been used to validate the tracker-specific exception.</p>
+<p>Until verified, do not manually remove MAM torrents based solely on the local client displaying 14 days of seeding or a ratio of 1.0. Verify the private tracker's actual requirements and recorded status.</p>
+<p>Full tracker-policy details are documented in <code>services/torrent/qbitrr.md</code>.</p>
+<h3 id="important-file-retention-behavior">Important File-Retention Behavior<a class="headerlink" href="#important-file-retention-behavior" title="Permanent link">&para;</a></h3>
+<p>Deleting or removing a completed torrent is not necessarily the same as deleting its imported library media.</p>
+<p>The system relies on hardlink-based imports where applicable.</p>
+<p>Once the library has a separate hardlink to a completed file, removing the original download directory entry does not remove the data referenced by the library hardlink.</p>
+<p>However, this depends on the import having completed correctly.</p>
+<p><strong>Do not assume every completed torrent has already been imported.</strong> Check Sonarr, Radarr, Shelfmark, or the destination library when troubleshooting missing files.</p>
+<hr />
+<h2 id="config-file">Config File<a class="headerlink" href="#config-file" title="Permanent link">&para;</a></h2>
+<p>The qBittorrent configuration file is located at:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>/opt/appdata/qbittorrent/qBittorrent/qBittorrent.conf
+</code></pre></div>
+<p>qBittorrent may write configuration changes during normal operation and shutdown.</p>
+<p><strong>Important:</strong> Do not manually edit the configuration file while the container is running. Changes may be overwritten.</p>
+<p>For direct file edits, use a planned maintenance window:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>docker<span class="w"> </span>stop<span class="w"> </span>qbittorrent
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>sudo<span class="w"> </span>nano<span class="w"> </span>/opt/appdata/qbittorrent/qBittorrent/qBittorrent.conf
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>docker<span class="w"> </span>start<span class="w"> </span>qbittorrent
+</code></pre></div>
+<p>For ordinary configuration changes, prefer the qBittorrent WebUI when available.</p>
+<p>The configuration files are owned by the service account used by the container, historically UID/GID <code>2000:2000</code>.</p>
+<p>Avoid modifying file ownership or permissions unless the existing state has been inspected and the change is necessary.</p>
+<hr />
+<h2 id="directory-structure">Directory Structure<a class="headerlink" href="#directory-structure" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>/opt/stacks/torrent/
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  compose.yaml                         ← Gluetun, qBittorrent, qBitrr
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  .env                                 ← protected environment values
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>/opt/appdata/qbittorrent/
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  qBittorrent/
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    qBittorrent.conf                   ← main configuration
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    categories.json                    ← download categories
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    BT_backup/                         ← torrent resume data
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    GeoDB/                             ← peer geolocation data
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    logs/                              ← application logs
+</code></pre></div>
+<h3 id="download-data">Download Data<a class="headerlink" href="#download-data" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>/data/
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  downloads/
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    tv/
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    anime/
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    movies/
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>      1080p/
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>      4k/
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    books/
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>      ebooks/
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>        downloads/
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>        ingest/
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>      audiobooks/
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>        downloads/
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>  media/
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>    tv/
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>    movies/
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>    books/
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>      ebooks/
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>      audiobooks/
+</code></pre></div>
+<p>The directories above describe the logical download and library layout, not a separate filesystem for each category.</p>
+<hr />
+<h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">&para;</a></h2>
+<p>qBittorrent runs with the documented PUID/PGID:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>2000:2000
+</code></pre></div>
+<p>The <code>/data/downloads</code> NFS mount must provide appropriate write permissions for that user and group.</p>
+<p>Historically, the NAS-side ownership was corrected during the Homelab v3 migration:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Historical deployment action on nas-prod-01</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>chown<span class="w"> </span>-R<span class="w"> </span><span class="m">2000</span>:2000<span class="w"> </span>/mnt/user/data/
+</code></pre></div>
+<p><strong>Do not rerun the recursive ownership command automatically.</strong> Inspect the current permissions, affected paths, and other services before applying ownership changes.</p>
+<h3 id="permission-troubleshooting">Permission Troubleshooting<a class="headerlink" href="#permission-troubleshooting" title="Permanent link">&para;</a></h3>
+<p>If torrents show errors or cannot write files:</p>
+<ol>
+<li>Confirm <code>/data</code> is mounted and accessible.</li>
+<li>Inspect ownership and permissions for the affected download directory.</li>
+<li>Confirm qBittorrent's actual runtime UID/GID.</li>
+<li>Check qBittorrent logs for the specific filesystem error.</li>
+<li>Verify the NFS export and NAS permissions if necessary.</li>
+</ol>
+<p>A read-only inspection on <code>docker-prod-01</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>stat<span class="w"> </span>-c<span class="w"> </span><span class="s1">'%n | %U:%G | %a'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span>/data<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>/data/downloads<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span>/data/downloads/tv
+</code></pre></div>
+<p>Only change permissions after identifying a real mismatch.</p>
+<hr />
+<h2 id="hardlinks">Hardlinks<a class="headerlink" href="#hardlinks" title="Permanent link">&para;</a></h2>
+<p>qBittorrent, Sonarr, Radarr, and the media applications use a shared <code>/data</code> filesystem layout.</p>
+<p>On <code>docker-prod-01</code>, <code>/data</code> is mounted from the Unraid NAS:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>192.168.30.16:/mnt/user/data
+</code></pre></div>
+<p>The deployment uses NFSv3 and a single parent mount to preserve hardlink compatibility.</p>
+<h3 id="why-the-single-nfs-mount-matters">Why the Single NFS Mount Matters<a class="headerlink" href="#why-the-single-nfs-mount-matters" title="Permanent link">&para;</a></h3>
+<p>Hardlinks require the source and destination to exist on the same filesystem.</p>
+<p>During the Homelab v3 deployment, separate <code>media</code> and <code>downloads</code> NFS exports prevented hardlinks from working across those paths.</p>
+<p>The solution was to restructure the NAS storage so that:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>/mnt/user/data/
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>  downloads/
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>  media/
+</code></pre></div>
+<p>is exposed through one NFS share.</p>
+<p><strong>Do not split <code>/data/media</code> and <code>/data/downloads</code> into independent mounts without redesigning the hardlink workflow.</strong></p>
+<h3 id="arr-hardlink-workflow">ARR Hardlink Workflow<a class="headerlink" href="#arr-hardlink-workflow" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Sonarr or Radarr sends a torrent to qBittorrent.</li>
+<li>qBittorrent downloads the content into its category directory.</li>
+<li>The ARR application imports the completed media using a hardlink where supported.</li>
+<li>One directory entry remains under downloads for seeding.</li>
+<li>A second directory entry exists in the media library.</li>
+<li>When cleanup removes the download-side entry, the library-side hardlink can preserve the file data.</li>
+</ol>
+<h3 id="verify-hardlinks">Verify Hardlinks<a class="headerlink" href="#verify-hardlinks" title="Permanent link">&para;</a></h3>
+<p>Compare inode numbers and hardlink counts for a known imported file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>stat<span class="w"> </span>/data/downloads/tv/&lt;torrent-file&gt;.mkv
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>stat<span class="w"> </span>/data/media/tv/&lt;show&gt;/&lt;imported-file&gt;.mkv
+</code></pre></div>
+<p>The files should have matching inode numbers and a hardlink count reflecting the additional directory entry.</p>
+<p>Use actual file paths when running this check.</p>
+<h3 id="books-and-audiobooks">Books and Audiobooks<a class="headerlink" href="#books-and-audiobooks" title="Permanent link">&para;</a></h3>
+<p>Shelfmark uses the same underlying filesystem approach.</p>
+<p><strong>Ebooks:</strong></p>
+<ul>
+<li>qBittorrent downloads to <code>/data/downloads/books/ebooks/downloads</code>.</li>
+<li>Shelfmark hardlinks completed files into the CWA ingest directory.</li>
+<li>CWA imports the ebook into its managed library.</li>
+</ul>
+<p><strong>Audiobooks:</strong></p>
+<ul>
+<li>qBittorrent downloads to <code>/data/downloads/books/audiobooks/downloads</code>.</li>
+<li>Shelfmark hardlinks the completed audiobook into <code>/data/media/books/audiobooks</code>.</li>
+<li>Audiobookshelf detects and serves the imported media.</li>
+</ul>
+<p>During the November 2026 audit, a public audiobook remained playable in Audiobookshelf after qBitrr removed its torrent.</p>
+<h3 id="nfs-reliability-considerations">NFS Reliability Considerations<a class="headerlink" href="#nfs-reliability-considerations" title="Permanent link">&para;</a></h3>
+<p>The single shared NFS mount is an intentional architecture decision and should be preserved.</p>
+<p>A November 2026 incident affected Shelfmark's existing NFS directory handles:</p>
+<ul>
+<li>Shelfmark returned <code>Stale file handle</code> errors.</li>
+<li>The host's <code>/data</code> mount was accessible.</li>
+<li>Other containers continued to access their directories.</li>
+<li>Restarting Shelfmark restored directory access.</li>
+<li>Subsequent ebook and audiobook imports succeeded.</li>
+</ul>
+<p>The incident did not establish that qBittorrent's own filesystem access was failing.</p>
+<p>If similar errors recur, investigate the affected container, host NFS mount, and NAS export before changing the storage architecture.</p>
+<p>See <code>services/books/shelfmark.md</code>.</p>
+<hr />
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="all-torrents-errored-or-download-speed-is-zero">All Torrents Errored or Download Speed Is Zero<a class="headerlink" href="#all-torrents-errored-or-download-speed-is-zero" title="Permanent link">&para;</a></h3>
+<p>First distinguish between filesystem errors, VPN connectivity, and tracker/peer availability.</p>
+<p>Check container status:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>docker<span class="w"> </span>ps<span class="w"> </span>--filter<span class="w"> </span><span class="nv">name</span><span class="o">=</span>gluetun
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>docker<span class="w"> </span>ps<span class="w"> </span>--filter<span class="w"> </span><span class="nv">name</span><span class="o">=</span>qbittorrent
+</code></pre></div>
+<p>Review logs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>docker<span class="w"> </span>logs<span class="w"> </span>gluetun<span class="w"> </span>--tail<span class="w"> </span><span class="m">30</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>docker<span class="w"> </span>logs<span class="w"> </span>qbittorrent<span class="w"> </span>--tail<span class="w"> </span><span class="m">30</span>
+</code></pre></div>
+<p>Check relevant download directory permissions:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>stat<span class="w"> </span>/data/downloads
+</code></pre></div>
+<p>If the torrent reports a permission error, investigate the specific save path rather than recursively modifying ownership across the entire NAS.</p>
+<h3 id="webui-not-reachable-bad-gateway">WebUI Not Reachable / Bad Gateway<a class="headerlink" href="#webui-not-reachable-bad-gateway" title="Permanent link">&para;</a></h3>
+<p>qBittorrent's WebUI is exposed through Gluetun.</p>
+<p>Check Gluetun first:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>docker<span class="w"> </span>ps<span class="w"> </span>--filter<span class="w"> </span><span class="nv">name</span><span class="o">=</span>gluetun
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>docker<span class="w"> </span>logs<span class="w"> </span>gluetun<span class="w"> </span>--tail<span class="w"> </span><span class="m">20</span>
+</code></pre></div>
+<p>Also verify that Traefik can reach Gluetun on port 8080.</p>
+<p>A qBittorrent WebUI failure does not necessarily mean the VPN tunnel itself is down.</p>
+<h3 id="listening-port-not-matching-vpn-forwarded-port">Listening Port Not Matching VPN-Forwarded Port<a class="headerlink" href="#listening-port-not-matching-vpn-forwarded-port" title="Permanent link">&para;</a></h3>
+<p>Gluetun obtains a dynamic forwarded port and uses its script to update qBittorrent.</p>
+<p>Inspect the Gluetun logs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>docker<span class="w"> </span>logs<span class="w"> </span>gluetun<span class="w"> </span>--tail<span class="w"> </span><span class="m">100</span>
+</code></pre></div>
+<p>Review the port-forwarding script and confirm the reported forwarded port matches qBittorrent's active listening port.</p>
+<p><strong>Historical recovery action:</strong> During the initial Homelab v3 deployment, a full torrent-stack restart resolved a port-forward synchronization problem.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/torrent
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>down
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</code></pre></div>
+<p><strong>Caution:</strong> These commands interrupt Gluetun, qBittorrent, qBitrr, and other services defined by the Compose project. They should not be used as the first troubleshooting step while important downloads are active.</p>
+<p>Prefer read-only investigation before restarting the stack.</p>
+<h3 id="torrent-stops-seeding-after-one-hour">Torrent Stops Seeding After One Hour<a class="headerlink" href="#torrent-stops-seeding-after-one-hour" title="Permanent link">&para;</a></h3>
+<p>Determine whether the torrent belongs to a managed public category or a private tracker with additional obligations.</p>
+<p>For public content managed by qBitrr, removal after approximately one hour is expected.</p>
+<p>For MAM content, early removal would be unexpected under the intended tracker-specific policy and requires investigation.</p>
+<p>Check:</p>
+<ul>
+<li>Torrent category.</li>
+<li>Tracker URL.</li>
+<li>qBitrr tracker-match configuration.</li>
+<li>Whether qBittorrent has any native seeding stop rule enabled.</li>
+<li>Torrent state and relevant Qbitrr logs.</li>
+</ul>
+<p>Do not assume that all torrent categories share identical policies.</p>
+<h3 id="mam-torrent-not-seeding-long-enough">MAM Torrent Not Seeding Long Enough<a class="headerlink" href="#mam-torrent-not-seeding-long-enough" title="Permanent link">&para;</a></h3>
+<p>Check both qBittorrent's native limits and qBitrr's tracker rules.</p>
+<p>The expected configuration is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>qBittorrent native global seeding limit: disabled
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>qBitrr MAM tracker policy:
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>  Minimum seed time: 14 days
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>  Minimum upload ratio: 1.0
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>  Hit-and-run mode: and
+</code></pre></div>
+<p>MAM compliance remains pending live verification.</p>
+<p>Do not manually remove the torrent until the applicable tracker obligations have been confirmed as satisfied.</p>
+<h3 id="completed-download-missing-from-library">Completed Download Missing From Library<a class="headerlink" href="#completed-download-missing-from-library" title="Permanent link">&para;</a></h3>
+<p>A completed torrent does not guarantee a successful library import.</p>
+<p>For ARR media, inspect Sonarr/Radarr activity and import history.</p>
+<p>For books, inspect Shelfmark and the destination application.</p>
+<p>Confirm both the original download path and the destination library path are accessible.</p>
+<p>If filesystem errors appear, investigate the shared NFS mount and container bind mounts.</p>
+<h3 id="configuration-changes-reverting-after-restart">Configuration Changes Reverting After Restart<a class="headerlink" href="#configuration-changes-reverting-after-restart" title="Permanent link">&para;</a></h3>
+<p>qBittorrent may overwrite manually edited configuration values during shutdown.</p>
+<p>Use the WebUI for normal configuration changes.</p>
+<p>For direct configuration-file editing, stop the container first and make a backup of the configuration file.</p>
+<p>Do not modify live configuration files and then assume the changes will survive a restart.</p>
+<hr />
+<h2 id="november-2026-audit-findings">November 2026 Audit Findings<a class="headerlink" href="#november-2026-audit-findings" title="Permanent link">&para;</a></h2>
+<p>The following findings were confirmed during the qBitrr optimization and troubleshooting audit.</p>
+<h3 id="verified">Verified<a class="headerlink" href="#verified" title="Permanent link">&para;</a></h3>
+<ul>
+<li>qBittorrent version 5.3.0 was observed.</li>
+<li>The old native global 60-minute seeding rule was disabled.</li>
+<li>qBitrr manages the four ARR torrent categories.</li>
+<li>qBitrr manages the <code>ebooks</code> and <code>audiobooks</code> categories.</li>
+<li>Public audiobook downloading and import worked after recovery from a Shelfmark NFS issue.</li>
+<li>A public audiobook remained playable after its torrent was automatically removed.</li>
+<li>qBitrr's seeding settings were confirmed on disk.</li>
+<li>qBitrr's 13 workers started successfully after restart.</li>
+</ul>
+<h3 id="configured-but-awaiting-live-verification">Configured but Awaiting Live Verification<a class="headerlink" href="#configured-but-awaiting-live-verification" title="Permanent link">&para;</a></h3>
+<ul>
+<li>MAM tracker matching and protection beyond the public one-hour policy.</li>
+<li>MAM torrent cleanup only after both the 14-day and 1.0-ratio requirements are satisfied.</li>
+<li>A newly stalled torrent successfully completing the full automated removal and replacement workflow.</li>
+<li>Torrent-based ebook cleanup with successful retained library import.</li>
+</ul>
+<h3 id="optional-follow-up">Optional Follow-Up<a class="headerlink" href="#optional-follow-up" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Reconfirm the historically documented upload speed and slot limits in the qBittorrent WebUI during a future configuration review.</li>
+<li>Investigate recurring NFS errors if they reappear.</li>
+<li>Avoid introducing additional download-client automation without evidence of an operational need.</li>
+</ul>
+<hr />
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>qBittorrent was restored from the Homelab v2 backup at <code>/mnt/user/backups/docker-v2/appdata/torrent-stack/qbittorrent/</code>.</li>
+<li>The v2 backup contained <code>Session\DefaultSavePath=/data/torrents</code>; this was corrected to <code>/data/downloads</code> during the v3 migration.</li>
+<li>All ARR applications connect using <code>gluetun:8080</code>.</li>
+<li>Shelfmark uses the same qBittorrent instance with separate book categories.</li>
+<li>qBittorrent runs within Gluetun's VPN network namespace.</li>
+<li>Gluetun handles VPN port forwarding and protection against traffic escaping the VPN.</li>
+<li>Keep qBittorrent's network interface bound to <code>tun0</code>.</li>
+<li>Keep qBittorrent's global seeding stop rule disabled while qBitrr manages private-tracker exceptions.</li>
+<li>Maintain the single shared <code>/data</code> NFS mount for hardlink compatibility.</li>
+<li>qBitrr handles torrent monitoring, automated recovery, and seeding policies; see <code>services/torrent/qbitrr.md</code>.</li>
+<li>Avoid storing credentials, passwords, or session cookies in documentation.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>
