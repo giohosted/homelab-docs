@@ -1,7 +1,7 @@
 # Backup Schedule
 
 **Last Updated:** 2026-11-14  
-**Status:** PBS Docker deployment active. November 14 scheduled backups completed successfully on all three Proxmox nodes, including the first verified scheduled backup on the replacement `pve-prod-02`. A fresh manual backup of Authentik VM 104 also completed successfully after its migration to `pve-prod-03`. Earlier targeted integrity and file-level recovery tests passed; full-guest restoration and PBS maintenance-job execution remain unverified.
+**Status:** Docker PBS active. November 14 scheduled backups completed on all three nodes; VM 104 manual backup passed after migration. The November 14 AI Observer VM 107 snapshot had PBS Verify State **OK** and passed an **isolated full-VM restore and local service startup test**. Other guest restores, full network cutover, and PBS maintenance-job execution remain unverified.
 
 Reference document for backup jobs across Homelab v3. Lists what is configured, when jobs run, where backups are stored, and how their success is verified.
 
@@ -23,7 +23,7 @@ Reference document for backup jobs across Homelab v3. Lists what is configured, 
 | TBD — Wave 8 | Dedicated Plex full-appdata backup | `/mnt/user/appdata/plex` | NAS `backups` share — final path TBD | nas-prod-01 | Not implemented |
 | TBD — Wave 8 | Synology ABB | nas-prod-01 `backups` share | Synology NAS | Synology | Not implemented |
 
-**AI Observer:** `observer-prod-01` (VM 107) remains included in the cluster backup job on `pve-prod-01`. Its November 14 scheduled backup completed successfully and included its primary virtual disk and EFI disk. Individual snapshot integrity and isolated full-VM recovery remain unverified. No separate observer rsync backup has been verified.
+**AI Observer:** `observer-prod-01` (VM 107) remains included in the cluster backup job on `pve-prod-01`. Its November 14 scheduled backup succeeded with the primary and EFI disks; the selected snapshot showed PBS Verify State **OK** and was restored to isolated VM 900 on `pve-prod-02`. Ubuntu boot, console login, and local MCP container startup succeeded. External connectivity and separate observer rsync backup remain unverified.
 
 **Authentik:** `auth-prod-01` (VM 104) now runs on `pve-prod-03`. Its November 14 scheduled backup succeeded on the former host before migration, and a fresh manual snapshot backup succeeded from node 03 at 14:09:45 CST. The first scheduled backup from its new host remains to be observed.
 
@@ -53,7 +53,7 @@ On November 14, scheduled PBS backups completed successfully on **all three curr
 
 Later that day, Authentik VM 104 was migrated to `pve-prod-03`, and its post-migration manual snapshot backup completed successfully.
 
-Continued reliability, PBS maintenance execution, and full-guest recovery remain to be tested.
+Continued backup reliability and PBS maintenance execution remain to be tested. A full-VM recovery test of VM 107 subsequently passed on November 14, but other guest restores and production-network recovery remain untested.
 
 ---
 
@@ -267,6 +267,16 @@ The successful backup demonstrates that VM 104 can execute a PBS backup from its
 
 See `services/infra/authentik.md` and `architecture/compute/pve-prod-03.md` for the migration and application validation history.
 
+### Isolated AI Observer Full-VM Restore — November 14, 2026
+
+**PASSED (isolated recovery scope):** A PBS-verified VM 107 backup (`vm/107/2026-11-14T08:03:37Z`; Verify State **OK**) was restored to temporary VM 900 on `pve-prod-02` using separate `local-zfs` disks. Unique identity was enabled; Start after restore was disabled. While stopped, the restored VM's `net0` adapter was removed and Start at boot was disabled before first boot.
+
+VM 900 booted Ubuntu 26.04.1 LTS, allowed console login, mounted its root and EFI filesystems, and started the four AI Observer MCP containers (three healthy, one running). The operator reported the tunnel units looked good. No production NIC or external connectivity was enabled for the test VM. VM 900 was shut down and deleted; final Proxmox checks showed VM 900 absent and production VM 107 running.
+
+**Scope boundary:** This verifies restore, local boot, and local service startup—not production-network failover, recovered external MCP/tunnel connectivity, or every credential. A separate operator-confirmed Secure Boot maintenance restart of production VM 107 occurred the same evening and was not part of the restore test. The tested snapshot predates that later maintenance. Other guests and PBS recovery still require separate validation.
+
+The authoritative step-by-step test record and safety checks are maintained in `runbooks/ai-observer-operations.md` under **Isolated AI Observer Full-VM Restore — November 14, 2026**.
+
 ### Retention
 
 **Configured and visually verified on the new PBS Docker instance, November 5:** daily prune with keep-last `3`, keep-daily `7`, keep-weekly `4`, keep-monthly `3`; keep-hourly and keep-yearly unset.
@@ -437,7 +447,7 @@ At the time, the outstanding work was:
 **IP:** 192.168.30.17  
 **Proxmox VMID:** 107  
 **Proxmox node:** pve-prod-01  
-**Status:** Scheduled VM backup completed successfully November 14, 2026; archive integrity and isolated restoration remain unverified.
+**Status:** November 14 VM 107 snapshot showed PBS Verify State **OK** and passed isolated restoration as VM 900, including OS boot and local MCP container startup; external connectivity untested.
 
 AI Observer hosts the read-only Proxmox, Unraid, Komodo, and UniFi MCP integrations with their OpenAI Secure MCP Tunnel clients.
 
@@ -460,7 +470,7 @@ However, that protection exists only when a usable VM backup has been created.
 
 **Current finding (November 14):** The scheduled VM 107 backup again completed successfully. Its 20 GiB system disk and EFI disk were included. The task log reported approximately 98% data reuse.
 
-Separate PBS snapshot-level integrity verification, detailed archive inspection, and restoration testing remain pending.
+Subsequently on November 14, the chosen VM 107 snapshot showed PBS Verify State **OK** and passed isolated VM restoration to VM 900 with local boot and Docker startup checks. Other snapshots and production-connected recovery remain untested.
 
 ### Configuration and Credentials Requiring Recovery
 
@@ -485,9 +495,9 @@ The authoritative complete inventory belongs in `services/infra/ai-observer.md` 
 - MCP Compose configuration exists in the private `homelab-infra` repository.
 - Sensitive credentials were retained separately through the established Bitwarden workflow.
 - The scheduled PBS job includes VM 107.
-- VM 107 completed a scheduled PBS backup on November 14; the resulting snapshot has not yet been independently integrity-verified or restore-tested.
+- VM 107 completed a scheduled PBS backup on November 14; the selected snapshot showed PBS Verify State **OK** and successfully restored as isolated VM 900, booting Ubuntu with the four MCP containers running.
 - No independent observer file-level backup job has been verified.
-- No observer restoration test has been completed.
+- **Completed November 14:** Isolated VM 107 restoration to temporary VM 900, OS boot, and local service startup. External MCP/tunnel functionality remains untested in the restored guest.
 
 Existing rsync jobs on docker-prod-01, auth-prod-01, and immich-prod-01 do not automatically protect observer-prod-01.
 
@@ -746,7 +756,7 @@ From Proxmox:
 - A fresh manual VM 104 backup on node 03 succeeded at 14:09:45 CST.
 - The first scheduled 02:00 execution for VM 104 from node 03 has not yet occurred.
 
-Earlier targeted CT 100 integrity verification and file-level retrieval passed. A full-guest restore test remains open.
+Earlier targeted CT 100 integrity verification and file-level retrieval passed. Subsequently on November 14, the VM 107 isolated full-VM restore also passed.
 
 ### PBS Archives
 
@@ -805,7 +815,7 @@ Verify:
 5. Required credentials are recoverable from approved secure storage.
 6. The restored integration can successfully perform a read-only Proxmox query.
 
-Until these checks pass, observer recoverability remains unverified.
+The isolated VM restore and local startup checks passed on November 14. Complete, network-connected observer disaster recovery and credential recovery remain unverified.
 
 ---
 
@@ -822,7 +832,7 @@ Until these checks pass, observer recoverability remains unverified.
 - **Open:** Confirm the first scheduled 02:00 backup of VM 104 from its new host.
 - **Open:** Verify recent successful rsync execution and heartbeat delivery on auth-prod-01 after its migration.
 - **Open:** Verify actual prune, GC, and scheduled verify executions on the Docker PBS deployment.
-- **Open:** Perform a safe isolated full VM/CT restore, including an appropriate recovery test for Authentik and AI Observer.
+- **Completed for AI Observer VM 107:** Isolated full-VM restore, OS boot, and local MCP startup on November 14. **Open:** Equivalent safe restore tests for other important guests, including Authentik, and network-connected recovery when explicitly approved.
 - **Open:** Verify Docker Host-network port 8007 access policy and PBS start-after-ZFS-mount ordering. Review update strategy for the unofficial image.
 - **Open:** Define the desired protection/recovery approach for the PBS container's persisted config and ZFS datastore; the operator intentionally declined a migration-time snapshot and accepts rebuilding a datastore if necessary.
 - **Housekeeping:** Remove the obsolete VM 103 exclusion only after confirming guest coverage and reviewing the backup-job configuration.
@@ -831,8 +841,8 @@ Until these checks pass, observer recoverability remains unverified.
 
 ### AI Observer Recovery
 
-- Confirm the recent November 14 VM 107 backup is present in PBS, then perform snapshot integrity verification.
-- Establish a tested recovery procedure for AI Observer.
+- **Completed:** VM 107 snapshot visible in PBS with Verify State **OK**; isolated full-VM restore and local container startup passed November 14.
+- **Open:** Test network-connected recovery/credential validity only through an explicitly authorized, production-safe exercise.
 - Verify secure recovery of Git-excluded configuration and tunnel credentials.
 - Decide whether a separate encrypted observer configuration backup is necessary.
 - Document the completed process in `runbooks/ai-observer-operations.md`.
@@ -919,7 +929,7 @@ Until these checks pass, observer recoverability remains unverified.
 | VM 105 disk coverage | 32 GiB system disk and EFI disk included; photos NFS mount is **not** included in that VM disk backup |
 | First scheduled backup on replacement pve-prod-02 | Not yet separately observed on November 13 |
 | NAS photo-library protection | Separate Unraid/ZFS and Immich database backup procedures; VM backup alone is not sufficient |
-| Isolated full guest restore | Not yet verified |
+| Isolated full guest restore | VM 107 passed November 14; other guests not yet restore-tested |
 | PBS prune, GC, and scheduled verify execution after Docker migration | Not rechecked during this verification |
 
 **Historical follow-up:** The first scheduled backup on the replacement pve-prod-02 was subsequently confirmed successful on November 14.
@@ -945,13 +955,13 @@ Until these checks pass, observer recoverability remains unverified.
 | Current guest placement | CT 100/VM 101/VM 106/VM 107 on node 01; VM 105 on node 02; CT 102/VM 104 on node 03 |
 | First scheduled backup of VM 104 from node 03 | Pending |
 | Recent Authentik rsync run after migration | Not reverified |
-| Isolated full guest restore | Not yet verified |
+| Isolated full guest restore | VM 107 passed November 14; other guests not yet restore-tested |
 | PBS prune, GC, and scheduled verify execution | Configured; successful execution not reverified |
 | PBS warning/error notification delivery | Not independently failure-tested |
 | Unraid-hosted PBS config/datastore recovery | Not end-to-end tested |
 
 **Current assessment:** The new three-node architecture has successfully executed scheduled backups on all three nodes. The migrated Authentik VM has also passed a fresh manual PBS backup from its destination host.
 
-The remaining work is to establish recovery assurance through archive verification, isolated restoration tests, backup-maintenance monitoring, and notification validation.
+The November 14 AI Observer restoration established recovery of one complete VM to another host, including local boot and container startup. Further work includes other guest restore tests, full network/application cutover, backup-maintenance monitoring, and notification validation.
 
 Do not equate successful backup execution with complete disaster-recovery readiness.

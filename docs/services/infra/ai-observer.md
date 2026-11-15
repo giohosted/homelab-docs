@@ -4,8 +4,8 @@
 **Host:** observer-prod-01 (192.168.30.17)  
 **Proxmox Host:** pve-prod-01 (192.168.10.11)  
 **Proxmox VMID:** 107  
-**Status:** Active — Proxmox, Unraid, Komodo and UniFi integrations verified end-to-end; tunnel startup recovery and VM 107 Secure Boot certificate update verified November 15, 2026  
-**Last Updated:** 2026-11-15
+**Status:** Active — Proxmox, Unraid, Komodo and UniFi integrations verified end-to-end  
+**Last Updated:** 2026-11-14
 
 ---
 
@@ -29,7 +29,7 @@ The Proxmox integration was verified October 29–30 and its compiled version/to
 
 The private `giohosted/homelab-infra` repository is shared across the participating Docker hosts. On `observer-prod-01`, `/opt/stacks` was confirmed clean and synchronized with `origin/main` after push of **`9887296`** (`Add AI Observer tunnel systemd units and config templates`). Earlier verified commit **`6502c59`** (`Add read-only Komodo and UniFi MCP deployments`) registered UniFi upstream source as a Git submodule pinned to `e13d0e22dce1b6a498edc5982d78bd589073d44c`. Proxmox and Unraid MCP Compose definitions were already tracked. This establishes repository coverage of all four MCP deployment definitions and their tunnel templates; it does **not** prove runtime re-deployment or disaster recovery.
 
-The repository now also contains `observer/tunnel-client/` with **four sanitized YAML examples** and **four copied, verified systemd service units**. The examples retain local ports and protected credential *file paths*, but their `tunnel_id` and `channel` values are placeholders. `/etc` holds the active configurations, and protected keys, MCP `.env` files, the shared tunnel binary and runtime state are **not** included in Git. Pulling the shared repository onto another Docker host copies these inert files; it does not install systemd units, create credentials, or start tunnels. **November 15 operational note:** the production VM now also has four systemd drop-in overrides under `/etc/systemd/system/tunnel-client*.service.d/override.conf` for MCP startup readiness. Their presence in `homelab-infra` has **not** been verified; the Git-tracked base units alone do not reproduce these new drop-ins. See Service Configuration below.
+The repository now also contains `observer/tunnel-client/` with **four sanitized YAML examples** and **four copied, verified systemd service units**. The examples retain local ports and protected credential *file paths*, but their `tunnel_id` and `channel` values are placeholders. `/etc` holds the active configurations, and protected keys, MCP `.env` files, the shared tunnel binary and runtime state are **not** included in Git. Pulling the shared repository onto another Docker host copies these inert files; it does not install systemd units, create credentials, or start tunnels.
 
 ## Architecture
 ### Request Flow
@@ -112,8 +112,6 @@ No public MCP hostname, Traefik route, port forwarding, or inbound internet fire
 |Disk storage|local-zfs|
 |Machine|q35|
 |Firmware|OVMF / UEFI|
-|EFI key enrollment|`ms-cert=2023k`, `pre-enrolled-keys=1` (verified November 15, 2026)|
-|Secure Boot|Enabled inside Ubuntu (`mokutil --sb-state`, November 15, 2026)|
 |Disk controller|VirtIO SCSI|
 |Network|VirtIO, vmbr0, VLAN tag 30|
 |QEMU guest agent|Enabled|
@@ -142,7 +140,7 @@ The observer was configured with SSH key-based authentication.
 
 SSH password authentication, keyboard-interactive authentication, and direct root SSH login were disabled.
 
-The VM uses a dedicated service account, `tunnel-client`, for the OpenAI tunnel daemon. This account has a noninteractive shell and no Docker group membership. The November 15 systemd startup checks run under the same restricted unit context and use localhost HTTP; no Docker-socket access was granted to the tunnel account.
+The VM uses a dedicated service account, `tunnel-client`, for the OpenAI tunnel daemon. This account has a noninteractive shell and no Docker group membership.
 
 Docker is administered separately with elevated privileges when needed.
 
@@ -637,7 +635,7 @@ The upstream `main.py` normally launches **stdio**. A separate custom `/opt/stac
 5. `tunnel-client-unifi.service` was confirmed **active**, tunnel `127.0.0.1:8087/readyz` returned HTTP `200` / `ready`, and the operator confirmed **automatic startup enabled**. The `Homelab UniFi` ChatGPT plugin discovered **55 tools**.
 6. **Live ChatGPT `unifi_health` and `get_site_status` succeeded**: `ok=true`, `read_only=true`, console connected, default site discovered, UDM-SE Network `10.6.109`; **3 devices online / 0 offline / 0 firmware-updatable**, **30 clients (13 wired, 17 wireless)** at `2026-11-06T05:16:03Z` (`2026-11-05 23:16 CST`). Counts are point-in-time, not fixed site inventory. All 55 individual operations were *not* tested.
 
-**Historical scope (November 5):** At initial UniFi rollout, the operator deferred the VM reboot and isolated restore exercises. **Subsequent November 15 verification:** Full observer VM reboot and a separate VM shutdown/boot after the Secure Boot EFI update both brought back all four tunnel readiness endpoints at HTTP 200, without manual restarts. An isolated VM restore remains **unperformed**; a boot of the existing VM is not evidence of restoration.
+**Historical November 5 rollout status:** A VM reboot, automatic all-four-tunnel reconnect exercise, and isolated VM restore/recovery test were not performed during the UniFi implementation. A separate isolated restore was subsequently completed November 14 (see Backup and Recovery Status); restored external tunnel connectivity was still not tested.
 
 ---
 
@@ -678,28 +676,7 @@ All four tunnel processes are independent native systemd services. On November 6
 | `UMask` | `0077` |
 | `WantedBy` | `multi-user.target` |
 
-On November 1, 2026, `tunnel-client-komodo.service` returned `active` and `enabled`, and `/readyz` returned HTTP 200 `ready`. The prior Proxmox/Unraid tunnels were previously verified operational. On November 5, the new UniFi tunnel was `active`, reported HTTP 200 `ready`, and its boot enablement was confirmed by the operator. **On November 15, the operator subsequently completed the observer reboot and all-four-tunnel startup validation;** the original Phase 4 deferral no longer describes the current state.
-
-### Verified Startup Readiness and Reboot Recovery — November 15, 2026
-
-After an observer reboot on November 15 at approximately `02:44:11 UTC`, the Unraid tunnel attempted to initialize against `127.0.0.1:8082/mcp` before the Unraid MCP container started at `02:44:12.052 UTC`. The tunnel logged `connection refused` and `startup catalog failed; control-plane polling disabled` while the tunnel process remained running. Unraid, Komodo and UniFi tunnel readiness endpoints returned HTTP `503` even though their systemd units were `active (running)`. Restarting those three tunnel services after their MCP endpoints became available restored HTTP `200` readiness. The timing definitively documents the Unraid startup race; the other two showed analogous symptoms but their initial error logs were not separately established.
-
-To prevent premature initialization, **four systemd drop-in overrides** were installed and verified on `observer-prod-01`:
-
-| Tunnel systemd unit | Override location | Pre-start local MCP check | Startup timeout |
-|---|---|---|---|
-| `tunnel-client.service` | `/etc/systemd/system/tunnel-client.service.d/override.conf` | `127.0.0.1:8080/health` must return HTTP 200 | `TimeoutStartSec=100` |
-| `tunnel-client-unraid.service` | `/etc/systemd/system/tunnel-client-unraid.service.d/override.conf` | `127.0.0.1:8082/health` must return HTTP 200 | `TimeoutStartSec=100` |
-| `tunnel-client-komodo.service` | `/etc/systemd/system/tunnel-client-komodo.service.d/override.conf` | `127.0.0.1:8084/ready` must return HTTP 200 | `TimeoutStartSec=100` |
-| `tunnel-client-unifi.service` | `/etc/systemd/system/tunnel-client-unifi.service.d/override.conf` | `127.0.0.1:8086/mcp` must return the observed HTTP 406 | `TimeoutStartSec=160` |
-
-Every override adds `[Unit] Wants=docker.service` and `After=docker.service`, plus `[Service] ExecStartPre` with bounded retries. Proxmox, Unraid and Komodo use `curl --fail --retry 35 --retry-delay 2 --retry-connrefused --retry-max-time 90 --connect-timeout 2 --max-time 3` against their respective verified health endpoints. UniFi has **no Docker healthcheck or dedicated health route** in its existing launcher and instead checks for the implementation-specific unauthenticated `/mcp` HTTP `406` response, retrying up to 30 times with two-second intervals. That response establishes HTTP application handling, **not** a full MCP handshake; revisit the check if its response behavior changes.
-
-These changes retain the existing restricted `tunnel-client` identity, `Restart=always`, `RestartSec=5`, `NoNewPrivileges=true`, `UMask=0077`, loopback-only MCP publishing and separate credential directories. `After=docker.service` alone is insufficient; the explicit HTTP pre-start checks prevent the early initialization observed in the incident.
-
-**Verification:** Each override's service-restart test succeeded. After a controlled full observer VM reboot at `2026-11-15 04:49:29 UTC`, all four systemd units reported `active (running)`, each `ExecStartPre` reported `status=0/SUCCESS`, and `/readyz` on ports `8081/8083/8085/8087` returned HTTP `200` without a manual restart. Following the subsequent Secure Boot EFI disk update and VM restart, all four readiness endpoints again returned HTTP `200`, and live ChatGPT read-only queries succeeded through Proxmox, Unraid, Komodo and UniFi.
-
-**Boundary:** Startup readiness and normal reboot behavior are now verified. A separate watchdog for a running tunnel that later becomes stuck at HTTP `503` was **not** implemented; systemd's `Restart=always` only reacts to process exits, not persistent application-level unready states. Full isolated-VM restoration, credential recovery from backup and exhaustive per-tool execution remain unverified. The drop-ins have not been confirmed as tracked in the infrastructure Git repository.
+On November 1, 2026, `tunnel-client-komodo.service` returned `active` and `enabled`, and `/readyz` returned HTTP 200 `ready`. The prior Proxmox/Unraid tunnels were previously verified operational. On November 5, the new UniFi tunnel was `active`, reported HTTP 200 `ready`, and its boot enablement was confirmed by the operator. **No observer VM reboot or automatic four-tunnel recovery test was performed**, per the operator's Phase 4 decision.
 
 ### Protected Configuration Files
 
@@ -875,7 +852,7 @@ The full 84-name inventory is recorded under **Proxmox MCP** above; tool discove
 | ChatGPT plugin discovery | Connected; 26 read tools, zero write tools |
 | Live `unraid_info` from ChatGPT | Passed (hostname `nas-prod-01`, Unraid 7.3.2) |
 
-A healthy container, a ready tunnel, and connected-plugin discovery each check different layers. End-to-end verification was achieved through the live ChatGPT invocation. The November 15 observer reboot separately verified automatic startup for all four tunnels. Full per-tool testing and isolated recovery/restore testing remain outstanding.
+A healthy container, a ready tunnel, and connected-plugin discovery each check different layers. End-to-end verification was achieved through the live ChatGPT invocation. Full per-tool testing, automatic startup through an actual observer reboot, and recovery/restore testing remain outstanding.
 
 
 ### Komodo MCP Verification — November 1, 2026 (CST)
@@ -897,7 +874,7 @@ A healthy container, a ready tunnel, and connected-plugin discovery each check d
 | ChatGPT plugin discovery | `Homelab Komodo`: 40 Read tools |
 | Live ChatGPT tool calls | `komodo_health_check` returned configured/healthy; `komodo_container_list` returned 26 containers |
 
-The `doctor` result included an HTTP 400 reachability response from `/mcp`, accepted by the diagnostic as a valid reachability result; it was **not** used as proof of authenticated JSON-RPC. Successful MCP tool calls provide that proof. Normal cold-reboot startup recovery was subsequently verified on November 15; full per-tool testing and isolated restore remain unverified.
+The `doctor` result included an HTTP 400 reachability response from `/mcp`, accepted by the diagnostic as a valid reachability result; it was **not** used as proof of authenticated JSON-RPC. Successful MCP tool calls provide that proof. Full per-tool testing, cold-reboot recovery and isolated restore remain unverified.
 
 ### Multi-host Komodo Verification — November 1, 2026 (CST)
 
@@ -927,7 +904,7 @@ The `doctor` result included an HTTP 400 reachability response from `/mcp`, acce
 | ChatGPT plugin discovery | `Homelab UniFi`, 55 tools |
 | Live ChatGPT `unifi_health` and `get_site_status` | Both succeeded; site 3/3 devices online, 30 connected clients (13 wired, 17 wireless) |
 
-The original ChatGPT test was observed at `2026-11-05 23:16 CST` (`2026-11-06T05:16:03Z`). On November 15, a subsequent full VM reboot and a second boot after the EFI update both passed all-four-tunnel readiness checks; the UniFi integration also passed a fresh live `unifi_health` tool call. An isolated restored-VM test remains unperformed.
+The ChatGPT test was observed at `2026-11-05 23:16 CST` (`2026-11-06T05:16:03Z`). **At that point**, a full VM reboot, restored-VM test, and automatic all-four-tunnel recovery check had not been performed. A separate isolated restore/boot test was completed November 14, but networked all-four-tunnel reconnection from the restored VM remains untested.
 
 ### Verified Live Query
 
@@ -950,15 +927,9 @@ This confirms the complete connection from ChatGPT through the tunnel, MCP serve
 
 ---
 
-### Observer EFI Certificates and Secure Boot — November 15, 2026
-
-A Proxmox upgrade surfaced an OVMF EFI certificate-enrollment warning for VM 107. Secure Boot was already enabled in Ubuntu. Following a fresh operator-verified VM 107 PBS backup, the operator gracefully shut down the VM and executed `qm enroll-efi-keys 107` on `pve-prod-01`; the command returned `successfully updated efidisk`. `qm config 107 | grep efidisk0` then showed `efitype=4m,ms-cert=2023k,pre-enrolled-keys=1` (previously `ms-cert=2023w`). VM 107 started normally and `mokutil --sb-state` inside Ubuntu returned `SecureBoot enabled`. All four MCP tunnel readiness endpoints returned HTTP `200` after the VM came back online and live ChatGPT integration checks passed.
-
-This is **verified for VM 107 only**. Other VM EFI certificate states (including VMs 105 and 106) were identified for separate review; no changes to those guests are claimed here. No firmware-key change was made while the VM was running. This maintenance did not constitute a full restore test.
-
 ## Backup and Recovery Status
 
-**Status as of November 15, 2026: operator confirmed a fresh manual VM 107 PBS backup; archive integrity and isolated restoration still require verification.**
+**Status: November 14 VM 107 PBS snapshot verified (UI Verify State OK); isolated full-VM restore, OS boot, and local MCP container startup passed. Full production-network recovery remains untested.**
 
 ### Proxmox VM Backup Coverage
 
@@ -968,16 +939,22 @@ During the October 29 incident, the VM 107 backup failed with a `connection rese
 
 The **October 30, 2026 scheduled VM 107 backup completed successfully** on `pve-prod-01` at approximately 02:22 CDT; this was verified in its Proxmox task log. That task included the primary VM disk and EFI disk. This confirms a successful backup *task*, not a separately completed PBS snapshot-integrity check or restoration test.
 
-**Subsequent infrastructure change:** The October 30 PBS proxy restart was only a temporary recovery; stale-handle failures recurred October 31–November 2. The active PBS service was migrated by November 5 to Docker on `nas-prod-01`, mounting its `nas-backups` datastore directly from `/mnt/zfs-mirror/backups/pbs` rather than through the former PBS VM NFSv3/`shfs` route. The `pbs-prod-01` Proxmox storage ID and daily backup job remained in place. Refer to `runbooks/backup-schedule.md` for current PBS architecture, verification and maintenance status.
-
-- Successful VM 107 scheduled backup task: **verified** (October 30; followed by subsequent scheduled snapshots).
-- Historical PBS archive visibility: **verified by the operator** with `pvesm list pbs-prod-01 --content backup --vmid 107` on `pve-prod-01`; 11 archives dated October 30 through November 14 were listed.
-- Fresh manual VM 107 backup after the systemd changes: **operator reported successful and verified** before the November 15 EFI maintenance. The exact new archive ID/time and independent snapshot integrity were not supplied in the conversation.
+- Successful VM 107 scheduled backup task: **verified** (October 30).
 - Independent PBS snapshot-level integrity verification: **pending**.
-- Safe isolated VM restoration and service validation: **not performed**.
+- Safe isolated VM restoration and local service startup: **completed and passed November 14, 2026**, after the prior Phase 4 decision to defer testing. Production-connected recovery remains untested.
 - Separate observer file-level backup: **not implemented/verified**.
 
-**Archive-listing discrepancy:** The read-only Homelab Proxmox integration returned zero results for VM 107 backup-list and storage-content queries, whereas a direct `pvesm list` on `pve-prod-01` exposed 11 historical snapshots. This indicates a tool/API visibility or listing discrepancy requiring separate investigation; it does **not** establish missing backups. No fix has been implemented or root cause verified.
+The read-only Proxmox archive-query tool returned zero snapshots even while the November 14 snapshot was visible in the Proxmox PBS storage interface with Verify State **OK**. Use the storage UI or PBS Content view to resolve such API-listing discrepancies.
+
+### Isolated AI Observer Full-VM Restore — November 14, 2026
+
+**PASSED (isolated recovery scope):** A PBS-verified VM 107 backup (`vm/107/2026-11-14T08:03:37Z`; Verify State **OK**) was restored to temporary VM 900 on `pve-prod-02` using separate `local-zfs` disks. Unique identity was enabled; Start after restore was disabled. While stopped, the restored VM's `net0` adapter was removed and Start at boot was disabled before first boot.
+
+VM 900 booted Ubuntu 26.04.1 LTS, allowed console login, mounted its root and EFI filesystems, and started the four AI Observer MCP containers (three healthy, one running). The operator reported the tunnel units looked good. No production NIC or external connectivity was enabled for the test VM. VM 900 was shut down and deleted; final Proxmox checks showed VM 900 absent and production VM 107 running.
+
+**Scope boundary:** This verifies restore, local boot, and local service startup—not production-network failover, recovered external MCP/tunnel connectivity, or every credential. A separate operator-confirmed Secure Boot maintenance restart of production VM 107 occurred the same evening and was not part of the restore test. The tested snapshot predates that later maintenance. Other guests and PBS recovery still require separate validation.
+
+The authoritative step-by-step test record and safety checks are maintained in `runbooks/ai-observer-operations.md` under **Isolated AI Observer Full-VM Restore — November 14, 2026**.
 
 ### Configuration and Credential Recovery
 The VM's configuration and credentials are spread across these locations:
@@ -991,12 +968,11 @@ The VM's configuration and credentials are spread across these locations:
 - `/etc/tunnel-client-unraid/` — Unraid tunnel YAML, restricted runtime key, protected MCP bearer Authorization header.
 - `/etc/tunnel-client-komodo/` — Komodo tunnel YAML and restricted OpenAI runtime key (no local MCP bearer header).
 - `/etc/tunnel-client-unifi/` — UniFi tunnel YAML and restricted OpenAI runtime key (no local MCP bearer header).
-- `/etc/systemd/system/tunnel-client.service`, `tunnel-client-unraid.service`, `tunnel-client-komodo.service`, `tunnel-client-unifi.service` — Four installed native systemd units; verified base-unit copies are tracked under `/opt/stacks/observer/tunnel-client/systemd/`.
-- `/etc/systemd/system/tunnel-client*.service.d/override.conf` — Four November 15 startup-readiness drop-ins; working in production, **Git coverage not verified**.
+- `/etc/systemd/system/tunnel-client.service`, `tunnel-client-unraid.service`, `tunnel-client-komodo.service`, `tunnel-client-unifi.service` — Four installed native systemd units; verified copies are tracked under `/opt/stacks/observer/tunnel-client/systemd/`.
 - `/opt/tunnel-client/` — Shared tunnel-client binary, bundled cloudflared and release support files; not recovered from Git.
 - `/opt/stacks/observer/tunnel-client/config/*.yaml.example` — Four sanitized Git-tracked examples, **not** the active tunnel YAML or a substitute for runtime key recovery.
 
-Existing Docker-host rsync backup jobs must **not** be assumed to protect observer VM host configuration or credentials. The operator confirmed a fresh manual VM 107 PBS backup after the November 1 Komodo and November 5 UniFi additions and the November 15 systemd changes; however, its independent integrity, exact file-level contents and successful restoration remain unverified. **Normal VM reboot and four-tunnel startup were verified November 15**, whereas a full isolated restore and independent credential-recovery exercise remain unperformed. The two remote Periphery key directories also require protection by the hosts' applicable backup procedures; their backup coverage is not independently verified here.
+Existing Docker-host rsync backup jobs must **not** be assumed to protect observer VM host configuration or credentials. The October 30 VM 107 backup predates the **November 1 Komodo and November 5 UniFi additions**. The November 14 snapshot, however, was independently visible with Verify State **OK**, and its isolated restoration demonstrated all four MCP containers started. The earlier Phase 4 choice to skip recovery testing is historical; the separate November 14 isolated restore was completed. Recoverability of every individual secret, external tunnel identities, and end-to-end production cutover is still not established. The two remote Periphery key directories also require protection by the hosts' applicable backup procedures; their backup coverage is not independently verified here.
 
 Keep credentials in approved secure storage (Bitwarden where verified), not in Git or Obsidian. The separately retained Unraid MCP bearer token remains an identified recovery-check item. See `runbooks/backup-schedule.md` for PBS and `runbooks/ai-observer-operations.md` for recovery.
 
@@ -1072,9 +1048,9 @@ Any change to upstream privileges, toolsets, local authentication, excluded tool
 | Codex usage through these tunnels | Not yet verified |
 | Proxmox, Unraid, Komodo, or UniFi write operations | Deferred, not authorized |
 | Automated maintenance and remediation | Deferred |
-| Fresh observer backup including Nov 1 Komodo and Nov 5 UniFi additions; credential recovery | **Manual PBS backup operator-verified November 15**; integrity and credential recovery not independently tested |
-| Observer reboot/tunnel startup recovery | **Verified November 15**: all four systemd pre-start checks succeeded and four tunnel readiness endpoints returned HTTP 200 |
-| Isolated observer restore exercise | **Not performed; excluded from this Phase 3 scope**; recovery readiness remains unproven |
+| November 14 observer snapshot including all four MCP containers | **PBS Verify State OK; isolated full-VM restore and local container startup passed**. Credential validity during networked recovery remains untested |
+| Observer production restart / tunnel reconnect | Production restarted separately for Secure Boot maintenance; restored VM networking and tunnel reconnect were intentionally not tested |
+| Isolated observer restore exercise | **Completed November 14** using VM 900 on pve-prod-02; Ubuntu boot and local MCP container startup passed |
 
 No elevated permissions should be introduced for convenience. Revisit information disclosure whenever enabling additional ostensibly read-only tools.
 
@@ -1118,6 +1094,6 @@ No elevated permissions should be introduced for convenience. Revisit informatio
 - The four installed integrations intentionally expose **read-only MCP tools**: Proxmox **84**, Unraid **26**, Komodo **40**, and UniFi **55**, all discovered in ChatGPT (**205 Read / 0 Write**). UniFi's upstream API key is a separate potentially write-capable boundary. Tool discovery is not proof of every individual upstream query's success.
 - Proxmox compiled binary `0.5.1` was verified November 1, 2026, and upstream tool classifications were checked against the **v0.5.1** reference, not just current `main`.
 - Komodo intentionally has an unauthenticated **local** MCP endpoint (read-only scope, localhost only); its dedicated non-admin upstream API credentials and eight tool exclusions are critical security controls. No credential output should be assumed safe solely because secret scrubbing is enabled. Remote Periphery Docker socket access belongs to Komodo administration, **not** ChatGPT.
-- Historical VM 107 PBS snapshots were listed directly on `pve-prod-01`; the operator also confirmed a fresh manual backup November 15 after the configuration changes. Independent snapshot-integrity validation, credential-recovery checks and an isolated restore remain unverified. Normal reboot recovery of all four tunnels was successfully tested November 15; separate runtime HTTP-503 watchdog recovery was not implemented.
+- The October 30 observer backup was successful but predates Komodo and UniFi. The **November 14** snapshot includes all four recovered MCP containers, showed PBS Verify State **OK**, and passed an isolated VM restore and local startup test. End-to-end recovered external connectivity and all credential validity remain untested. The earlier Phase 4 decision to defer testing is historical.
 - Update authoritative docs after verified implementations; preserve explicit distinction between implemented, planned and unresolved work.
 

@@ -1,7 +1,7 @@
 # Backup & Restore Runbook
 
 **Last Updated:** 2026-11-14  
-**Status:** Docker-based PBS active. Scheduled backups verified on all three Proxmox nodes November 14, 2026. Authentik VM 104 successfully backed up from its new host, `pve-prod-03`, following migration. Targeted CT 100 integrity verification and file-level recovery previously passed. Full VM/CT restoration, PBS maintenance-job execution, and long-term recovery reliability remain unverified.
+**Status:** Docker-based PBS active. Scheduled backups verified across all three Proxmox nodes. Authentik VM 104 backed up successfully after migration. The November 14 **isolated full-VM restore of AI Observer VM 107 to test VM 900 passed** for VM boot and local services. Other guest restores, production-network recovery, PBS maintenance execution, and overall disaster recovery readiness remain unverified.
 
 Procedures for restoring Homelab v3 infrastructure following host failure, data loss, corruption, or application-level problems.
 
@@ -40,7 +40,7 @@ Before performing any restoration:
 
 | Type | Tool | What It Covers | Location | Status |
 |---|---|---|---|---|
-| VM & CT backups | PBS Docker on Unraid | Selected Proxmox VM/LXC disks and configurations | nas-prod-01 `/mnt/zfs-mirror/backups/pbs` (direct bind mount) | November 14 scheduled backups successful on all three nodes; VM 104 post-migration backup successful; full guest recovery not tested |
+| VM & CT backups | PBS Docker on Unraid | Selected Proxmox VM/LXC disks and configurations | nas-prod-01 `/mnt/zfs-mirror/backups/pbs` (direct bind mount) | November 14 scheduled backups successful on all three nodes; VM 104 post-migration backup successful; isolated full-VM recovery of VM 107 passed; other guest restores untested |
 | Stacks & appdata | rsync | Docker Compose files, `.env` files, and persistent appdata on participating Docker hosts | nas-prod-01 `/mnt/user/backups/stacks` and `/mnt/user/backups/appdata` | Documented operational; latest runs not reverified |
 | Plex built-in DB backup | Plex Scheduled Tasks | Plex library and blobs databases only | nas-prod-01 `/mnt/user/appdata/plex` | Last verified 2026-10-26 |
 | Plex full-appdata backup | Custom script planned | Complete Plex persistent appdata | NAS backups share — destination TBD | Pending |
@@ -246,7 +246,7 @@ The underlying `zfs-mirror/backups` dataset also contains non-PBS rsync data.
 
 These results establish successful backup execution from the three-node architecture.
 
-**They do not establish full disaster-recovery readiness.** No complete VM or LXC has been independently restored in an isolated test.
+**Those backup jobs alone do not establish disaster-recovery readiness.** Subsequently on November 14, VM 107 was restored and booted successfully in an isolated test; other guests and production-network recovery are still untested.
 
 ### Authentication and Alerts
 
@@ -283,7 +283,7 @@ PBS does not require a paid subscription for its core features; the GUI no-subsc
 - Verify successful scheduled prune, garbage collection, and snapshot verification operations.
 - Continue checking daily backup execution on all three nodes.
 - Confirm the first scheduled backup of VM 104 from pve-prod-03.
-- Test isolated full guest restoration.
+- **Completed for VM 107:** An isolated full-VM restore passed on November 14; perform equivalent safe tests for other critical guests when appropriate.
 - Review network exposure of TCP 8007.
 - Validate PBS startup ordering relative to ZFS availability.
 - Establish a protected recovery strategy for the Docker configuration and datastore appropriate to the accepted risk.
@@ -296,7 +296,7 @@ The operator intentionally declined a migration-time ZFS snapshot and accepted d
 
 Use this procedure when a VM or LXC has been lost, corrupted, or must be restored to an earlier recovery point.
 
-**Status:** Backup execution verified on all three nodes November 14. CT 100 previously passed integrity verification and `/etc/hostname` was successfully restored at file level. No complete VM/CT restoration test has been performed.
+**Status:** Backup execution verified on all three nodes November 14. CT 100 previously passed integrity verification and `/etc/hostname` file-level recovery. **VM 107 passed an isolated full-VM restore and local boot/service check on November 14.** Other guest restores and production connectivity remain unverified.
 
 ### Backup Infrastructure
 
@@ -492,9 +492,19 @@ A newer scheduled backup completed successfully on **November 14, 2026**. Its pr
 
 This provides current backup-execution evidence after the four integrations were deployed.
 
-However, independent snapshot integrity verification and a safe restoration test have not been completed.
+Subsequently on November 14, the selected VM 107 snapshot showed PBS **Verify State: OK** and was restored successfully to isolated VM 900; the recovered OS booted and all four MCP containers started. Production-network connectivity was not exercised.
 
-The operator previously opted to skip Phase 4 reboot/recovery testing.
+The operator previously opted to skip recovery testing during the Phase 4 rollout. A separate isolated restoration exercise was completed on November 14, 2026; it did not perform a production recovery or external tunnel reconnection.
+
+### Isolated AI Observer Full-VM Restore — November 14, 2026
+
+**PASSED (isolated recovery scope):** A PBS-verified VM 107 backup (`vm/107/2026-11-14T08:03:37Z`; Verify State **OK**) was restored to temporary VM 900 on `pve-prod-02` using separate `local-zfs` disks. Unique identity was enabled; Start after restore was disabled. While stopped, the restored VM's `net0` adapter was removed and Start at boot was disabled before first boot.
+
+VM 900 booted Ubuntu 26.04.1 LTS, allowed console login, mounted its root and EFI filesystems, and started the four AI Observer MCP containers (three healthy, one running). The operator reported the tunnel units looked good. No production NIC or external connectivity was enabled for the test VM. VM 900 was shut down and deleted; final Proxmox checks showed VM 900 absent and production VM 107 running.
+
+**Scope boundary:** This verifies restore, local boot, and local service startup—not production-network failover, recovered external MCP/tunnel connectivity, or every credential. A separate operator-confirmed Secure Boot maintenance restart of production VM 107 occurred the same evening and was not part of the restore test. The tested snapshot predates that later maintenance. Other guests and PBS recovery still require separate validation.
+
+The authoritative step-by-step test record and safety checks are maintained in `runbooks/ai-observer-operations.md` under **Isolated AI Observer Full-VM Restore — November 14, 2026**.
 
 ### Special Precautions
 
@@ -935,7 +945,7 @@ For observer-prod-01:
 - Confirm the required configuration is included.
 - Confirm credentials remain recoverable.
 - Review production tunnel identity and IP conflict precautions.
-- Complete a safe restoration test.
+- **Completed for VM 107:** An isolated restore and local service test passed November 14; do not infer successful production-network recovery.
 - Verify read-only queries through all four ChatGPT MCP integrations.
 
 See `runbooks/ai-observer-operations.md`.
@@ -1236,7 +1246,7 @@ A documented recovery procedure is not automatically a tested recovery procedure
 | Authentik VM 104 | Migrated to pve-prod-03; fresh November 14 manual backup succeeded | Confirm first scheduled backup from node 03; perform isolated restore test |
 | Historical PBS recovery points | Older snapshots found; completeness varies | Verify required snapshots and preserve historical recovery options |
 | PBS Docker container | Config/datastore not protected by PVE guest jobs; original VM 103 destroyed | Plan PBS Docker configuration and datastore recovery |
-| AI Observer VM 107 | November 14 scheduled backup succeeded | Confirm snapshot integrity and perform safe isolated restoration |
+| AI Observer VM 107 | November 14 snapshot Verify State OK; isolated restore to VM 900 booted successfully and local MCP containers started | Test production-network recovery only under an approved, conflict-safe plan; validate secure credential recovery and tunnel connectivity separately |
 | Immich VM 105 | November 14 scheduled backup on replacement node 02 succeeded | Validate VM recovery plus separate database and NAS photo-library protection |
 | Docker-host rsync recovery | Documented; latest executions not reverified | Check current jobs and test appropriate file restoration |
 | Plex built-in DB backups | Files last verified 2026-10-26 | Establish and test database restore procedure |
@@ -1343,10 +1353,10 @@ These items should remain open until the corresponding work has been completed a
 | VM 104 backup disks | 32 GiB system disk plus EFI disk |
 | VM 107 backup | `TASK OK`; system and EFI disks |
 | Former PBS VM 103 | Deleted; not available as rollback |
-| Full guest restoration | Not performed |
+| Full guest restoration | VM 107 isolated restore/boot/local services passed November 14; other guests and external connectivity not tested |
 | PBS prune, GC, and scheduled verification | Execution not independently reverified |
 | Authentik rsync after migration | Latest successful execution not independently confirmed |
 | Warning/error notification delivery | Not failure-tested |
 | PBS Docker/datastore recovery | No end-to-end restoration test |
 
-**Current assessment:** Backup execution is verified across the three-node Proxmox architecture, and Authentik has been successfully backed up from its new host. The principal remaining gap is recovery assurance: independent integrity checks, isolated restores, PBS maintenance validation, and notification testing.
+**Current assessment:** Backups run successfully across the three-node Proxmox cluster. AI Observer VM 107 additionally passed an isolated full-VM restoration, guest boot, and local Docker startup test. This is a meaningful recovery milestone, but end-to-end network/application recovery, other guest restores, PBS maintenance, and notification testing remain open.
