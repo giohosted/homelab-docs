@@ -1,0 +1,5948 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/architecture/storage/nas-prod-01/">
+      
+      
+        <link rel="prev" href="../../network/wireguard-vpn/">
+      
+      
+        <link rel="next" href="../synology/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>nas-prod-01 - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#nas-prod-01-storage-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              nas-prod-01
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#network-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Interfaces
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#live-network-verification-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Live Network Verification — November 14, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dedicated-storage-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dedicated Storage Network
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-nfs-storage-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox NFS Storage Mapping
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#management-network-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management Network Terminology
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Security Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#array-parity-array-xfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Array — Parity Array (XFS)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Array — Parity Array (XFS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#november-14-array-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 14 Array Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-parity-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Parity Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parity-1-and-disk-3-connection-incident-resolved-october-31-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parity 1 and Disk 3 Connection Incident — Resolved (October 31, 2026)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#incident-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Incident History
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-performed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery Performed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-recovery-verification-october-31" class="md-nav__link">
+    <span class="md-ellipsis">
+      Post-Recovery Verification — October 31
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-xfs-warning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical XFS Warning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Root Cause Assessment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remaining-assurance-measures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Remaining Assurance Measures
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-documentation-correction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Documentation Correction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zfs-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      ZFS Impact
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pool-zfs-mirror-zfs-mirror" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pool — ZFS Mirror (zfs-mirror)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pool — ZFS Mirror (zfs-mirror)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-disk-status-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Disk Status — November 14, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#previous-zfs-verification-october-30-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Previous ZFS Verification — October 30, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datasets-and-snapshot-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Datasets and Snapshot Policy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage Safety
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shares" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shares
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Shares">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-share-folder-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      data Share Folder Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#media-and-downloads-hardlink-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      Media and Downloads — Hardlink Design
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backups-share-folder-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      backups Share Folder Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-datastore-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Datastore Ownership
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nfs-exports" class="md-nav__link">
+    <span class="md-ellipsis">
+      NFS Exports
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NFS Exports">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#documented-exports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documented Exports
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-nfs-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical NFS Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-proxmox-iso-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Proxmox ISO Connectivity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pbs-docker-active-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Docker — Active Deployment
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PBS Docker — Active Deployment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persistent-container-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      Persistent Container Paths
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docker-status-november-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Docker Status — November 14
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-cluster-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox Cluster Integration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentication-and-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication and Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-backup-schedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Backup Schedule
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-verification-november-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Verification — November 14
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-recovery-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Recovery Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention-and-maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retention and Maintenance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-security-and-lifecycle-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Security and Lifecycle Risks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-nfs-filesystem-and-october-2026-incident-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS NFS Filesystem and October 2026 Incident — Historical
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#former-storage-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      Former Storage Topology
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-nas-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical NAS Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-pbs-vm-client-mount" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical PBS VM Client Mount
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#incident-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      Incident Evidence
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporary-recovery-october-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      Temporary Recovery — October 30
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recurrence-and-final-architecture-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recurrence and Final Architecture Decision
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSH Access
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SSH Access">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authorized-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authorized Keys
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssh-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSH Security
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firewall-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Boundaries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-observer-unraid-monitoring-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI Observer — Unraid Monitoring Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AI Observer — Unraid Monitoring Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#november-14-integration-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 14 Integration Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Boundaries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Docker Containers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker Containers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plex-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plex Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#beszel-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beszel Agent
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ups-graceful-shutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      UPS &amp; Graceful Shutdown
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="UPS & Graceful Shutdown">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#documented-ups-server-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documented UPS Server Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-ups-measurements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical UPS Measurements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-nut-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox NUT Clients
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Client Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debian-nut-systemd-workaround" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debian NUT Systemd Workaround
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#november-14-destination-node-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 14 Destination-Node Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-nas-server-verification-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current NAS Server Verification Boundary
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intended-shutdown-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      Intended Shutdown Sequence
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-validation-still-outstanding" class="md-nav__link">
+    <span class="md-ellipsis">
+      End-to-End Validation Still Outstanding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rack-and-ups-cabling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rack and UPS Cabling
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugins-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plugins Installed
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#three-node-proxmox-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Three-Node Proxmox Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Three-Node Proxmox Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-guest-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Guest Distribution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architectural-recovery-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architectural Recovery Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-verification-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Open Verification Items
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open Verification Items">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Networking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-and-data-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage and Data Protection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ups" class="md-nav__link">
+    <span class="md-ellipsis">
+      UPS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitoring-and-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Monitoring and Documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-summary-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — November 14, 2026
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#network-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Interfaces
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#live-network-verification-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Live Network Verification — November 14, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dedicated-storage-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dedicated Storage Network
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-nfs-storage-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox NFS Storage Mapping
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#management-network-terminology" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management Network Terminology
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Security Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#array-parity-array-xfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Array — Parity Array (XFS)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Array — Parity Array (XFS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#november-14-array-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 14 Array Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-parity-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Parity Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parity-1-and-disk-3-connection-incident-resolved-october-31-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parity 1 and Disk 3 Connection Incident — Resolved (October 31, 2026)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#incident-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Incident History
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-performed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery Performed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-recovery-verification-october-31" class="md-nav__link">
+    <span class="md-ellipsis">
+      Post-Recovery Verification — October 31
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-xfs-warning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical XFS Warning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#root-cause-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Root Cause Assessment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remaining-assurance-measures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Remaining Assurance Measures
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-documentation-correction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Documentation Correction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zfs-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      ZFS Impact
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pool-zfs-mirror-zfs-mirror" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pool — ZFS Mirror (zfs-mirror)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pool — ZFS Mirror (zfs-mirror)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-disk-status-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Disk Status — November 14, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#previous-zfs-verification-october-30-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Previous ZFS Verification — October 30, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datasets-and-snapshot-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Datasets and Snapshot Policy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage Safety
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shares" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shares
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Shares">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-share-folder-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      data Share Folder Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#media-and-downloads-hardlink-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      Media and Downloads — Hardlink Design
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backups-share-folder-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      backups Share Folder Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-datastore-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Datastore Ownership
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nfs-exports" class="md-nav__link">
+    <span class="md-ellipsis">
+      NFS Exports
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NFS Exports">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#documented-exports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documented Exports
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-nfs-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical NFS Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-proxmox-iso-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Proxmox ISO Connectivity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pbs-docker-active-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Docker — Active Deployment
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PBS Docker — Active Deployment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persistent-container-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      Persistent Container Paths
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docker-status-november-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Docker Status — November 14
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-cluster-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox Cluster Integration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentication-and-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication and Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-backup-schedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Backup Schedule
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-verification-november-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Verification — November 14
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-recovery-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Recovery Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention-and-maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retention and Maintenance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-security-and-lifecycle-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Security and Lifecycle Risks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-nfs-filesystem-and-october-2026-incident-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS NFS Filesystem and October 2026 Incident — Historical
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#former-storage-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      Former Storage Topology
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-nas-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical NAS Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-pbs-vm-client-mount" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical PBS VM Client Mount
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#incident-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      Incident Evidence
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporary-recovery-october-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      Temporary Recovery — October 30
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recurrence-and-final-architecture-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recurrence and Final Architecture Decision
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSH Access
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SSH Access">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authorized-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authorized Keys
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssh-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      SSH Security
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firewall-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Boundaries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-observer-unraid-monitoring-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI Observer — Unraid Monitoring Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AI Observer — Unraid Monitoring Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#november-14-integration-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 14 Integration Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Boundaries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Docker Containers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker Containers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plex-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plex Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#beszel-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beszel Agent
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ups-graceful-shutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      UPS &amp; Graceful Shutdown
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="UPS & Graceful Shutdown">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#documented-ups-server-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documented UPS Server Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-ups-measurements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical UPS Measurements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proxmox-nut-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox NUT Clients
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Client Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debian-nut-systemd-workaround" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debian NUT Systemd Workaround
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#november-14-destination-node-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 14 Destination-Node Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-nas-server-verification-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current NAS Server Verification Boundary
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intended-shutdown-sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      Intended Shutdown Sequence
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-validation-still-outstanding" class="md-nav__link">
+    <span class="md-ellipsis">
+      End-to-End Validation Still Outstanding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rack-and-ups-cabling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rack and UPS Cabling
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugins-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plugins Installed
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#three-node-proxmox-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Three-Node Proxmox Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Three-Node Proxmox Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-guest-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Guest Distribution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architectural-recovery-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architectural Recovery Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-verification-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Open Verification Items
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open Verification Items">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Networking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-and-data-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage and Data Protection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ups" class="md-nav__link">
+    <span class="md-ellipsis">
+      UPS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitoring-and-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Monitoring and Documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-summary-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — November 14, 2026
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="nas-prod-01-storage-architecture">nas-prod-01 — Storage Architecture<a class="headerlink" href="#nas-prod-01-storage-architecture" title="Permanent link">&para;</a></h1>
+<p><strong>Host:</strong> nas-prod-01<br />
+<strong>OS:</strong> Unraid 7.3.4 (live-verified November 14, 2026)<br />
+<strong>Chassis:</strong> Rosewill RSV-L4412U (4U, 12-bay)<br />
+<strong>Role:</strong> Primary NAS, bulk media storage, ZFS-backed critical data, Plex, Proxmox Backup Server, and UPS/NUT server<br />
+<strong>Last Updated:</strong> 2026-11-14</p>
+<p><strong>Verification status:</strong> Network interfaces, Unraid version, array disk status, Docker container state, shares, Proxmox NFS storage access, and PBS storage connectivity were checked through read-only integrations on November 14. Historical incident investigations and implementation details are retained with their original verification dates. Direct ZFS pool-state readback, current NUT server configuration, and PBS maintenance-job execution have not been independently verified in this review.</p>
+<hr />
+<h2 id="network-interfaces">Network Interfaces<a class="headerlink" href="#network-interfaces" title="Permanent link">&para;</a></h2>
+<p>The NAS uses separate management, service/data, and dedicated point-to-point storage interfaces.</p>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Type</th>
+<th>IP</th>
+<th>Network</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>br0</code> (onboard 2.5GbE)</td>
+<td>Linux bridge</td>
+<td><code>192.168.10.10/24</code></td>
+<td>Management — UniFi default network</td>
+<td>Unraid administration, NUT server, management-plane services</td>
+</tr>
+<tr>
+<td><code>eth1</code> (X710 Port 2, 10GbE)</td>
+<td>Physical interface</td>
+<td><code>192.168.30.16/24</code></td>
+<td>Services — VLAN 30</td>
+<td>NFS, PBS, and service-facing data traffic</td>
+</tr>
+<tr>
+<td><code>eth2</code> (X710 Port 1, 10GbE)</td>
+<td>Physical interface</td>
+<td><code>10.0.0.2/30</code></td>
+<td>Private point-to-point, untagged</td>
+<td>Dedicated DAC to <code>pve-prod-01</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="live-network-verification-november-14-2026">Live Network Verification — November 14, 2026<a class="headerlink" href="#live-network-verification-november-14-2026" title="Permanent link">&para;</a></h3>
+<p>The Homelab Unraid integration returned:</p>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>IPv4 Address</th>
+<th>Link State</th>
+<th>Speed</th>
+<th>MTU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>br0</code></td>
+<td><code>192.168.10.10</code></td>
+<td>UP</td>
+<td>2.5 Gbps</td>
+<td>1500</td>
+</tr>
+<tr>
+<td><code>eth1</code></td>
+<td><code>192.168.30.16</code></td>
+<td>UP</td>
+<td>10 Gbps</td>
+<td>1500</td>
+</tr>
+<tr>
+<td><code>eth2</code></td>
+<td><code>10.0.0.2</code></td>
+<td>UP</td>
+<td>10 Gbps</td>
+<td>1500</td>
+</tr>
+</tbody>
+</table>
+<p>All three addresses were configured statically according to the returned interface information.</p>
+<p><strong>Resolved documentation discrepancy:</strong></p>
+<p>Earlier versions of this document described <code>eth2</code> as unconfigured, with a future <code>10.0.0.x/30</code> address.</p>
+<p>That statement is superseded.</p>
+<p><strong><code>eth2</code> is implemented and operational at <code>10.0.0.2/30</code>, with an active 10 Gbps link.</strong></p>
+<p>The corresponding Proxmox storage configuration confirms that <code>pve-prod-01</code> accesses the NAS ISO export through <code>10.0.0.2</code>.</p>
+<h3 id="dedicated-storage-network">Dedicated Storage Network<a class="headerlink" href="#dedicated-storage-network" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pve-prod-01 (Minisforum MS-A2)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  SFP+ Port 1 — 10.0.0.1/30
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        |
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        | 10GbE DAC — point-to-point
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        |
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>nas-prod-01 (Intel X710-DA2)
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  eth2 / X710 Port 1 — 10.0.0.2/30
+</code></pre></div>
+<p>This link:</p>
+<ul>
+<li>Does not traverse the UniFi switch.</li>
+<li>Does not use a VLAN tag.</li>
+<li>Uses the private subnet <code>10.0.0.0/30</code>.</li>
+<li>Provides a dedicated path for NAS storage access from <code>pve-prod-01</code>.</li>
+<li>Is not directly reachable by <code>pve-prod-02</code> or <code>pve-prod-03</code>.</li>
+</ul>
+<h3 id="proxmox-nfs-storage-mapping">Proxmox NFS Storage Mapping<a class="headerlink" href="#proxmox-nfs-storage-mapping" title="Permanent link">&para;</a></h3>
+<p>The three-node Proxmox cluster maintains two definitions for the same Unraid ISO export.</p>
+<table>
+<thead>
+<tr>
+<th>Storage ID</th>
+<th>Proxmox Nodes</th>
+<th>NAS Endpoint</th>
+<th>Export</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nas-isos</code></td>
+<td>pve-prod-01</td>
+<td><code>10.0.0.2</code></td>
+<td><code>/mnt/user/isos</code></td>
+</tr>
+<tr>
+<td><code>nas-isos-p2</code></td>
+<td>pve-prod-02, pve-prod-03</td>
+<td><code>192.168.30.16</code></td>
+<td><code>/mnt/user/isos</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>November 14 verification:</strong></p>
+<ul>
+<li><code>nas-isos</code> was available on <code>pve-prod-01</code>.</li>
+<li><code>nas-isos-p2</code> was available on <code>pve-prod-02</code> and <code>pve-prod-03</code>.</li>
+<li>Both storage definitions referenced the same NAS export.</li>
+<li>The private 10GbE path was operational.</li>
+</ul>
+<p>The separate storage IDs preserve the primary node's dedicated DAC connection without requiring the additional nodes to use an unreachable storage subnet.</p>
+<h3 id="management-network-terminology">Management Network Terminology<a class="headerlink" href="#management-network-terminology" title="Permanent link">&para;</a></h3>
+<p>The NAS management subnet remains <code>192.168.10.0/24</code>.</p>
+<p>Earlier documentation referred to this network as <strong>VLAN 10</strong>.</p>
+<p>Live UniFi inspection on November 14 reported that the Management network is actually UniFi's <strong>default network, VLAN ID 1</strong>, using untagged management traffic.</p>
+<p>This is a documentation terminology correction, not a network configuration change.</p>
+<p>The NAS interface remains:</p>
+<p><code>192.168.10.10/24</code></p>
+<p>No management addressing or VLAN configuration was modified.</p>
+<h3 id="network-security-considerations">Network Security Considerations<a class="headerlink" href="#network-security-considerations" title="Permanent link">&para;</a></h3>
+<p>The intended design separates the Unraid management plane from production service access.</p>
+<p>Services normally use the NAS data address:</p>
+<p><code>192.168.30.16</code></p>
+<p>However, Docker PBS uses Host networking, so TCP 8007 may also be reachable through the management address:</p>
+<p><code>192.168.10.10</code></p>
+<p>The Unraid Docker integration currently advertises the PBS web UI using the management address.</p>
+<p>That alone does not establish which source networks can reach it.</p>
+<p><strong>Open verification:</strong> Confirm the actual PBS listener binding and firewall reachability before describing TCP 8007 as restricted to VLAN 30.</p>
+<p>See:</p>
+<ul>
+<li><code>architecture/network/ip-addresses.md</code></li>
+<li><code>architecture/network/vlan-design.md</code></li>
+<li><code>architecture/network/firewall-rules.md</code></li>
+</ul>
+<hr />
+<h2 id="array-parity-array-xfs">Array — Parity Array (XFS)<a class="headerlink" href="#array-parity-array-xfs" title="Permanent link">&para;</a></h2>
+<p><strong>Current state:</strong> STARTED<br />
+<strong>Last live verification:</strong> November 14, 2026<br />
+<strong>Configuration:</strong> Two parity disks and three XFS data disks</p>
+<p>The read-only Unraid integration confirmed all five assigned array devices report <code>DISK_OK</code> with zero reported device errors.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Drive</th>
+<th>Size</th>
+<th>Serial</th>
+<th>Verified Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Parity 1</td>
+<td>WD Red Pro (WD121KFBX-68EF5N0)</td>
+<td>12 TB</td>
+<td><code>AAHKXP9H</code></td>
+<td><code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Parity 2</td>
+<td>WD Red Pro (WD121KFBX-68EF5N0)</td>
+<td>12 TB</td>
+<td><code>2AH2JSWY</code></td>
+<td><code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Disk 1</td>
+<td>Seagate IronWolf (ST6000VN0033)</td>
+<td>6 TB</td>
+<td><code>ZAD97T6M</code></td>
+<td><code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Disk 2</td>
+<td>Seagate IronWolf (ST6000VN0033)</td>
+<td>6 TB</td>
+<td><code>ZAD97RT0</code></td>
+<td><code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Disk 3</td>
+<td>WD Red Pro (WD121KFBX-68EF5N0)</td>
+<td>12 TB</td>
+<td><code>5PK7HDXF</code></td>
+<td><code>DISK_OK</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Current configuration details:</strong></p>
+<ul>
+<li>Two parity disks.</li>
+<li>Three installed XFS data disks.</li>
+<li>Approximately 24 TB decimal usable data capacity (approximately 22 TiB), excluding filesystem overhead.</li>
+<li>Parity disks do not contribute usable share storage.</li>
+<li>Disk 3 is installed and operational, not a future expansion.</li>
+<li>The array remains online after the October 31 reconstruction.</li>
+</ul>
+<h3 id="november-14-array-verification">November 14 Array Verification<a class="headerlink" href="#november-14-array-verification" title="Permanent link">&para;</a></h3>
+<p>The live integration reported:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Array state</td>
+<td><code>STARTED</code></td>
+</tr>
+<tr>
+<td>Parity 1</td>
+<td><code>DISK_OK</code>, zero reported errors</td>
+</tr>
+<tr>
+<td>Parity 2</td>
+<td><code>DISK_OK</code>, zero reported errors</td>
+</tr>
+<tr>
+<td>Disk 1</td>
+<td><code>DISK_OK</code>, zero reported errors</td>
+</tr>
+<tr>
+<td>Disk 2</td>
+<td><code>DISK_OK</code>, zero reported errors</td>
+</tr>
+<tr>
+<td>Disk 3</td>
+<td><code>DISK_OK</code>, zero reported errors</td>
+</tr>
+<tr>
+<td>Parity check status</td>
+<td><code>COMPLETED</code></td>
+</tr>
+<tr>
+<td>Active parity-check operation</td>
+<td>None reported</td>
+</tr>
+</tbody>
+</table>
+<p>The API did not supply a fresh parity-check completion timestamp or a new full parity-integrity assessment.</p>
+<p>The reported state confirms that the array is operating and its assigned devices are healthy according to the available Unraid status information.</p>
+<p>It does not replace a fresh non-correcting parity check, extended SMART testing, or end-to-end file-content verification.</p>
+<h3 id="historical-parity-verification">Historical Parity Verification<a class="headerlink" href="#historical-parity-verification" title="Permanent link">&para;</a></h3>
+<p>The March 11, 2026 parity synchronization completed in approximately 19 hours and 28 minutes with zero reported errors.</p>
+<p>This result describes an earlier array configuration.</p>
+<p>The October 31 reconstruction is documented separately below.</p>
+<hr />
+<h3 id="parity-1-and-disk-3-connection-incident-resolved-october-31-2026">Parity 1 and Disk 3 Connection Incident — Resolved (October 31, 2026)<a class="headerlink" href="#parity-1-and-disk-3-connection-incident-resolved-october-31-2026" title="Permanent link">&para;</a></h3>
+<p><strong>Status:</strong> Resolved<br />
+<strong>Probable cause:</strong> Shared SAS-to-SATA breakout cable or connector-path fault<br />
+<strong>Root cause certainty:</strong> Probable, not conclusively isolated</p>
+<h3 id="incident-history">Incident History<a class="headerlink" href="#incident-history" title="Permanent link">&para;</a></h3>
+<p>Parity 1 was disabled (<code>DISK_DSBL</code>, red X) while assigned to a 14 TB Seagate IronWolf Pro (<code>ST14000NT001</code>).</p>
+<p>The previously installed 12 TB WD Red Pro had exhibited similar symptoms and was replaced with the Seagate, which subsequently developed the same problem.</p>
+<p>Disk 3, a separate 12 TB WD Red Pro, also disappeared from the active array.</p>
+<p>The operator confirmed that Parity 1 and Disk 3 shared one SAS-to-SATA breakout cable.</p>
+<p>Possible fault sources included:</p>
+<ul>
+<li>SAS-to-SATA breakout cable.</li>
+<li>Cable connectors.</li>
+<li>HBA or backplane connection path.</li>
+<li>Power delivery.</li>
+<li>Other interface-level problems.</li>
+</ul>
+<p>The breakout cable was considered the leading suspect, but no component-specific electrical test conclusively isolated the original fault.</p>
+<h3 id="recovery-performed">Recovery Performed<a class="headerlink" href="#recovery-performed" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Shut down <code>nas-prod-01</code>.</li>
+<li>Physically replaced the suspected SAS-to-SATA breakout cable.</li>
+<li>Removed the temporary 14 TB Seagate from the Parity 1 slot.</li>
+<li>Reinstalled the original 12 TB WD Red Pro, serial <code>AAHKXP9H</code>, as Parity 1.</li>
+<li>Reassigned the established 12 TB WD Red Pro, serial <code>5PK7HDXF</code>, as Disk 3.</li>
+<li>Started the array and accepted the Unraid reconstruction operation.</li>
+<li>Confirmed the system performed simultaneous Parity 1 and Disk 3 reconstruction.</li>
+<li>Verified completion with zero reported reconstruction errors.</li>
+</ol>
+<p>The system log included:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>md: recovery thread: recon P D3 ...
+</code></pre></div>
+<p>The reconstruction completed in approximately 20 hours and 18 minutes (73,119 seconds).</p>
+<h3 id="post-recovery-verification-october-31">Post-Recovery Verification — October 31<a class="headerlink" href="#post-recovery-verification-october-31" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Array</td>
+<td>STARTED</td>
+</tr>
+<tr>
+<td>Parity 1</td>
+<td>Valid, <code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Parity 2</td>
+<td><code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Disk 1</td>
+<td><code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Disk 2</td>
+<td><code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Disk 3</td>
+<td><code>DISK_OK</code></td>
+</tr>
+<tr>
+<td>Disk errors</td>
+<td>Zero reported</td>
+</tr>
+<tr>
+<td>Disk 3 filesystem</td>
+<td><code>/dev/md3p1</code>, XFS, mounted read/write at <code>/mnt/disk3</code></td>
+</tr>
+<tr>
+<td>Disk 3 data</td>
+<td>Approximately 2.2 TB used at time of check</td>
+</tr>
+<tr>
+<td>Directory traversal</td>
+<td>Completed successfully</td>
+</tr>
+<tr>
+<td>Parity 1 SMART</td>
+<td>PASSED</td>
+</tr>
+<tr>
+<td>Disk 3 SMART</td>
+<td>PASSED</td>
+</tr>
+<tr>
+<td>Parity 1 SATA CRC historical count</td>
+<td>454</td>
+</tr>
+<tr>
+<td>Disk 3 SATA CRC historical count</td>
+<td>29</td>
+</tr>
+<tr>
+<td>New interface errors</td>
+<td>None observed in reviewed post-replacement logs</td>
+</tr>
+</tbody>
+</table>
+<h3 id="historical-xfs-warning">Historical XFS Warning<a class="headerlink" href="#historical-xfs-warning" title="Permanent link">&para;</a></h3>
+<p>Before reconstruction, an Unassigned Devices mount of physical Disk 3 (<code>/dev/sdf1</code>) failed on October 30 with XFS metadata corruption messages.</p>
+<p>At that time, the emulated Unraid filesystem (<code>/dev/md3p1</code>) mounted successfully.</p>
+<p>Following reconstruction:</p>
+<ul>
+<li><code>/dev/md3p1</code> mounted normally.</li>
+<li>Its directory tree was traversable.</li>
+<li>No active filesystem-access problem remained in the verified observations.</li>
+</ul>
+<p>The earlier physical-mount warning is retained as historical diagnostic evidence.</p>
+<p>It should not be described as proof of an ongoing active array failure.</p>
+<h3 id="root-cause-assessment">Root Cause Assessment<a class="headerlink" href="#root-cause-assessment" title="Permanent link">&para;</a></h3>
+<p>Both affected drives had historical interface CRC errors.</p>
+<p>The replacement Parity 1 drive developed the same type of problem as the earlier drive.</p>
+<p>After replacing the shared breakout cable:</p>
+<ul>
+<li>Reconstruction completed successfully.</li>
+<li>Short SMART tests passed.</li>
+<li>No new interface CRC counts were observed during the reviewed verification period.</li>
+<li>Both affected devices returned to <code>DISK_OK</code>.</li>
+</ul>
+<p><strong>Conclusion:</strong> A cable or shared connection-path fault is the best-supported explanation.</p>
+<p>However, a cable-specific test was not performed, so the root cause remains probable rather than definitive.</p>
+<h3 id="remaining-assurance-measures">Remaining Assurance Measures<a class="headerlink" href="#remaining-assurance-measures" title="Permanent link">&para;</a></h3>
+<p>The following were not completed as part of the repair:</p>
+<ul>
+<li>Full XFS metadata check.</li>
+<li>Full-file-content verification.</li>
+<li>Extended SMART surface tests.</li>
+<li>Separate non-correcting parity check after reconstruction.</li>
+</ul>
+<p>These are optional assurance checks rather than evidence of a continuing known failure.</p>
+<p>Continue normal SMART, parity, temperature, and error-counter monitoring.</p>
+<h3 id="historical-documentation-correction">Historical Documentation Correction<a class="headerlink" href="#historical-documentation-correction" title="Permanent link">&para;</a></h3>
+<p>An earlier storage document described Disk 3 as not installed on October 30.</p>
+<p>The operator confirmed Disk 3 was already an established data disk.</p>
+<p>The original Phase 2 commissioning documentation described an earlier two-data-disk configuration.</p>
+<p>The precise date Disk 3 entered service was not established.</p>
+<p>This runbook records the verified five-device array configuration.</p>
+<h3 id="zfs-impact">ZFS Impact<a class="headerlink" href="#zfs-impact" title="Permanent link">&para;</a></h3>
+<p>The independent <code>zfs-mirror</code> pool was not involved in the parity reconstruction.</p>
+<p>Its October 30 <code>zpool status -v</code> result was healthy, and no ZFS configuration change was required as part of the repair.</p>
+<hr />
+<h2 id="pool-zfs-mirror-zfs-mirror">Pool — ZFS Mirror (<code>zfs-mirror</code>)<a class="headerlink" href="#pool-zfs-mirror-zfs-mirror" title="Permanent link">&para;</a></h2>
+<p>The NAS uses a separate mirrored ZFS pool for critical storage.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Drive</th>
+<th>Size</th>
+<th>Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mirror disk 1</td>
+<td>WD Red Plus</td>
+<td>4 TB</td>
+<td>WD40EFRX</td>
+</tr>
+<tr>
+<td>Mirror disk 2</td>
+<td>WD Red Plus</td>
+<td>4 TB</td>
+<td>WD40EFPX</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Usable capacity:</strong> Approximately 3.68 TB<br />
+<strong>Filesystem:</strong> ZFS mirror<br />
+<strong>Purpose:</strong> Photos, backups, and selected system data</p>
+<h3 id="current-disk-status-november-14-2026">Current Disk Status — November 14, 2026<a class="headerlink" href="#current-disk-status-november-14-2026" title="Permanent link">&para;</a></h3>
+<p>The live Unraid array API reported:</p>
+<table>
+<thead>
+<tr>
+<th>Device</th>
+<th>Status</th>
+<th>Reported Errors</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WD40EFRX</td>
+<td><code>DISK_OK</code></td>
+<td>0</td>
+</tr>
+<tr>
+<td>WD40EFPX</td>
+<td><code>DISK_OK</code></td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Both devices were present in the <code>zfs-mirror</code> pool-device inventory.</p>
+<p>The read-only integration did not expose a current native <code>zpool status -v</code> result during this review.</p>
+<p>Therefore, the November 14 disk-level status should not be represented as a new direct verification of the complete ZFS pool state or scrub history.</p>
+<h3 id="previous-zfs-verification-october-30-2026">Previous ZFS Verification — October 30, 2026<a class="headerlink" href="#previous-zfs-verification-october-30-2026" title="Permanent link">&para;</a></h3>
+<p>A direct <code>zpool status -v</code> check reported:</p>
+<ul>
+<li>Pool <code>zfs-mirror</code>: <code>ONLINE</code>.</li>
+<li>Both mirror members: <code>ONLINE</code>.</li>
+<li>Read errors: 0.</li>
+<li>Write errors: 0.</li>
+<li>Checksum errors: 0.</li>
+<li>Known data errors: None.</li>
+</ul>
+<p>No ZFS reconfiguration was performed during the October 31 parity incident.</p>
+<h3 id="datasets-and-snapshot-policy">Datasets and Snapshot Policy<a class="headerlink" href="#datasets-and-snapshot-policy" title="Permanent link">&para;</a></h3>
+<p>The critical shares include:</p>
+<ul>
+<li><code>photos</code></li>
+<li><code>backups</code></li>
+<li><code>system</code></li>
+</ul>
+<p>Historical documentation describes ZnapZend snapshots on the photos and backups datasets:</p>
+<table>
+<thead>
+<tr>
+<th>Snapshot Cadence</th>
+<th>Historical Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Daily</td>
+<td>7 days</td>
+</tr>
+<tr>
+<td>Weekly</td>
+<td>30 days</td>
+</tr>
+</tbody>
+</table>
+<p>These settings were documented before the November PBS changes.</p>
+<p>Their current enabled state, actual snapshot inventory, and latest successful execution were not independently rechecked on November 14.</p>
+<p><strong>Important:</strong> The PBS datastore is a directory under the backups dataset, not a separately verified child ZFS dataset.</p>
+<p>The operator elected not to create a migration-time protective ZFS snapshot during the November 3–5 PBS migration.</p>
+<h3 id="storage-safety">Storage Safety<a class="headerlink" href="#storage-safety" title="Permanent link">&para;</a></h3>
+<p>A healthy mirror protects against certain single-drive failures.</p>
+<p>It does not protect against every form of data loss, including:</p>
+<ul>
+<li>Accidental deletion.</li>
+<li>Application-level corruption.</li>
+<li>Destructive administrative changes.</li>
+<li>Loss of the entire NAS.</li>
+<li>Simultaneous loss of both mirror devices.</li>
+<li>Damage to an unprotected recovery history.</li>
+</ul>
+<p>Independent backup and restoration procedures remain necessary for irreplaceable photos, configuration, and backup data.</p>
+<hr />
+<h2 id="shares">Shares<a class="headerlink" href="#shares" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Share</th>
+<th>Storage Location</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data</code></td>
+<td>Parity array</td>
+<td><code>/mnt/user/data</code></td>
+<td>Single share for media and downloads; supports hardlinks</td>
+</tr>
+<tr>
+<td><code>appdata</code></td>
+<td>Parity array</td>
+<td><code>/mnt/user/appdata</code></td>
+<td>NAS Docker application configuration</td>
+</tr>
+<tr>
+<td><code>isos</code></td>
+<td>Parity array</td>
+<td><code>/mnt/user/isos</code></td>
+<td>Proxmox ISO images</td>
+</tr>
+<tr>
+<td><code>photos</code></td>
+<td>ZFS mirror</td>
+<td><code>/mnt/user/photos</code></td>
+<td>Immich photo library</td>
+</tr>
+<tr>
+<td><code>backups</code></td>
+<td>ZFS mirror</td>
+<td><code>/mnt/user/backups</code></td>
+<td>PBS datastore and Docker-host rsync backups</td>
+</tr>
+<tr>
+<td><code>system</code></td>
+<td>ZFS mirror</td>
+<td><code>/mnt/user/system</code></td>
+<td>Unraid system share</td>
+</tr>
+</tbody>
+</table>
+<p>All six share names were returned by the live Unraid integration on November 14.</p>
+<p>The locations above reflect the established storage design and prior direct filesystem checks.</p>
+<p>The share API response did not independently revalidate every configured storage policy, NFS export option, or underlying mount path.</p>
+<h3 id="data-share-folder-structure"><code>data</code> Share Folder Structure<a class="headerlink" href="#data-share-folder-structure" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>data/
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── media/
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>│   ├── movies/
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>│   │   ├── 1080p/
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│   │   └── 4k/
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>│   ├── tv/
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>│   ├── anime/
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>│   └── books/
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>│       ├── ebooks/
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>│       └── audiobooks/
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>└── downloads/
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    ├── movies/
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    ├── tv/
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    ├── anime/
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    └── books/
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>        ├── ebooks/
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>        │   ├── downloads/
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>        │   └── ingest/
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>        └── audiobooks/
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>            └── downloads/
+</code></pre></div>
+<p>This directory structure reflects the previously documented media application layout.</p>
+<p>Its contents were not recursively rechecked during the November 14 review.</p>
+<h3 id="media-and-downloads-hardlink-design">Media and Downloads — Hardlink Design<a class="headerlink" href="#media-and-downloads-hardlink-design" title="Permanent link">&para;</a></h3>
+<p>The <code>data</code> share combines media and download directories into one NFS-exported filesystem.</p>
+<p><code>docker-prod-01</code> mounts:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>192.168.30.16:/mnt/user/data → /data
+</code></pre></div>
+<p><strong>Protocol:</strong> NFSv3, per established host configuration.</p>
+<p>The single mount is intentional.</p>
+<p>Separate NFS mounts for downloads and media can prevent applications from creating hardlinks across paths, even if the underlying data resides on the same NAS.</p>
+<p>The consolidated <code>data</code> share allows ARR applications and qBittorrent to operate on a consistent <code>/data</code> filesystem.</p>
+<p>See <code>architecture/decisions-log.md</code> for the original design rationale.</p>
+<h3 id="backups-share-folder-structure"><code>backups</code> Share Folder Structure<a class="headerlink" href="#backups-share-folder-structure" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>/mnt/user/backups/
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>├── pbs/
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>│   └── [PBS-managed datastore contents]
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>├── appdata/
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>│   ├── docker-prod-01/
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>│   ├── auth-prod-01/
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>│   └── immich-prod-01/
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>└── stacks/
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    ├── docker-prod-01/
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    ├── auth-prod-01/
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    └── immich-prod-01/
+</code></pre></div>
+<p>The directory structure is the established rsync and PBS design.</p>
+<p>A new complete directory inventory was not performed during the November 14 documentation review.</p>
+<h3 id="pbs-datastore-ownership">PBS Datastore Ownership<a class="headerlink" href="#pbs-datastore-ownership" title="Permanent link">&para;</a></h3>
+<p><strong>Active datastore directory:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>/mnt/zfs-mirror/backups/pbs
+</code></pre></div>
+<p><strong>Docker container directory:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>/backups
+</code></pre></div>
+<p>The datastore is managed by PBS.</p>
+<p>The November migration verified:</p>
+<ul>
+<li>Directory ownership: UID/GID <code>34:34</code>.</li>
+<li>Datastore root mode: <code>755</code>.</li>
+<li><code>.chunks</code> directory mode: <code>750</code>.</li>
+<li>Existing <code>ct</code> and <code>vm</code> backup groups.</li>
+<li>Existing <code>.lock</code> file and PBS metadata.</li>
+</ul>
+<p>Do not manually place unrelated files inside the datastore.</p>
+<p>Do not recursively change ownership or permissions without identifying the specific problem.</p>
+<p>Do not manually delete PBS chunks, manifests, indexes, or lock files as a general troubleshooting technique.</p>
+<hr />
+<h2 id="nfs-exports">NFS Exports<a class="headerlink" href="#nfs-exports" title="Permanent link">&para;</a></h2>
+<p>The following reflects the established NFS configuration and the available Proxmox storage verification.</p>
+<h3 id="documented-exports">Documented Exports<a class="headerlink" href="#documented-exports" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>data</code></li>
+<li><code>appdata</code></li>
+<li><code>isos</code></li>
+<li><code>photos</code></li>
+<li><code>backups</code></li>
+</ul>
+<h3 id="historical-nfs-configuration">Historical NFS Configuration<a class="headerlink" href="#historical-nfs-configuration" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Documented Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maximum NFS protocol</td>
+<td>NFSv3</td>
+</tr>
+<tr>
+<td>Share access</td>
+<td>Private</td>
+</tr>
+<tr>
+<td>Permitted networks</td>
+<td>Service and storage networks, with individual exports previously inspected</td>
+</tr>
+<tr>
+<td>Root squashing</td>
+<td><code>no_root_squash</code></td>
+</tr>
+<tr>
+<td>SMB</td>
+<td>Disabled on documented NAS shares</td>
+</tr>
+<tr>
+<td>Historical share permissions</td>
+<td><code>nobody:users</code> with documented access permissions</td>
+</tr>
+</tbody>
+</table>
+<p>The October incident also identified <code>async</code> on the backups export.</p>
+<p>These export options were not freshly read back from Unraid on November 14.</p>
+<h3 id="verified-proxmox-iso-connectivity">Verified Proxmox ISO Connectivity<a class="headerlink" href="#verified-proxmox-iso-connectivity" title="Permanent link">&para;</a></h3>
+<p>The live Proxmox integration confirmed:</p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Storage</th>
+<th>Network Path</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td><code>nas-isos</code></td>
+<td>10.0.0.2</td>
+<td>Available</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td><code>nas-isos-p2</code></td>
+<td>192.168.30.16</td>
+<td>Available</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td><code>nas-isos-p2</code></td>
+<td>192.168.30.16</td>
+<td>Available</td>
+</tr>
+</tbody>
+</table>
+<p>This verifies successful storage access through the relevant interfaces.</p>
+<p>It does not independently establish all NFS export options or access restrictions.</p>
+<h3 id="security-considerations">Security Considerations<a class="headerlink" href="#security-considerations" title="Permanent link">&para;</a></h3>
+<p>NFSv3 with <code>no_root_squash</code> allows privileged client-side operations to carry substantial authority on exported storage.</p>
+<p>Maintain narrowly scoped export access and avoid exposing NFS to untrusted networks.</p>
+<p>Do not change working exports as part of documentation cleanup.</p>
+<hr />
+<h2 id="pbs-docker-active-deployment">PBS Docker — Active Deployment<a class="headerlink" href="#pbs-docker-active-deployment" title="Permanent link">&para;</a></h2>
+<p><strong>Deployment:</strong> November 3–5, 2026<br />
+<strong>Host:</strong> nas-prod-01<br />
+<strong>Current status:</strong> RUNNING<br />
+<strong>Image:</strong> <code>ayufan/proxmox-backup-server:latest</code><br />
+<strong>Image type:</strong> Unofficial third-party build<br />
+<strong>Container name:</strong> <code>proxmox-backup-server</code><br />
+<strong>PBS UI version:</strong> 4.2.0 at last direct application-version verification<br />
+<strong>Last container-state verification:</strong> November 14, 2026</p>
+<h3 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h3>
+<p>The current PBS service runs as a Docker container directly on Unraid.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Proxmox cluster
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>├── pve-prod-01
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>├── pve-prod-02
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>└── pve-prod-03
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>        |
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>        | PBS API / TCP 8007
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>        |
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>nas-prod-01 — 192.168.30.16
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        |
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        | Docker Host networking
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>        |
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>proxmox-backup-server container
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>        |
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>        | /backups
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>        |
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>/mnt/zfs-mirror/backups/pbs
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>        |
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>        | Direct local ZFS filesystem
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>        |
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>zfs-mirror/backups
+</code></pre></div>
+<p>The active datastore does <strong>not</strong> pass through an NFS mount or Unraid <code>shfs</code>/FUSE layer inside PBS.</p>
+<p>This is a deliberate change from the retired VM-based deployment.</p>
+<h3 id="pbs-configuration">PBS Configuration<a class="headerlink" href="#pbs-configuration" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox storage ID</td>
+<td><code>pbs-prod-01</code></td>
+</tr>
+<tr>
+<td>PBS host address</td>
+<td><code>192.168.30.16</code></td>
+</tr>
+<tr>
+<td>PBS TCP port</td>
+<td><code>8007</code></td>
+</tr>
+<tr>
+<td>PBS datastore</td>
+<td><code>nas-backups</code></td>
+</tr>
+<tr>
+<td>Datastore container path</td>
+<td><code>/backups</code></td>
+</tr>
+<tr>
+<td>Datastore host path</td>
+<td><code>/mnt/zfs-mirror/backups/pbs</code></td>
+</tr>
+<tr>
+<td>Networking</td>
+<td>Docker Host</td>
+</tr>
+<tr>
+<td>Privileged mode</td>
+<td>Disabled</td>
+</tr>
+<tr>
+<td>Timezone</td>
+<td><code>America/Chicago</code></td>
+</tr>
+<tr>
+<td>Auto-start</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Memory limit</td>
+<td>2 GiB</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Extra Docker parameters:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>--restart unless-stopped
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>--memory=2g
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>--mount type=tmpfs,destination=/run
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>--stop-signal=SIGHUP
+</code></pre></div>
+<h3 id="persistent-container-paths">Persistent Container Paths<a class="headerlink" href="#persistent-container-paths" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Host Path</th>
+<th>Container Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/mnt/user/appdata/pbs/etc</code></td>
+<td><code>/etc/proxmox-backup</code></td>
+<td>PBS configuration and protected secrets</td>
+</tr>
+<tr>
+<td><code>/mnt/user/appdata/pbs/logs</code></td>
+<td><code>/var/log/proxmox-backup</code></td>
+<td>Logs</td>
+</tr>
+<tr>
+<td><code>/mnt/user/appdata/pbs/lib</code></td>
+<td><code>/var/lib/proxmox-backup</code></td>
+<td>PBS runtime state</td>
+</tr>
+<tr>
+<td><code>/mnt/zfs-mirror/backups/pbs</code></td>
+<td><code>/backups</code></td>
+<td>PBS datastore, direct ZFS access</td>
+</tr>
+</tbody>
+</table>
+<p>These mappings were established during the November PBS Docker migration.</p>
+<p>The November 14 read-only Docker API confirmed the container was running but did not independently return its complete bind-mount configuration.</p>
+<h3 id="docker-status-november-14">Docker Status — November 14<a class="headerlink" href="#docker-status-november-14" title="Permanent link">&para;</a></h3>
+<p>The live Unraid integration reported:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Container</td>
+<td><code>proxmox-backup-server</code></td>
+</tr>
+<tr>
+<td>State</td>
+<td>RUNNING</td>
+</tr>
+<tr>
+<td>Auto-start</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Image</td>
+<td><code>ayufan/proxmox-backup-server:latest</code></td>
+</tr>
+<tr>
+<td>Image update flag</td>
+<td>No update reported</td>
+</tr>
+<tr>
+<td>Orphaned</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>The absence of a reported image update does not establish that the unofficial image is current with upstream Proxmox Backup Server security releases.</p>
+<h3 id="proxmox-cluster-integration">Proxmox Cluster Integration<a class="headerlink" href="#proxmox-cluster-integration" title="Permanent link">&para;</a></h3>
+<p>The Proxmox storage definition was independently verified November 14.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Storage ID</td>
+<td><code>pbs-prod-01</code></td>
+</tr>
+<tr>
+<td>Storage type</td>
+<td>PBS</td>
+</tr>
+<tr>
+<td>Server</td>
+<td><code>192.168.30.16</code></td>
+</tr>
+<tr>
+<td>Datastore</td>
+<td><code>nas-backups</code></td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td><code>pve-backup@pbs!pve-cluster</code></td>
+</tr>
+<tr>
+<td>Shared across cluster</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>pve-prod-01</td>
+<td>Available</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>Available</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>Available</td>
+</tr>
+</tbody>
+</table>
+<p>The same storage ID is retained across the three-node cluster.</p>
+<p><strong>Important:</strong> The active PBS service is on the NAS, not inside a Proxmox VM.</p>
+<p>The former VM 103 has been destroyed.</p>
+<h3 id="authentication-and-access">Authentication and Access<a class="headerlink" href="#authentication-and-access" title="Permanent link">&para;</a></h3>
+<p><strong>Automated PVE backups:</strong></p>
+<ul>
+<li>Account/token: <code>pve-backup@pbs!pve-cluster</code>.</li>
+<li>Access restricted to the intended <code>nas-backups</code> datastore according to the documented configuration.</li>
+<li>Existing backup-group ownership was reassigned during migration.</li>
+</ul>
+<p><strong>Interactive administration:</strong></p>
+<ul>
+<li>Authentik OIDC.</li>
+<li>Local emergency administrator <code>admin@pbs</code>.</li>
+</ul>
+<p>The shared Proxmox/Authentik OIDC client secret was rotated during PBS migration and interactive login tests passed on the then-existing Proxmox nodes and PBS.</p>
+<p>A post-migration Authentik SSO functional test also passed November 14 after VM 104 was moved to <code>pve-prod-03</code>.</p>
+<p>No credentials or client secrets are recorded in this document.</p>
+<h3 id="current-backup-schedule">Current Backup Schedule<a class="headerlink" href="#current-backup-schedule" title="Permanent link">&para;</a></h3>
+<p>Proxmox Datacenter backup job:</p>
+<p><code>backup-54015f90-26e5</code></p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enabled</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Schedule</td>
+<td>Daily 02:00</td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Snapshot</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td><code>pbs-prod-01</code></td>
+</tr>
+<tr>
+<td>Guest selection</td>
+<td>All current cluster guests</td>
+</tr>
+<tr>
+<td>Exclusion</td>
+<td>VM 103 (retired; harmless stale exclusion)</td>
+</tr>
+</tbody>
+</table>
+<p>This configuration was live-verified November 14.</p>
+<p>The backup job covers all seven registered Proxmox guests.</p>
+<h3 id="backup-verification-november-14">Backup Verification — November 14<a class="headerlink" href="#backup-verification-november-14" title="Permanent link">&para;</a></h3>
+<p>The scheduled 02:00 jobs completed successfully on all three nodes.</p>
+<table>
+<thead>
+<tr>
+<th>Proxmox Node</th>
+<th>Guests Backed Up</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td>100, 101, 104, 106, 107</td>
+<td><code>TASK OK</code></td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>105</td>
+<td><code>TASK OK</code></td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>102</td>
+<td><code>TASK OK</code></td>
+</tr>
+</tbody>
+</table>
+<p>The scheduled backup of Authentik VM 104 ran on node 01 before the host migration.</p>
+<p>Later on November 14, VM 104 was moved to node 03.</p>
+<p>A separate manual snapshot backup then completed successfully from the new host.</p>
+<p><strong>Authentik post-migration backup:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Guest</td>
+<td>VM 104 — auth-prod-01</td>
+</tr>
+<tr>
+<td>Current host</td>
+<td>pve-prod-03</td>
+</tr>
+<tr>
+<td>Target</td>
+<td><code>pbs-prod-01</code></td>
+</tr>
+<tr>
+<td>Completion</td>
+<td>November 14, 2026, 14:09:45 CST</td>
+</tr>
+<tr>
+<td>Backup mode</td>
+<td>Snapshot</td>
+</tr>
+<tr>
+<td>Virtual disk size</td>
+<td>32 GiB</td>
+</tr>
+<tr>
+<td>Sparse zero data</td>
+<td>11.59 GiB (36%)</td>
+</tr>
+<tr>
+<td>Data reused</td>
+<td>30.52 GiB (95%)</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>44 seconds</td>
+</tr>
+<tr>
+<td>Result</td>
+<td>Successful</td>
+</tr>
+</tbody>
+</table>
+<p>The EFI disk was also included.</p>
+<p>The post-migration backup demonstrates that the Lenovo can back up the Authentik VM successfully through the shared PBS configuration.</p>
+<h3 id="backup-recovery-verification">Backup Recovery Verification<a class="headerlink" href="#backup-recovery-verification" title="Permanent link">&para;</a></h3>
+<p><strong>Previously verified November 5:</strong></p>
+<ul>
+<li>Manual CT 100 backup completed successfully.</li>
+<li>CT 100 snapshot passed targeted PBS integrity verification.</li>
+<li>File-level recovery of CT 100 <code>/etc/hostname</code> succeeded.</li>
+<li>Scheduled backup jobs passed on the then-existing two-node cluster.</li>
+</ul>
+<p><strong>Subsequently verified November 14:</strong></p>
+<ul>
+<li>Successful scheduled backups from all three current nodes.</li>
+<li>Successful manual backup of Authentik from its new node.</li>
+</ul>
+<p><strong>Still outstanding:</strong></p>
+<ul>
+<li>Isolated full VM restore.</li>
+<li>Isolated full LXC restore.</li>
+<li>Verification of recent backup archives across all guests.</li>
+<li>Successful execution of scheduled prune/GC/verify tasks following the Docker migration.</li>
+<li>Validation of actual warning/error notification delivery.</li>
+<li>Tested recovery of PBS container configuration and datastore.</li>
+</ul>
+<p>A successful backup task is not equivalent to a complete disaster recovery test.</p>
+<h3 id="retention-and-maintenance">Retention and Maintenance<a class="headerlink" href="#retention-and-maintenance" title="Permanent link">&para;</a></h3>
+<p>The following settings were last visually verified on the Docker PBS instance in November 2026:</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Schedule / Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prune</td>
+<td>Daily</td>
+</tr>
+<tr>
+<td>Keep last</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Keep daily</td>
+<td>7</td>
+</tr>
+<tr>
+<td>Keep weekly</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Keep monthly</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Garbage collection</td>
+<td>Saturday 04:00</td>
+</tr>
+<tr>
+<td>Verification</td>
+<td>Saturday 05:00</td>
+</tr>
+<tr>
+<td>Reverification of older snapshots</td>
+<td>After approximately 30 days</td>
+</tr>
+</tbody>
+</table>
+<p>Actual maintenance-job success has not been reverified during this documentation update.</p>
+<p><strong>Capacity planning:</strong> Approximately 500 GB is the operator's preferred soft PBS budget, not an enforced quota.</p>
+<h3 id="pbs-security-and-lifecycle-risks">PBS Security and Lifecycle Risks<a class="headerlink" href="#pbs-security-and-lifecycle-risks" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The image is unofficial and has been described as unmaintained.</li>
+<li>It may lag upstream security fixes.</li>
+<li>Docker Host networking can expose PBS on multiple host interfaces.</li>
+<li>PBS container settings and secrets are not covered by the Proxmox guest backup job.</li>
+<li>The NAS ZFS pool and datastore remain separate recovery dependencies.</li>
+<li>The container must not start before required persistent storage is available.</li>
+<li>Automatic start-after-ZFS-mount behavior has not been independently tested.</li>
+<li>Changes to the datastore should use supported PBS operations.</li>
+<li>Image updates should be handled through Unraid's container update/recreation workflow with the configuration and storage mappings preserved.</li>
+</ul>
+<p>Do not run the retired PBS VM against the active datastore.</p>
+<p>VM 103 no longer exists.</p>
+<hr />
+<h3 id="pbs-nfs-filesystem-and-october-2026-incident-historical">PBS NFS Filesystem and October 2026 Incident — Historical<a class="headerlink" href="#pbs-nfs-filesystem-and-october-2026-incident-historical" title="Permanent link">&para;</a></h3>
+<p><strong>Historical only:</strong> This section describes the retired PBS VM architecture.</p>
+<p>The active Docker PBS deployment does not use the old NFS/FUSE datastore access path.</p>
+<h3 id="former-storage-topology">Former Storage Topology<a class="headerlink" href="#former-storage-topology" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>PBS VM 103 — former pbs-prod-01
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  /mnt/backups/pbs
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>        |
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>        | NFSv3
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>        |
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>192.168.30.16:/mnt/user/backups
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>        |
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>        | Unraid fuse.shfs
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>        |
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>zfs-mirror/backups
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>        |
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>/mnt/zfs-mirror/backups/pbs
+</code></pre></div>
+<h3 id="historical-nas-configuration">Historical NAS Configuration<a class="headerlink" href="#historical-nas-configuration" title="Permanent link">&para;</a></h3>
+<p>The October 30 investigation established:</p>
+<ul>
+<li>Share: <code>backups</code>.</li>
+<li>Primary pool: <code>zfs-mirror</code>.</li>
+<li>Secondary pool: None.</li>
+<li><code>shareUseCache="only"</code>.</li>
+<li><code>shareCachePool="zfs-mirror"</code>.</li>
+<li>Permit exclusive shares: No.</li>
+<li>NFS export path: <code>/mnt/user/backups</code>.</li>
+<li>Export <code>fsid=101</code>.</li>
+<li>Export used <code>async</code>, <code>no_subtree_check</code>, and <code>no_root_squash</code>.</li>
+<li>Permitted networks included <code>192.168.30.0/24</code>, <code>192.168.10.0/24</code>, and <code>10.0.0.0/30</code>.</li>
+<li>Unraid FUSE filesystem: <code>fuse.shfs</code>.</li>
+<li><code>fuse_remember="330"</code> observed.</li>
+</ul>
+<h3 id="historical-pbs-vm-client-mount">Historical PBS VM Client Mount<a class="headerlink" href="#historical-pbs-vm-client-mount" title="Permanent link">&para;</a></h3>
+<p>The former PBS VM mounted the NAS export using NFSv3.</p>
+<p>Observed mount options included:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>soft,timeo=30,retrans=3
+</code></pre></div>
+<p>The client used systemd automount.</p>
+<p>Those options are historical and do not describe the current PBS Docker datastore.</p>
+<h3 id="incident-evidence">Incident Evidence<a class="headerlink" href="#incident-evidence" title="Permanent link">&para;</a></h3>
+<p>The former PBS proxy retained a stale descriptor to:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>/mnt/backups/pbs/.lock
+</code></pre></div>
+<p>Backup tasks failed with:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ESTALE: Stale file handle
+</code></pre></div>
+<p>Clients reported connection resets and HTTP/2 failures.</p>
+<p>The historical investigation confirmed:</p>
+<ul>
+<li>A long-lived stale file descriptor existed.</li>
+<li>The current <code>.lock</code> pathname was accessible.</li>
+<li>New locks could be acquired.</li>
+<li>Restarting the proxy closed the stale descriptor.</li>
+<li>Backup execution temporarily recovered.</li>
+</ul>
+<p>The original event invalidating the descriptor was never conclusively identified.</p>
+<p>FUSE/NFS file-handle handling was a leading hypothesis.</p>
+<h3 id="temporary-recovery-october-30">Temporary Recovery — October 30<a class="headerlink" href="#temporary-recovery-october-30" title="Permanent link">&para;</a></h3>
+<p>The operator restarted:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>systemctl<span class="w"> </span>restart<span class="w"> </span>proxmox-backup-proxy
+</code></pre></div>
+<p>The subsequent manual CT 100 backup and both scheduled PVE backup jobs succeeded.</p>
+<p>CT 100 snapshot integrity verification also passed.</p>
+<p>No NAS export, share, ownership, filesystem, or global exclusive-share configuration was modified.</p>
+<h3 id="recurrence-and-final-architecture-decision">Recurrence and Final Architecture Decision<a class="headerlink" href="#recurrence-and-final-architecture-decision" title="Permanent link">&para;</a></h3>
+<p>The same failure returned October 31–November 2.</p>
+<p>The operator elected to replace the VM-based PBS deployment with Docker PBS directly on Unraid.</p>
+<p>The new implementation uses:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>/mnt/zfs-mirror/backups/pbs → /backups
+</code></pre></div>
+<p>This eliminates the previous NFS/FUSE datastore access path from PBS.</p>
+<p>The former VM 103 was initially retained stopped, then deleted before the November 13 Proxmox node replacement.</p>
+<p><strong>Do not use the historical proxy restart, NFS mount, or old VM recovery procedures as instructions for the current Docker PBS deployment.</strong></p>
+<p>The operator accepted the risk of proceeding without an additional migration-time ZFS snapshot.</p>
+<p>For complete incident chronology, see:</p>
+<ul>
+<li><code>runbooks/backup-schedule.md</code></li>
+<li><code>runbooks/backup-restore.md</code></li>
+</ul>
+<hr />
+<h2 id="ssh-access">SSH Access<a class="headerlink" href="#ssh-access" title="Permanent link">&para;</a></h2>
+<p>SSH is enabled on <code>nas-prod-01</code>.</p>
+<p>The established backup scripts authenticate using the <code>root</code> SSH account.</p>
+<h3 id="authorized-keys">Authorized Keys<a class="headerlink" href="#authorized-keys" title="Permanent link">&para;</a></h3>
+<p>The documented <code>/root/.ssh/authorized_keys</code> configuration includes dedicated backup public keys for:</p>
+<table>
+<thead>
+<tr>
+<th>Key Identity</th>
+<th>Host</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backup@docker-prod-01</code></td>
+<td>docker-prod-01</td>
+<td>Nightly rsync</td>
+</tr>
+<tr>
+<td><code>backup@auth-prod-01</code></td>
+<td>auth-prod-01</td>
+<td>Nightly rsync</td>
+</tr>
+<tr>
+<td><code>backup@immich-prod-01</code></td>
+<td>immich-prod-01</td>
+<td>Nightly rsync</td>
+</tr>
+</tbody>
+</table>
+<p>Private keys reside on participating backup clients at:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>/root/.ssh/backup_rsa
+</code></pre></div>
+<p>The rsync destination address is:</p>
+<p><code>192.168.30.16</code></p>
+<p>This uses the Services network rather than the NAS management address.</p>
+<h3 id="ssh-security">SSH Security<a class="headerlink" href="#ssh-security" title="Permanent link">&para;</a></h3>
+<p>The backup keys are service credentials.</p>
+<p>They should be:</p>
+<ul>
+<li>Restricted to authorized hosts.</li>
+<li>Protected by appropriate filesystem permissions.</li>
+<li>Stored outside version control.</li>
+<li>Rotated if compromised.</li>
+<li>Included in the recovery/credential management plan.</li>
+</ul>
+<p>The live Unraid integration did not expose the current <code>authorized_keys</code> file, so the exact active key inventory was not independently read back on November 14.</p>
+<h3 id="firewall-boundaries">Firewall Boundaries<a class="headerlink" href="#firewall-boundaries" title="Permanent link">&para;</a></h3>
+<p>The documented Services-to-Management firewall policy blocks general access to the NAS management IP from production service hosts.</p>
+<p>The current firewall design also contains targeted exceptions for other infrastructure services.</p>
+<p>Do not assume every possible route to a NAS management service has been packet-level tested.</p>
+<p>See <code>architecture/network/firewall-rules.md</code>.</p>
+<hr />
+<h2 id="ai-observer-unraid-monitoring-integration">AI Observer — Unraid Monitoring Integration<a class="headerlink" href="#ai-observer-unraid-monitoring-integration" title="Permanent link">&para;</a></h2>
+<p><code>observer-prod-01</code> runs the read-only Unraid MCP integration.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Observer host</td>
+<td><code>observer-prod-01</code></td>
+</tr>
+<tr>
+<td>Observer IP</td>
+<td><code>192.168.30.17</code></td>
+</tr>
+<tr>
+<td>Proxmox node</td>
+<td><code>pve-prod-01</code></td>
+</tr>
+<tr>
+<td>NAS endpoint</td>
+<td><code>192.168.30.16:443</code></td>
+</tr>
+<tr>
+<td>Unraid API</td>
+<td>GraphQL</td>
+</tr>
+<tr>
+<td>MCP implementation</td>
+<td>dinglebear-ai Rust Unraid MCP</td>
+</tr>
+<tr>
+<td>MCP version</td>
+<td>0.6.3</td>
+</tr>
+<tr>
+<td>Exposed tools</td>
+<td>26 read-only</td>
+</tr>
+<tr>
+<td>Write tools</td>
+<td>None exposed</td>
+</tr>
+</tbody>
+</table>
+<p>The MCP connects using HTTPS and protected API credentials.</p>
+<p>Its permissions and tool exposure are documented in:</p>
+<p><code>services/infra/ai-observer.md</code></p>
+<p>Operational procedures are maintained in:</p>
+<p><code>runbooks/ai-observer-operations.md</code></p>
+<h3 id="november-14-integration-verification">November 14 Integration Verification<a class="headerlink" href="#november-14-integration-verification" title="Permanent link">&para;</a></h3>
+<p>The read-only integration successfully returned:</p>
+<ul>
+<li>Unraid operating system version.</li>
+<li>CPU and RAM inventory.</li>
+<li>Network interface status.</li>
+<li>Array state and disks.</li>
+<li>Share inventory.</li>
+<li>Docker container inventory.</li>
+<li>Basic MCP service status.</li>
+</ul>
+<p>The Unraid UPS and UPS configuration requests failed upstream during this review.</p>
+<p>These failures do not demonstrate that NUT itself is unhealthy; they establish only that the integration could not retrieve those data.</p>
+<p>Do not infer current UPS server settings from an unsuccessful API query.</p>
+<p>The network API's broader summary query also returned an error, while the more specific network-interface query succeeded.</p>
+<p>The verified interface results are recorded in the Network Interfaces section.</p>
+<h3 id="security-boundaries">Security Boundaries<a class="headerlink" href="#security-boundaries" title="Permanent link">&para;</a></h3>
+<p>The ChatGPT-facing Unraid MCP exposes read-only tools.</p>
+<p>It does not provide general NAS shell access, Docker write operations, direct filesystem modification, or Unraid administrative changes.</p>
+<p>Read-only queries can still return operational details and potentially sensitive configuration information, so results should be handled appropriately.</p>
+<hr />
+<h2 id="docker-containers">Docker Containers<a class="headerlink" href="#docker-containers" title="Permanent link">&para;</a></h2>
+<p>The November 14 Unraid integration returned three running containers.</p>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Image</th>
+<th>Network / Access</th>
+<th>Purpose</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plex</code></td>
+<td><code>lscr.io/linuxserver/plex</code></td>
+<td>Documented Plex service IP <code>192.168.30.2</code></td>
+<td>Plex Media Server</td>
+<td>RUNNING</td>
+</tr>
+<tr>
+<td><code>proxmox-backup-server</code></td>
+<td><code>ayufan/proxmox-backup-server:latest</code></td>
+<td>Docker Host; intended PBS endpoint <code>192.168.30.16:8007</code></td>
+<td>Proxmox Backup Server</td>
+<td>RUNNING</td>
+</tr>
+<tr>
+<td><code>beszel-agent</code></td>
+<td><code>henrygd/beszel-agent:latest</code></td>
+<td>Agent networking not independently inspected</td>
+<td>Host monitoring</td>
+<td>RUNNING</td>
+</tr>
+</tbody>
+</table>
+<p>All three reported auto-start enabled.</p>
+<p>The image-update flag was false for all three at the time of inspection.</p>
+<p>This is a point-in-time container status and does not establish that images are current with upstream releases.</p>
+<h3 id="plex-configuration">Plex Configuration<a class="headerlink" href="#plex-configuration" title="Permanent link">&para;</a></h3>
+<p>The documented Plex configuration includes:</p>
+<ul>
+<li>Intel QuickSync hardware transcoding.</li>
+<li><code>/dev/dri</code> GPU access.</li>
+<li>Intel UHD 730 integrated GPU.</li>
+<li>Hardware encoding enabled.</li>
+<li>HEVC encoding configured for HEVC sources only.</li>
+<li>Media path <code>/data</code> mapped to <code>/mnt/user/data</code>.</li>
+<li>Persistent appdata at <code>/mnt/user/appdata/plex</code>.</li>
+<li>Service address <code>192.168.30.2</code>.</li>
+<li>Direct external access through the documented Plex port-forward architecture.</li>
+</ul>
+<p>The November 14 Docker API verified that Plex was running but did not independently re-read its full environment variables, bind mounts, or transcoder configuration.</p>
+<p>Those details remain based on the established service documentation.</p>
+<p>See <code>services/media/plex.md</code>.</p>
+<h3 id="beszel-agent">Beszel Agent<a class="headerlink" href="#beszel-agent" title="Permanent link">&para;</a></h3>
+<p>The NAS runs <code>beszel-agent</code> for monitoring.</p>
+<p>The container was confirmed running on November 14.</p>
+<p>Its exact port binding, token configuration, and monitoring hub registration were not independently inspected during this review.</p>
+<p>See <code>services/monitoring/beszel.md</code>.</p>
+<hr />
+<h2 id="ups-graceful-shutdown">UPS &amp; Graceful Shutdown<a class="headerlink" href="#ups-graceful-shutdown" title="Permanent link">&para;</a></h2>
+<p><strong>Architecture:</strong> A Tripp-Lite UPS is connected to <code>nas-prod-01</code> by USB.</p>
+<p>Unraid hosts the Network UPS Tools (NUT) server.</p>
+<p>The three Proxmox hosts run NUT network clients.</p>
+<h3 id="documented-ups-server-configuration">Documented UPS Server Configuration<a class="headerlink" href="#documented-ups-server-configuration" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Documented Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UPS</td>
+<td>Tripp-Lite SMART1500LCDXL</td>
+</tr>
+<tr>
+<td>Capacity</td>
+<td>1500 VA / 900 W</td>
+</tr>
+<tr>
+<td>USB connection</td>
+<td>UPS → nas-prod-01</td>
+</tr>
+<tr>
+<td>NUT plugin</td>
+<td>dmacias/Network UPS Tools</td>
+</tr>
+<tr>
+<td>Previously documented NUT version</td>
+<td>2.8.4</td>
+</tr>
+<tr>
+<td>Server mode</td>
+<td>Netserver</td>
+</tr>
+<tr>
+<td>Driver</td>
+<td><code>usbhid-ups</code></td>
+</tr>
+<tr>
+<td>Driver port</td>
+<td><code>auto</code></td>
+</tr>
+<tr>
+<td>NUT server address</td>
+<td><code>192.168.10.10</code></td>
+</tr>
+<tr>
+<td>UPS identifier</td>
+<td><code>ups</code></td>
+</tr>
+<tr>
+<td>Client endpoint</td>
+<td><code>ups@192.168.10.10</code></td>
+</tr>
+<tr>
+<td>Documented NAS shutdown threshold</td>
+<td>Six minutes on battery</td>
+</tr>
+</tbody>
+</table>
+<h3 id="historical-ups-measurements">Historical UPS Measurements<a class="headerlink" href="#historical-ups-measurements" title="Permanent link">&para;</a></h3>
+<p>Previously documented values included:</p>
+<ul>
+<li>UPS status: On Line.</li>
+<li>Battery charge: 100%.</li>
+<li>Estimated runtime: Approximately 34 minutes.</li>
+<li>Load: Approximately 15%.</li>
+<li>Apparent load: Approximately 225 VA.</li>
+<li>Nominal capacity: 1500 VA.</li>
+</ul>
+<p>These were historical point-in-time readings.</p>
+<p>They should not be treated as current battery performance guarantees.</p>
+<h3 id="proxmox-nut-clients">Proxmox NUT Clients<a class="headerlink" href="#proxmox-nut-clients" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Management IP</th>
+<th>Role</th>
+<th>Last Documented Verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td>192.168.10.11</td>
+<td>Secondary network client</td>
+<td>Operational before November 13</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>192.168.10.12</td>
+<td>Secondary network client</td>
+<td>Enabled, active, UPS <code>OL</code> on November 13</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>192.168.10.13</td>
+<td>Secondary network client</td>
+<td>Enabled, active, UPS <code>OL</code> on November 14</td>
+</tr>
+</tbody>
+</table>
+<p>The November 13 deployment established operational NUT monitoring on both newly deployed Proxmox nodes.</p>
+<p>The replacement Dell and Lenovo use <code>nut-client</code> 2.8.1-5.</p>
+<h3 id="client-configuration">Client Configuration<a class="headerlink" href="#client-configuration" title="Permanent link">&para;</a></h3>
+<p><strong>File:</strong> <code>/etc/nut/nut.conf</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>MODE=netclient
+</code></pre></div>
+<p><strong>File:</strong> <code>/etc/nut/upsmon.conf</code></p>
+<p>Documented settings include:</p>
+<ul>
+<li>MONITOR target: <code>ups@192.168.10.10</code>.</li>
+<li>Secondary monitoring role.</li>
+<li>Power value: 1.</li>
+<li><code>MINSUPPLIES 1</code>.</li>
+<li><code>POLLFREQ 5</code>.</li>
+<li><code>HOSTSYNC 15</code>.</li>
+<li><code>DEADTIME 15</code>.</li>
+<li><code>FINALDELAY 5</code>.</li>
+<li>Shutdown command: <code>/sbin/shutdown -h +0</code>.</li>
+<li>Powerdown flag: <code>/etc/killpower</code>.</li>
+</ul>
+<p>Protected monitoring credentials are not recorded in this document.</p>
+<h3 id="debian-nut-systemd-workaround">Debian NUT Systemd Workaround<a class="headerlink" href="#debian-nut-systemd-workaround" title="Permanent link">&para;</a></h3>
+<p>Nodes 02 and 03 required a local systemd drop-in because the installed Debian NUT service referenced a nonexistent tmpfiles configuration.</p>
+<p>The corrected pre-start reference is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>/usr/lib/tmpfiles.d/nut-client.conf
+</code></pre></div>
+<p>Both services subsequently started successfully.</p>
+<p>The systemd pre-start operation reported <code>0/SUCCESS</code>.</p>
+<p>This workaround should be reviewed after future NUT package updates.</p>
+<h3 id="november-14-destination-node-verification">November 14 Destination-Node Verification<a class="headerlink" href="#november-14-destination-node-verification" title="Permanent link">&para;</a></h3>
+<p>Following physical maintenance and the Authentik migration, the operator checked <code>pve-prod-03</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>systemctl<span class="w"> </span>is-enabled<span class="w"> </span>nut-monitor
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>systemctl<span class="w"> </span>is-active<span class="w"> </span>nut-monitor
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>upsc<span class="w"> </span>ups@192.168.10.10<span class="w"> </span>ups.status
+</code></pre></div>
+<p>Results:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>enabled
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>active
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>Init SSL without certificate database
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>OL
+</code></pre></div>
+<p>This verifies that the Lenovo's client was active and could query the remote UPS.</p>
+<p>It does not establish that the entire UPS-triggered shutdown process has been tested.</p>
+<h3 id="current-nas-server-verification-boundary">Current NAS Server Verification Boundary<a class="headerlink" href="#current-nas-server-verification-boundary" title="Permanent link">&para;</a></h3>
+<p>On November 14, the read-only Unraid integration could not retrieve UPS or UPS-configuration information because the upstream API returned errors.</p>
+<p>The documented NUT server configuration remains based on earlier observations.</p>
+<p>The successful <code>OL</code> query from <code>pve-prod-03</code> confirms that the remote UPS endpoint responded at the time of the operator's check.</p>
+<p>It does not independently confirm the NAS's current six-minute shutdown timer, detailed server policy, or physical UPS outlet mapping.</p>
+<h3 id="intended-shutdown-sequence">Intended Shutdown Sequence<a class="headerlink" href="#intended-shutdown-sequence" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Utility power fails.</li>
+<li>NUT server detects the UPS on battery.</li>
+<li>The configured NAS shutdown timer allows for a temporary outage.</li>
+<li>At the configured shutdown condition, the server signals its NUT clients.</li>
+<li>Proxmox nodes shut down their VMs and LXCs.</li>
+<li>All three Proxmox hosts shut down.</li>
+<li>The NAS shuts down after dependent systems where the configured sequence permits.</li>
+</ol>
+<h3 id="end-to-end-validation-still-outstanding">End-to-End Validation Still Outstanding<a class="headerlink" href="#end-to-end-validation-still-outstanding" title="Permanent link">&para;</a></h3>
+<p>The following have not been tested as a complete production sequence:</p>
+<ul>
+<li>Real UPS-triggered forced-shutdown signaling.</li>
+<li>Guest shutdown completion on each Proxmox node.</li>
+<li>NAS-last shutdown behavior.</li>
+<li>Actual power connectivity of all three Proxmox nodes to battery-backed UPS outlets.</li>
+<li>Battery runtime under full production load.</li>
+<li>Restart behavior following restoration of utility power.</li>
+</ul>
+<p>Do not trigger <code>upsmon -c fsd</code> or deliberately interrupt UPS power during routine monitoring.</p>
+<p>A full shutdown test requires an approved maintenance plan, suitable backups, and explicit recovery steps.</p>
+<h3 id="rack-and-ups-cabling">Rack and UPS Cabling<a class="headerlink" href="#rack-and-ups-cabling" title="Permanent link">&para;</a></h3>
+<p>The NAS is installed in the Rosewill chassis at U8–U11.</p>
+<p>The UPS is installed at U18.</p>
+<p>The latest physical rack layout is:</p>
+<table>
+<thead>
+<tr>
+<th>Device</th>
+<th>Rack Position</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td>U5–U6</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>U17</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>U7</td>
+</tr>
+<tr>
+<td>pi-prod-01</td>
+<td>U7, sharing shelf with Lenovo</td>
+</tr>
+<tr>
+<td>nas-prod-01</td>
+<td>U8–U11</td>
+</tr>
+<tr>
+<td>UPS</td>
+<td>U18</td>
+</tr>
+</tbody>
+</table>
+<p>The latest rack documentation confirms the physical locations of the new Dell and Lenovo nodes.</p>
+<p>UPS outlet assignment details remain unverified.</p>
+<p>See <code>architecture/hardware/rack-layout.md</code>.</p>
+<hr />
+<h2 id="plugins-installed">Plugins Installed<a class="headerlink" href="#plugins-installed" title="Permanent link">&para;</a></h2>
+<p>The following plugin inventory is preserved from the existing NAS documentation.</p>
+<table>
+<thead>
+<tr>
+<th>Plugin</th>
+<th>Purpose</th>
+<th>Verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NUT</td>
+<td>UPS monitoring and shutdown</td>
+<td>Previously documented; live plugin query unavailable November 14</td>
+</tr>
+<tr>
+<td>ZFS Master</td>
+<td>ZFS pool management UI</td>
+<td>Historical installed-plugin inventory</td>
+</tr>
+<tr>
+<td>ZnapZend</td>
+<td>ZFS snapshot scheduling</td>
+<td>Historical installed-plugin inventory</td>
+</tr>
+<tr>
+<td>Intel-GPU-TOP</td>
+<td>GPU monitoring</td>
+<td>Historical installed-plugin inventory</td>
+</tr>
+<tr>
+<td>Dynamix System Temp</td>
+<td>CPU and board temperature monitoring</td>
+<td>Historical installed-plugin inventory</td>
+</tr>
+<tr>
+<td>Unassigned Devices</td>
+<td>External drive management</td>
+<td>Historical installed-plugin inventory</td>
+</tr>
+<tr>
+<td>Fix Common Problems</td>
+<td>Configuration health checks</td>
+<td>Historical installed-plugin inventory</td>
+</tr>
+</tbody>
+</table>
+<p>The live Unraid plugin listing returned an upstream error during this documentation review.</p>
+<p>Therefore, this table is not a newly verified installed-plugin inventory.</p>
+<p>Do not remove entries based solely on the integration's inability to retrieve the list.</p>
+<hr />
+<h2 id="three-node-proxmox-integration">Three-Node Proxmox Integration<a class="headerlink" href="#three-node-proxmox-integration" title="Permanent link">&para;</a></h2>
+<p>The NAS serves the current <code>homelab-v3</code> cluster.</p>
+<p><strong>Cluster state verified November 14, 2026:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Hardware</th>
+<th>Management IP</th>
+<th>NAS Dependencies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td>Minisforum MS-A2</td>
+<td>192.168.10.11</td>
+<td>PBS, ISO export over private DAC, service-facing NAS exports</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>Dell OptiPlex 5000 SFF</td>
+<td>192.168.10.12</td>
+<td>PBS, ISO export over Services network, Immich photo library</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>Lenovo ThinkCentre M90q Tiny</td>
+<td>192.168.10.13</td>
+<td>PBS, ISO export over Services network, Authentik/secondary DNS backup coverage</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cluster characteristics:</strong></p>
+<ul>
+<li>Three voting Proxmox nodes.</li>
+<li>Two votes required for quorum.</li>
+<li>No external QDevice.</li>
+<li>No automatic Proxmox HA.</li>
+<li>Local ZFS guest storage on each node.</li>
+<li>Shared PBS backup storage hosted by Unraid.</li>
+</ul>
+<h3 id="current-guest-distribution">Current Guest Distribution<a class="headerlink" href="#current-guest-distribution" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Guests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td>CT 100, VM 101, VM 107; VM 106 stopped</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>VM 105 (Immich)</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>CT 102 (secondary AdGuard), VM 104 (Authentik)</td>
+</tr>
+</tbody>
+</table>
+<p>The Authentik VM was migrated from node 01 to node 03 on November 14.</p>
+<p>Its application health, DNS, reverse proxy, SSO, and fresh PBS backup checks succeeded.</p>
+<p>The NAS PBS endpoint did not need to change during the migration.</p>
+<h3 id="architectural-recovery-considerations">Architectural Recovery Considerations<a class="headerlink" href="#architectural-recovery-considerations" title="Permanent link">&para;</a></h3>
+<p>The NAS is a major dependency for the homelab.</p>
+<p>Its failure can affect:</p>
+<ul>
+<li>NFS-mounted application data.</li>
+<li>Immich photo storage.</li>
+<li>Plex media storage.</li>
+<li>Central PBS backups.</li>
+<li>Docker-host rsync backups.</li>
+<li>Shared ISO library.</li>
+<li>NUT server availability.</li>
+</ul>
+<p>Three-node Proxmox quorum does not eliminate NAS-related single points of failure.</p>
+<p>The cluster is not configured for automatic guest failover.</p>
+<p>Recovery assurance depends on usable independent copies of critical NAS data and tested restoration procedures.</p>
+<hr />
+<h2 id="open-verification-items">Open Verification Items<a class="headerlink" href="#open-verification-items" title="Permanent link">&para;</a></h2>
+<h3 id="networking">Networking<a class="headerlink" href="#networking" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Confirm intended PBS TCP 8007 access through both NAS interfaces.</li>
+<li>Periodically recheck the dedicated <code>eth2</code> 10GbE link and Proxmox NFS access.</li>
+<li>Review export permissions and <code>no_root_squash</code> exposure during a separate security assessment.</li>
+<li>Confirm physical cabling and port profiles if topology changes.</li>
+</ul>
+<h3 id="storage-and-data-protection">Storage and Data Protection<a class="headerlink" href="#storage-and-data-protection" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Obtain a fresh native <code>zpool status -v</code> result.</li>
+<li>Review ZFS scrub and snapshot task history.</li>
+<li>Verify current ZnapZend schedule and retention.</li>
+<li>Continue parity, SMART, and interface-error monitoring.</li>
+<li>Review independent recovery protection for the photos and backups datasets.</li>
+<li>Test an appropriate NAS critical-data recovery scenario.</li>
+</ul>
+<h3 id="pbs">PBS<a class="headerlink" href="#pbs" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Verify scheduled prune/GC/snapshot-verification execution.</li>
+<li>Perform an isolated full VM or LXC restore.</li>
+<li>Confirm actual backup warning/error notification delivery.</li>
+<li>Review the unofficial PBS Docker image maintenance strategy.</li>
+<li>Verify persistent configuration backup and datastore recovery.</li>
+<li>Confirm PBS container startup ordering after ZFS pool availability.</li>
+<li>Confirm the first scheduled VM 104 backup from <code>pve-prod-03</code>.</li>
+</ul>
+<h3 id="ups">UPS<a class="headerlink" href="#ups" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Read back current NUT server settings directly from Unraid.</li>
+<li>Confirm the six-minute shutdown threshold.</li>
+<li>Reconcile physical UPS outlet assignments.</li>
+<li>Plan and safely validate end-to-end shutdown behavior.</li>
+<li>Verify recovery behavior following restoration of mains power.</li>
+</ul>
+<h3 id="monitoring-and-documentation">Monitoring and Documentation<a class="headerlink" href="#monitoring-and-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Recheck the current Unraid installed-plugin inventory when the API issue is resolved.</li>
+<li>Confirm Docker-host rsync success after the Authentik VM migration.</li>
+<li>Keep hardware, backup, network, and recovery documentation consistent with the three-node architecture.</li>
+<li>Preserve historical findings separately from current implementation state.</li>
+</ul>
+<p>None of the above items should be marked complete without appropriate verification.</p>
+<hr />
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>architecture/hardware/inventory.md</code> — NAS hardware, disk inventory, Proxmox hosts.</li>
+<li><code>architecture/hardware/rack-layout.md</code> — Physical placement and cabling.</li>
+<li><code>architecture/compute/pve-prod-01.md</code> — Primary node and dedicated storage link.</li>
+<li><code>architecture/compute/pve-prod-02.md</code> — Dell node and Immich.</li>
+<li><code>architecture/compute/pve-prod-03.md</code> — Lenovo node, secondary DNS, and Authentik.</li>
+<li><code>architecture/network/ip-addresses.md</code> — Network addressing and interfaces.</li>
+<li><code>architecture/network/vlan-design.md</code> — Management, Services, and storage network topology.</li>
+<li><code>architecture/network/firewall-rules.md</code> — Network access restrictions and exceptions.</li>
+<li><code>architecture/decisions-log.md</code> — NAS, storage, backup, and network architecture decisions.</li>
+<li><code>architecture/storage/drives.md</code> — Detailed drive inventory.</li>
+<li><code>services/media/plex.md</code> — Plex deployment and data paths.</li>
+<li><code>services/photos/immich.md</code> — Immich database and NAS photo storage.</li>
+<li><code>services/infra/authentik.md</code> — Authentik migration and service configuration.</li>
+<li><code>services/infra/ai-observer.md</code> — Read-only infrastructure integrations.</li>
+<li><code>services/monitoring/beszel.md</code> — Beszel deployment.</li>
+<li><code>runbooks/backup-schedule.md</code> — Backup scheduling and verified status.</li>
+<li><code>runbooks/backup-restore.md</code> — Recovery procedures.</li>
+<li><code>runbooks/ai-observer-operations.md</code> — Observer diagnostics and operational procedures.</li>
+</ul>
+<hr />
+<h2 id="verification-summary-november-14-2026">Verification Summary — November 14, 2026<a class="headerlink" href="#verification-summary-november-14-2026" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unraid version</td>
+<td><strong>7.3.4</strong>, live-verified</td>
+</tr>
+<tr>
+<td>NAS management</td>
+<td><code>br0</code> at <code>192.168.10.10</code>, UP, 2.5 Gbps</td>
+</tr>
+<tr>
+<td>NAS Services interface</td>
+<td><code>eth1</code> at <code>192.168.30.16</code>, UP, 10 Gbps</td>
+</tr>
+<tr>
+<td>NAS dedicated storage interface</td>
+<td><code>eth2</code> at <code>10.0.0.2/30</code>, UP, 10 Gbps</td>
+</tr>
+<tr>
+<td>Dedicated NFS path</td>
+<td><code>nas-isos</code> available from pve-prod-01 through <code>10.0.0.2</code></td>
+</tr>
+<tr>
+<td>Other Proxmox ISO path</td>
+<td><code>nas-isos-p2</code> available from nodes 02 and 03</td>
+</tr>
+<tr>
+<td>Array</td>
+<td>STARTED</td>
+</tr>
+<tr>
+<td>Parity drives</td>
+<td>Both <code>DISK_OK</code>, zero reported errors</td>
+</tr>
+<tr>
+<td>Data drives</td>
+<td>All three <code>DISK_OK</code>, zero reported errors</td>
+</tr>
+<tr>
+<td>ZFS mirror members</td>
+<td>Both reported <code>DISK_OK</code>, zero device errors</td>
+</tr>
+<tr>
+<td>Native ZFS pool readback</td>
+<td>Not performed during this review</td>
+</tr>
+<tr>
+<td>Unraid shares</td>
+<td>All six documented shares returned</td>
+</tr>
+<tr>
+<td>Plex Docker</td>
+<td>RUNNING</td>
+</tr>
+<tr>
+<td>PBS Docker</td>
+<td>RUNNING</td>
+</tr>
+<tr>
+<td>Beszel Agent Docker</td>
+<td>RUNNING</td>
+</tr>
+<tr>
+<td>PBS cluster storage</td>
+<td>Available on all three Proxmox nodes</td>
+</tr>
+<tr>
+<td>PBS scheduled job</td>
+<td>Enabled, daily 02:00</td>
+</tr>
+<tr>
+<td>November 14 scheduled backups</td>
+<td>Successful on nodes 01, 02, and 03</td>
+</tr>
+<tr>
+<td>November 14 Authentik manual backup</td>
+<td>Successful from pve-prod-03</td>
+</tr>
+<tr>
+<td>Former PBS VM 103</td>
+<td>Deleted; not a rollback VM</td>
+</tr>
+<tr>
+<td>UPS client on pve-prod-03</td>
+<td>Previously verified active, enabled, UPS <code>OL</code></td>
+</tr>
+<tr>
+<td>Live NUT server configuration</td>
+<td>Could not be retrieved through current Unraid integration</td>
+</tr>
+<tr>
+<td>Current installed-plugin inventory</td>
+<td>Could not be retrieved through current Unraid integration</td>
+</tr>
+<tr>
+<td>Full guest restore</td>
+<td>Not yet verified</td>
+</tr>
+<tr>
+<td>Network/firewall changes</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Storage configuration changes</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Assessment:</strong> The NAS's documented network topology is now reconciled with current evidence. Its dedicated 10GbE storage link is implemented and operational, the active array disks report healthy status, the PBS Docker service is running, and all three Proxmox nodes can access their intended NAS-backed storage.</p>
+<p>The remaining work concerns deeper recovery testing, current ZFS maintenance verification, UPS shutdown validation, and PBS lifecycle assurance—not a known active storage or network failure.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>

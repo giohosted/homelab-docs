@@ -1,0 +1,4550 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/architecture/network/vlan-design/">
+      
+      
+        <link rel="prev" href="../../hardware/rack-layout/">
+      
+      
+        <link rel="next" href="../firewall-rules/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>VLAN Design - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vlan-design-homelab-v3" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              VLAN Design
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#firewall-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Design
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#management-19216810024" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management — 192.168.10.0/24
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Management — 192.168.10.0/24">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Devices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#management-vlan-naming-discrepancy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management VLAN Naming Discrepancy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access Policy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#management-dns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management DNS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-observer-exception" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI Observer Exception
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-management-separation" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Management Separation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vlan-20-trusted-19216820024" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN 20 — Trusted (192.168.20.0/24)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VLAN 20 — Trusted (192.168.20.0/24)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-policy_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access Policy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trusted-to-iot-verification-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trusted-to-IoT Verification Gap
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-v2-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical v2 Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vlan-30-services-19216830024" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN 30 — Services (192.168.30.0/24)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VLAN 30 — Services (192.168.30.0/24)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-configuration_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Services
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#three-node-workload-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Three-Node Workload Distribution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application Networking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-data-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Data Interface
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Restrictions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#targeted-management-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Targeted Management Exceptions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vlan-40-iot-19216840024" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN 40 — IoT (192.168.40.0/24)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VLAN 40 — IoT (192.168.40.0/24)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-configuration_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intended-security-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Intended Security Policy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iot-to-dmz-consideration" class="md-nav__link">
+    <span class="md-ellipsis">
+      IoT-to-DMZ Consideration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dns-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      DNS Handling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-migration-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Migration Plan
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vlan-50-game-servers-19216850024" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN 50 — Game Servers (192.168.50.0/24)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VLAN 50 — Game Servers (192.168.50.0/24)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verified-network-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-game-server-guest" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Game-Server Guest
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dmz-firewall-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      DMZ Firewall Behavior
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Port Forwarding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remaining-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Remaining Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#firewall-zones" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Zones
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Firewall Zones">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      Internal Zone
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dmz-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dmz Zone
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gateway-external-vpn-and-hotspot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gateway, External, VPN, and Hotspot
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inter-vlan-policy-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inter-VLAN Policy Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dns-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      DNS Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DNS Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dhcp-dns-assignments" class="md-nav__link">
+    <span class="md-ellipsis">
+      DHCP DNS Assignments
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxmox-network-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox Network Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Proxmox Network Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guest-vlan-tagging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Guest VLAN Tagging
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage Network
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Design Principles
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-verification-and-documentation-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Open Verification and Documentation Items
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open Verification and Documentation Items">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-configuration_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firewall-housekeeping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Housekeeping
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-status-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Status — November 14, 2026
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Status — November 14, 2026">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#live-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      Live-Verified
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documented-but-not-fully-reverified" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documented but Not Fully Reverified
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unresolved" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unresolved
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#firewall-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Design
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#management-19216810024" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management — 192.168.10.0/24
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Management — 192.168.10.0/24">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Devices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#management-vlan-naming-discrepancy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management VLAN Naming Discrepancy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access Policy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#management-dns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Management DNS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-observer-exception" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI Observer Exception
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-management-separation" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Management Separation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vlan-20-trusted-19216820024" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN 20 — Trusted (192.168.20.0/24)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VLAN 20 — Trusted (192.168.20.0/24)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access-policy_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access Policy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trusted-to-iot-verification-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trusted-to-IoT Verification Gap
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-v2-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical v2 Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vlan-30-services-19216830024" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN 30 — Services (192.168.30.0/24)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VLAN 30 — Services (192.168.30.0/24)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-configuration_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Services
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#three-node-workload-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Three-Node Workload Distribution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application Networking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nas-data-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      NAS Data Interface
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Restrictions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#targeted-management-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Targeted Management Exceptions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vlan-40-iot-19216840024" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN 40 — IoT (192.168.40.0/24)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VLAN 40 — IoT (192.168.40.0/24)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-configuration_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intended-security-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Intended Security Policy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iot-to-dmz-consideration" class="md-nav__link">
+    <span class="md-ellipsis">
+      IoT-to-DMZ Consideration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dns-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      DNS Handling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-migration-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Migration Plan
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vlan-50-game-servers-19216850024" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLAN 50 — Game Servers (192.168.50.0/24)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="VLAN 50 — Game Servers (192.168.50.0/24)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verified-network-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-game-server-guest" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Game-Server Guest
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dmz-firewall-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      DMZ Firewall Behavior
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Port Forwarding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remaining-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Remaining Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#firewall-zones" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Zones
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Firewall Zones">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      Internal Zone
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dmz-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dmz Zone
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gateway-external-vpn-and-hotspot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gateway, External, VPN, and Hotspot
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inter-vlan-policy-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inter-VLAN Policy Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dns-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      DNS Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DNS Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dhcp-dns-assignments" class="md-nav__link">
+    <span class="md-ellipsis">
+      DHCP DNS Assignments
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxmox-network-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proxmox Network Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Proxmox Network Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guest-vlan-tagging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Guest VLAN Tagging
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storage-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      Storage Network
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Design Principles
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-verification-and-documentation-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Open Verification and Documentation Items
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open Verification and Documentation Items">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#network-configuration_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firewall-housekeeping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Firewall Housekeeping
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-status-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Status — November 14, 2026
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Status — November 14, 2026">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#live-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      Live-Verified
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documented-but-not-fully-reverified" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documented but Not Fully Reverified
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unresolved" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unresolved
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="vlan-design-homelab-v3">VLAN Design — Homelab v3<a class="headerlink" href="#vlan-design-homelab-v3" title="Permanent link">&para;</a></h1>
+<p><strong>Last Updated:</strong> 2026-11-14<br />
+<strong>Status:</strong> Active — five configured networks across the Internal and Dmz firewall zones<br />
+<strong>Enforced by:</strong> UniFi Dream Machine Special Edition (UDM-SE)<br />
+<strong>Verification:</strong> Live UniFi Network API and Proxmox cluster inspection, November 14, 2026</p>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Homelab v3 uses network segmentation to separate infrastructure management, trusted clients, production services, IoT devices, and game-server workloads.</p>
+<p>The UniFi Dream Machine SE handles inter-network routing and firewall enforcement.</p>
+<p>The architecture uses five networks:</p>
+<table>
+<thead>
+<tr>
+<th>Network</th>
+<th>VLAN ID</th>
+<th>Subnet</th>
+<th>Gateway</th>
+<th>Firewall Zone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Management</td>
+<td>1 (default/untagged)</td>
+<td>192.168.10.0/24</td>
+<td>192.168.10.1</td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>Trusted</td>
+<td>20</td>
+<td>192.168.20.0/24</td>
+<td>192.168.20.1</td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>Services</td>
+<td>30</td>
+<td>192.168.30.0/24</td>
+<td>192.168.30.1</td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>IoT</td>
+<td>40</td>
+<td>192.168.40.0/24</td>
+<td>192.168.40.1</td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>Game Servers</td>
+<td>50</td>
+<td>192.168.50.0/24</td>
+<td>192.168.50.1</td>
+<td>Dmz</td>
+</tr>
+</tbody>
+</table>
+<p>All five networks were confirmed enabled through the UniFi API on November 14, 2026.</p>
+<h3 id="firewall-design">Firewall Design<a class="headerlink" href="#firewall-design" title="Permanent link">&para;</a></h3>
+<p>The intended security model prioritizes:</p>
+<ul>
+<li>Separation of management interfaces from application workloads.</li>
+<li>Restricted administrative access from trusted devices.</li>
+<li>Denial of general Services-to-Management connectivity.</li>
+<li>Isolation of untrusted IoT devices.</li>
+<li>Isolation of game servers through a separate DMZ firewall zone.</li>
+<li>Narrow, explicit exceptions for required infrastructure dependencies.</li>
+<li>Stateful return traffic for authorized connections.</li>
+</ul>
+<p><strong>Important implementation detail:</strong></p>
+<p>The current configuration is <strong>not a universal default-deny inter-VLAN firewall</strong>.</p>
+<p>The live UniFi configuration includes an enabled system-defined <code>Allow All Traffic</code> fallback for Internal-to-Internal traffic.</p>
+<p>Explicit user-defined block policies implement the primary restrictions between Management, Trusted, Services, and IoT.</p>
+<p>Consequently, missing directional rules may permit traffic that the original design intended to restrict.</p>
+<p>The design should not be considered fully security-validated until the effective policies and representative traffic paths have been checked.</p>
+<p>Detailed IP allocations and firewall rules are documented separately:</p>
+<ul>
+<li><code>architecture/network/ip-addresses.md</code></li>
+<li><code>architecture/network/firewall-rules.md</code></li>
+</ul>
+<hr />
+<h2 id="management-19216810024">Management — 192.168.10.0/24<a class="headerlink" href="#management-19216810024" title="Permanent link">&para;</a></h2>
+<p><strong>UniFi network name:</strong> Management<br />
+<strong>Actual VLAN ID:</strong> 1 (default network)<br />
+<strong>Historical documentation name:</strong> VLAN 10 — Management<br />
+<strong>Gateway:</strong> 192.168.10.1<br />
+<strong>Firewall zone:</strong> Internal<br />
+<strong>Role:</strong> Infrastructure administration and control-plane services</p>
+<p>This network is dedicated to infrastructure management interfaces and services.</p>
+<h3 id="key-devices">Key Devices<a class="headerlink" href="#key-devices" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Device</th>
+<th>IP</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UDM-SE</td>
+<td>192.168.10.1</td>
+<td>Router, gateway, firewall, UniFi controller</td>
+</tr>
+<tr>
+<td>USW-Pro-Max-24</td>
+<td>192.168.10.2</td>
+<td>Core network switch</td>
+</tr>
+<tr>
+<td>nas-prod-01</td>
+<td>192.168.10.10</td>
+<td>Unraid management</td>
+</tr>
+<tr>
+<td>pve-prod-01</td>
+<td>192.168.10.11</td>
+<td>Primary Proxmox node</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>192.168.10.12</td>
+<td>Dell OptiPlex 5000 SFF Proxmox node</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>192.168.10.13</td>
+<td>Lenovo ThinkCentre M90q Proxmox node</td>
+</tr>
+<tr>
+<td>pi-prod-01</td>
+<td>192.168.10.20</td>
+<td>Monitoring host; former Proxmox QDevice</td>
+</tr>
+</tbody>
+</table>
+<p>The three-node Proxmox cluster was verified online and quorate on November 14, 2026.</p>
+<h3 id="management-vlan-naming-discrepancy">Management VLAN Naming Discrepancy<a class="headerlink" href="#management-vlan-naming-discrepancy" title="Permanent link">&para;</a></h3>
+<p>Earlier Homelab v3 documentation consistently referred to the Management network as <strong>VLAN 10</strong>.</p>
+<p>However, the live UniFi Network API reports:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Management</td>
+</tr>
+<tr>
+<td>VLAN ID</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Default network</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>IPv4 gateway</td>
+<td>192.168.10.1</td>
+</tr>
+<tr>
+<td>Prefix length</td>
+<td>24</td>
+</tr>
+<tr>
+<td>Firewall zone</td>
+<td>Internal</td>
+</tr>
+</tbody>
+</table>
+<p>The current Management network is therefore UniFi's default/untagged network, despite using addresses in the <code>192.168.10.0/24</code> subnet.</p>
+<p><strong>VLAN IDs and IP subnets are independent concepts.</strong> An IP subnet using <code>192.168.10.0/24</code> does not require VLAN tag 10.</p>
+<p>The documentation's historical "VLAN 10" terminology should not be interpreted as proof that the management uplink is tagged with IEEE 802.1Q VLAN ID 10.</p>
+<p>Before changing terminology across all infrastructure documentation, confirm the relevant switch-port profiles and Proxmox management interface configurations.</p>
+<p><strong>Do not change the working VLAN configuration merely to make its tag match the subnet number.</strong></p>
+<h3 id="access-policy">Access Policy<a class="headerlink" href="#access-policy" title="Permanent link">&para;</a></h3>
+<p>The live UniFi configuration includes:</p>
+<ul>
+<li>Management-to-Trusted: Allowed.</li>
+<li>Management-to-Services: Allowed.</li>
+<li>Management-to-IoT: Allowed.</li>
+<li>Trusted-to-Management: Restricted to approved administrative ports.</li>
+<li>Services-to-Management: Blocked except for targeted exceptions.</li>
+<li>IoT-to-Management: Blocked by the IoT-to-Internal rule.</li>
+</ul>
+<p>Management hosts retain broad outbound access to the established Internal networks for administrative operations.</p>
+<p>Inbound access from other networks is restricted through the applicable user-defined firewall rules.</p>
+<h3 id="management-dns">Management DNS<a class="headerlink" href="#management-dns" title="Permanent link">&para;</a></h3>
+<p>The live DHCP configuration supplies:</p>
+<ul>
+<li>Primary DNS: <code>9.9.9.9</code></li>
+<li>Secondary DNS: <code>1.1.1.1</code></li>
+</ul>
+<p>This avoids making Management network clients dependent on Proxmox-hosted AdGuard services for DNS.</p>
+<p>Hosts with static configurations may use their own DNS settings; those should be verified separately.</p>
+<h3 id="ai-observer-exception">AI Observer Exception<a class="headerlink" href="#ai-observer-exception" title="Permanent link">&para;</a></h3>
+<p><code>observer-prod-01</code> resides on the Services network and requires access to the Proxmox API on the Management network.</p>
+<p>A targeted firewall exception allows:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source</td>
+<td>192.168.30.17</td>
+</tr>
+<tr>
+<td>Destination</td>
+<td>192.168.10.11</td>
+</tr>
+<tr>
+<td>Protocol</td>
+<td>TCP</td>
+</tr>
+<tr>
+<td>Destination port</td>
+<td>8006</td>
+</tr>
+<tr>
+<td>Action</td>
+<td>ALLOW</td>
+</tr>
+<tr>
+<td>Return traffic</td>
+<td>Enabled</td>
+</tr>
+</tbody>
+</table>
+<p>This connection supports the read-only Proxmox MCP integration.</p>
+<p><strong>November 14 verification:</strong> The rule exists, is enabled, and is ordered before the general Services-to-Management block.</p>
+<p>The exception does not grant unrestricted access from Services to Management.</p>
+<p>It also does not explicitly allow direct access to the management APIs of <code>pve-prod-02</code> or <code>pve-prod-03</code>.</p>
+<p>The observer currently accesses the cluster through the node 01 Proxmox API endpoint.</p>
+<p>See <code>services/infra/ai-observer.md</code>.</p>
+<h3 id="nas-management-separation">NAS Management Separation<a class="headerlink" href="#nas-management-separation" title="Permanent link">&para;</a></h3>
+<p>The NAS uses <code>192.168.10.10</code> for its management interface.</p>
+<p>Production NFS and service-facing traffic use its separate Services network interface at <code>192.168.30.16</code>.</p>
+<p>This separates normal application storage access from the Unraid management plane.</p>
+<p>Docker PBS uses Host networking, however, so its TCP 8007 listener may be reachable through multiple NAS interfaces. Actual binding and reachability remain to be verified.</p>
+<hr />
+<h2 id="vlan-20-trusted-19216820024">VLAN 20 — Trusted (192.168.20.0/24)<a class="headerlink" href="#vlan-20-trusted-19216820024" title="Permanent link">&para;</a></h2>
+<p><strong>VLAN ID:</strong> 20<br />
+<strong>Gateway:</strong> 192.168.20.1<br />
+<strong>Firewall zone:</strong> Internal<br />
+<strong>Role:</strong> Trusted personal devices</p>
+<p>Dedicated to trusted client devices, including personal laptops, desktops, phones, and other approved endpoints.</p>
+<h3 id="network-configuration">Network Configuration<a class="headerlink" href="#network-configuration" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Network name</td>
+<td>Trusted</td>
+</tr>
+<tr>
+<td>VLAN ID</td>
+<td>20</td>
+</tr>
+<tr>
+<td>Subnet</td>
+<td>192.168.20.0/24</td>
+</tr>
+<tr>
+<td>Gateway</td>
+<td>192.168.20.1</td>
+</tr>
+<tr>
+<td>DHCP</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>DHCP range</td>
+<td>192.168.20.100–192.168.20.254</td>
+</tr>
+<tr>
+<td>Primary DNS</td>
+<td>192.168.30.10</td>
+</tr>
+<tr>
+<td>Secondary DNS</td>
+<td>192.168.30.15</td>
+</tr>
+<tr>
+<td>Firewall zone</td>
+<td>Internal</td>
+</tr>
+</tbody>
+</table>
+<h3 id="access-policy_1">Access Policy<a class="headerlink" href="#access-policy_1" title="Permanent link">&para;</a></h3>
+<p>Trusted clients are permitted to:</p>
+<ul>
+<li>Access production applications on the Services network.</li>
+<li>Access approved administrative services on Management.</li>
+<li>Access the internet.</li>
+</ul>
+<p>The Trusted-to-Services rule allows general access to Services.</p>
+<p>The Trusted-to-Management rule uses the <code>MGMT_ADMIN_PORTS</code> traffic-matching list.</p>
+<p><strong>Verified administrative ports:</strong></p>
+<ul>
+<li>22</li>
+<li>443</li>
+<li>8006</li>
+<li>8090</li>
+<li>3001</li>
+</ul>
+<p>All other Trusted-to-Management traffic is covered by the corresponding explicit block rule.</p>
+<h3 id="trusted-to-iot-verification-gap">Trusted-to-IoT Verification Gap<a class="headerlink" href="#trusted-to-iot-verification-gap" title="Permanent link">&para;</a></h3>
+<p>The November 14 UniFi firewall inspection did not identify an explicit Trusted-to-IoT deny policy.</p>
+<p>Because both networks belong to the Internal zone, and the system-defined Internal-to-Internal fallback is <code>ALLOW</code>, Trusted-to-IoT traffic should <strong>not</strong> be assumed blocked.</p>
+<p>A safe connectivity test is required to establish effective behavior.</p>
+<p>If the intended security policy is to deny Trusted-to-IoT traffic, a separate firewall change should be reviewed and explicitly authorized.</p>
+<p>No change was implemented during the documentation review.</p>
+<h3 id="historical-v2-configuration">Historical v2 Configuration<a class="headerlink" href="#historical-v2-configuration" title="Permanent link">&para;</a></h3>
+<p>VLAN 20 was retained from Homelab v2.</p>
+<p>During the v3 migration, the previous Proxmox and Docker hosts used this network:</p>
+<ul>
+<li>v2 Proxmox — <code>192.168.20.2</code></li>
+<li>v2 Docker host — <code>192.168.20.10</code></li>
+</ul>
+<p>These addresses are historical references.</p>
+<p>Their current operational status and decommissioning state were not reverified during this update.</p>
+<hr />
+<h2 id="vlan-30-services-19216830024">VLAN 30 — Services (192.168.30.0/24)<a class="headerlink" href="#vlan-30-services-19216830024" title="Permanent link">&para;</a></h2>
+<p><strong>VLAN ID:</strong> 30<br />
+<strong>Gateway:</strong> 192.168.30.1<br />
+<strong>Firewall zone:</strong> Internal<br />
+<strong>Role:</strong> Production services, application VMs/LXCs, and service-facing storage</p>
+<h3 id="network-configuration_1">Network Configuration<a class="headerlink" href="#network-configuration_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Network name</td>
+<td>Services</td>
+</tr>
+<tr>
+<td>VLAN ID</td>
+<td>30</td>
+</tr>
+<tr>
+<td>Subnet</td>
+<td>192.168.30.0/24</td>
+</tr>
+<tr>
+<td>Gateway</td>
+<td>192.168.30.1</td>
+</tr>
+<tr>
+<td>DHCP</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>DHCP range</td>
+<td>192.168.30.100–192.168.30.254</td>
+</tr>
+<tr>
+<td>Primary DNS</td>
+<td>192.168.30.10</td>
+</tr>
+<tr>
+<td>Secondary DNS</td>
+<td>192.168.30.15</td>
+</tr>
+<tr>
+<td>Firewall zone</td>
+<td>Internal</td>
+</tr>
+</tbody>
+</table>
+<h3 id="current-services">Current Services<a class="headerlink" href="#current-services" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>IP</th>
+<th>Host</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dns-prod-01</td>
+<td>192.168.30.10</td>
+<td>pve-prod-01</td>
+<td>Primary AdGuard</td>
+</tr>
+<tr>
+<td>docker-prod-01</td>
+<td>192.168.30.11</td>
+<td>pve-prod-01</td>
+<td>Primary Docker application host and Traefik</td>
+</tr>
+<tr>
+<td>auth-prod-01</td>
+<td>192.168.30.13</td>
+<td>pve-prod-03</td>
+<td>Authentik identity provider</td>
+</tr>
+<tr>
+<td>immich-prod-01</td>
+<td>192.168.30.14</td>
+<td>pve-prod-02</td>
+<td>Immich photo service</td>
+</tr>
+<tr>
+<td>dns-prod-02</td>
+<td>192.168.30.15</td>
+<td>pve-prod-03</td>
+<td>Secondary AdGuard</td>
+</tr>
+<tr>
+<td>nas-prod-01</td>
+<td>192.168.30.16</td>
+<td>Physical Unraid host</td>
+<td>Data/NFS/PBS interface</td>
+</tr>
+<tr>
+<td>observer-prod-01</td>
+<td>192.168.30.17</td>
+<td>pve-prod-01</td>
+<td>AI Observer</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Additional service:</strong> Plex runs as a Docker container on <code>nas-prod-01</code> and has the documented service address <code>192.168.30.2</code>.</p>
+<p>The retired PBS VM 103 previously used <code>192.168.30.12</code>. It was replaced by Docker PBS on Unraid and destroyed before the November 13 Proxmox node replacement.</p>
+<p>The active PBS endpoint is:</p>
+<p><code>https://192.168.30.16:8007</code></p>
+<h3 id="three-node-workload-distribution">Three-Node Workload Distribution<a class="headerlink" href="#three-node-workload-distribution" title="Permanent link">&para;</a></h3>
+<p>The Services network spans the three-node Proxmox cluster.</p>
+<table>
+<thead>
+<tr>
+<th>Proxmox Node</th>
+<th>Current Services VLAN Guests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td>dns-prod-01 (CT 100), docker-prod-01 (VM 101), observer-prod-01 (VM 107)</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>immich-prod-01 (VM 105)</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>dns-prod-02 (CT 102), auth-prod-01 (VM 104)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>November 14 verification:</strong> The Proxmox cluster was online and quorate, and the guest assignments above matched the live inventory.</p>
+<p>Primary and secondary DNS now reside on separate Proxmox hosts.</p>
+<p>Authentik was moved from node 01 to node 03 on November 14, 2026.</p>
+<p>The migration retained:</p>
+<ul>
+<li>Guest IP: <code>192.168.30.13</code></li>
+<li>Gateway: <code>192.168.30.1</code></li>
+<li>VLAN tag: 30</li>
+<li>Original virtual NIC MAC address</li>
+<li>Existing application routing and SSO configuration</li>
+</ul>
+<p>Post-migration networking, application health, SSO, and PBS backup checks passed.</p>
+<h3 id="application-networking">Application Networking<a class="headerlink" href="#application-networking" title="Permanent link">&para;</a></h3>
+<p>Production Docker containers generally use their host's IP address and Docker networks rather than receiving individual VLAN 30 addresses.</p>
+<p>Services published through the central Traefik instance use <code>docker-prod-01</code>.</p>
+<p>Other services may be accessed directly through their respective hosts.</p>
+<p>For example:</p>
+<ul>
+<li><code>auth.giohosted.com</code> resolves to Traefik on <code>192.168.30.11</code>.</li>
+<li>Traefik forwards Authentik traffic to <code>192.168.30.13:9000</code>.</li>
+</ul>
+<p>The Authentik host migration did not require DNS or reverse-proxy changes.</p>
+<h3 id="nas-data-interface">NAS Data Interface<a class="headerlink" href="#nas-data-interface" title="Permanent link">&para;</a></h3>
+<p>The NAS uses:</p>
+<ul>
+<li>Management: <code>192.168.10.10</code></li>
+<li>Services data: <code>192.168.30.16</code></li>
+</ul>
+<p>Production VMs connect to Unraid's NFS exports through the Services interface.</p>
+<p>The primary Docker host uses the documented NFSv3 export:</p>
+<p><code>192.168.30.16:/mnt/user/data</code></p>
+<p>The Immich VM uses the documented photos export:</p>
+<p><code>192.168.30.16:/mnt/user/photos</code></p>
+<p>PBS Docker accesses its datastore directly through the Unraid host's ZFS filesystem, rather than through the previous PBS VM's NFS mount.</p>
+<p>The separate NAS management interface remains subject to Management network firewall restrictions.</p>
+<h3 id="network-restrictions">Network Restrictions<a class="headerlink" href="#network-restrictions" title="Permanent link">&para;</a></h3>
+<p>The live UniFi configuration includes explicit rules blocking Services-initiated traffic to:</p>
+<ul>
+<li>Management, except targeted exceptions.</li>
+<li>Trusted.</li>
+<li>IoT.</li>
+</ul>
+<p>Services retains internet access for:</p>
+<ul>
+<li>Container image pulls.</li>
+<li>Software updates.</li>
+<li>External API calls.</li>
+<li>Cloudflare Tunnel.</li>
+<li>OpenAI Secure MCP Tunnels.</li>
+<li>Other approved application dependencies.</li>
+</ul>
+<h3 id="targeted-management-exceptions">Targeted Management Exceptions<a class="headerlink" href="#targeted-management-exceptions" title="Permanent link">&para;</a></h3>
+<p>Two specific Services-to-Management exceptions were confirmed enabled:</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Destination</th>
+<th>Port</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>observer-prod-01 — 192.168.30.17</td>
+<td>pve-prod-01 — 192.168.10.11</td>
+<td>TCP 8006</td>
+<td>AI Observer Proxmox API</td>
+</tr>
+<tr>
+<td>Services network</td>
+<td>pi-prod-01 — 192.168.10.20</td>
+<td>Port 45876</td>
+<td>Beszel monitoring</td>
+</tr>
+</tbody>
+</table>
+<p>The Beszel rule uses the configured <code>Bezsel Ports</code> group.</p>
+<p>Its current API policy did not explicitly restrict the protocol to TCP, despite the historical Beszel documentation describing TCP 45876.</p>
+<p>These exceptions are evaluated before the general Services-to-Management block.</p>
+<p>No general Services-to-Management allowance was added for the new Proxmox node.</p>
+<hr />
+<h2 id="vlan-40-iot-19216840024">VLAN 40 — IoT (192.168.40.0/24)<a class="headerlink" href="#vlan-40-iot-19216840024" title="Permanent link">&para;</a></h2>
+<p><strong>VLAN ID:</strong> 40<br />
+<strong>Gateway:</strong> 192.168.40.1<br />
+<strong>Firewall zone:</strong> Internal<br />
+<strong>Role:</strong> Smart home devices, printers, and other untrusted endpoints</p>
+<h3 id="network-configuration_2">Network Configuration<a class="headerlink" href="#network-configuration_2" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Network name</td>
+<td>IoT</td>
+</tr>
+<tr>
+<td>VLAN ID</td>
+<td>40</td>
+</tr>
+<tr>
+<td>Subnet</td>
+<td>192.168.40.0/24</td>
+</tr>
+<tr>
+<td>Gateway</td>
+<td>192.168.40.1</td>
+</tr>
+<tr>
+<td>DHCP</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>DHCP range</td>
+<td>192.168.40.100–192.168.40.254</td>
+</tr>
+<tr>
+<td>DHCP DNS</td>
+<td>9.9.9.9</td>
+</tr>
+<tr>
+<td>Internet access</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Firewall zone</td>
+<td>Internal</td>
+</tr>
+</tbody>
+</table>
+<h3 id="intended-security-policy">Intended Security Policy<a class="headerlink" href="#intended-security-policy" title="Permanent link">&para;</a></h3>
+<p>IoT devices should have internet access without unrestricted connectivity to trusted clients or infrastructure administration.</p>
+<p>The live firewall configuration includes an enabled rule:</p>
+<p><code>Block IoT to All Internal</code></p>
+<p>The destination uses the <code>NET_INTERNAL</code> traffic-matching list containing <code>192.168.0.0/16</code>.</p>
+<p>The rule is scoped to the Internal firewall zone and blocks IoT-initiated access to other Internal networks.</p>
+<p>This is consistent with the original IoT isolation objective for Management, Trusted, and Services.</p>
+<h3 id="iot-to-dmz-consideration">IoT-to-DMZ Consideration<a class="headerlink" href="#iot-to-dmz-consideration" title="Permanent link">&para;</a></h3>
+<p>Game Servers is assigned to the separate Dmz firewall zone.</p>
+<p>The IoT-to-Internal rule does not itself establish an IoT-to-Dmz block.</p>
+<p>The live configuration also includes a system-defined Internal-to-Dmz <code>Allow All Traffic</code> policy.</p>
+<p>Therefore, IoT-to-Game Servers access should not be assumed denied without reviewing effective zone policies and testing representative traffic.</p>
+<p>This is a remaining security validation item.</p>
+<h3 id="dns-handling">DNS Handling<a class="headerlink" href="#dns-handling" title="Permanent link">&para;</a></h3>
+<p>The current UniFi DHCP configuration supplies:</p>
+<p><code>9.9.9.9</code></p>
+<p>Earlier documentation contained conflicting descriptions of IoT DNS behavior:</p>
+<ol>
+<li>IoT uses public DNS directly.</li>
+<li>The UDM-SE intercepts IoT DNS and redirects it to AdGuard.</li>
+</ol>
+<p>The November 14 UniFi API verification establishes the DHCP-advertised resolver, but does not independently establish whether DNS interception or NAT redirection is configured.</p>
+<p>No custom DNS policy objects were returned by the available DNS policy listing.</p>
+<p><strong>Current status:</strong></p>
+<ul>
+<li>DHCP-advertised DNS: Verified as <code>9.9.9.9</code>.</li>
+<li>DNS interception/NAT behavior: Not verified.</li>
+<li>Actual resolver usage by individual IoT clients: Not verified.</li>
+</ul>
+<p>Do not treat the older interception design as confirmed implementation.</p>
+<h3 id="historical-migration-plan">Historical Migration Plan<a class="headerlink" href="#historical-migration-plan" title="Permanent link">&para;</a></h3>
+<p>The original v3 migration plan identified seven IoT devices to move from VLAN 30 to VLAN 40 during Phase 1.</p>
+<p>The completion status of those individual migrations has not been reverified during this update.</p>
+<p>Preserve the historical Phase 1 record until the device assignments are independently checked.</p>
+<hr />
+<h2 id="vlan-50-game-servers-19216850024">VLAN 50 — Game Servers (192.168.50.0/24)<a class="headerlink" href="#vlan-50-game-servers-19216850024" title="Permanent link">&para;</a></h2>
+<p><strong>VLAN ID:</strong> 50<br />
+<strong>Gateway:</strong> 192.168.50.1<br />
+<strong>Firewall zone:</strong> Dmz<br />
+<strong>Role:</strong> Dedicated game-server network</p>
+<p>The Game Servers network separates hosted game workloads from production services and infrastructure management.</p>
+<p>Unlike Management, Trusted, Services, and IoT, this network belongs to UniFi's <strong>Dmz</strong> firewall zone.</p>
+<h3 id="verified-network-configuration">Verified Network Configuration<a class="headerlink" href="#verified-network-configuration" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Network name</td>
+<td>Game Servers</td>
+</tr>
+<tr>
+<td>VLAN ID</td>
+<td>50</td>
+</tr>
+<tr>
+<td>Subnet</td>
+<td>192.168.50.0/24</td>
+</tr>
+<tr>
+<td>Gateway</td>
+<td>192.168.50.1</td>
+</tr>
+<tr>
+<td>DHCP</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>DHCP range</td>
+<td>192.168.50.6–192.168.50.254</td>
+</tr>
+<tr>
+<td>Firewall zone</td>
+<td>Dmz</td>
+</tr>
+<tr>
+<td>Internet access</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Network isolation toggle</td>
+<td>Disabled</td>
+</tr>
+<tr>
+<td>Custom DHCP DNS override</td>
+<td>None returned</td>
+</tr>
+</tbody>
+</table>
+<p>These settings were verified through the live UniFi Network API on November 14, 2026.</p>
+<h3 id="current-game-server-guest">Current Game-Server Guest<a class="headerlink" href="#current-game-server-guest" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Guest</td>
+<td>dragonwilds-server</td>
+</tr>
+<tr>
+<td>VMID</td>
+<td>106</td>
+</tr>
+<tr>
+<td>Proxmox host</td>
+<td>pve-prod-01</td>
+</tr>
+<tr>
+<td>Bridge</td>
+<td>vmbr0</td>
+</tr>
+<tr>
+<td>VLAN tag</td>
+<td>50</td>
+</tr>
+<tr>
+<td>Guest state during November 14 check</td>
+<td>Stopped</td>
+</tr>
+<tr>
+<td>Guest IP</td>
+<td>Not verified</td>
+</tr>
+</tbody>
+</table>
+<p>The Proxmox VLAN tag was previously confirmed through the live Proxmox integration.</p>
+<p>The guest's configured operating-system IP was not independently verified.</p>
+<p>Do not infer the guest IP from the DHCP range.</p>
+<h3 id="dmz-firewall-behavior">DMZ Firewall Behavior<a class="headerlink" href="#dmz-firewall-behavior" title="Permanent link">&para;</a></h3>
+<p>The live UniFi firewall inspection returned the following system-defined zone policies:</p>
+<table>
+<thead>
+<tr>
+<th>Direction</th>
+<th>Observed Policy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Internal → Dmz</td>
+<td>Allow All Traffic</td>
+</tr>
+<tr>
+<td>Dmz → Internal</td>
+<td>Block new traffic by default; established/related return traffic permitted</td>
+</tr>
+<tr>
+<td>Dmz → External</td>
+<td>Allow All Traffic</td>
+</tr>
+<tr>
+<td>External → Dmz</td>
+<td>Block new traffic by default; established/related return traffic permitted</td>
+</tr>
+</tbody>
+</table>
+<p>This provides an important security distinction:</p>
+<p><strong>DMZ workloads are restricted from initiating new connections into the Internal zone, but the current default policy allows Internal networks to initiate connections toward the DMZ.</strong></p>
+<p>Therefore, the DMZ is not fully isolated from internal clients in both directions.</p>
+<p>The existing policy may be intentional for game-server administration, but its scope should be reviewed against the desired security model.</p>
+<h3 id="port-forwarding">Port Forwarding<a class="headerlink" href="#port-forwarding" title="Permanent link">&para;</a></h3>
+<p>The existence of VLAN 50 and its zone policies does not establish which game-server ports are exposed to the internet.</p>
+<p>Specific inbound rules, port forwards, destination addresses, and application-level listening services must be verified separately.</p>
+<p>The November 14 documentation review did not establish a complete Dragonwilds port-forward inventory.</p>
+<h3 id="remaining-verification">Remaining Verification<a class="headerlink" href="#remaining-verification" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Determine the guest's actual IP address.</li>
+<li>Review any game-server port forwards.</li>
+<li>Confirm the intended Internal-to-DMZ access requirements.</li>
+<li>Verify DMZ-to-Internal restrictions with safe tests.</li>
+<li>Determine whether IoT-to-DMZ access should be blocked.</li>
+<li>Confirm actual internet access and application behavior when the guest is running.</li>
+</ul>
+<p>Do not modify the firewall during documentation reconciliation without a separate approved implementation plan.</p>
+<hr />
+<h2 id="firewall-zones">Firewall Zones<a class="headerlink" href="#firewall-zones" title="Permanent link">&para;</a></h2>
+<p>UniFi Network currently exposes six zones:</p>
+<table>
+<thead>
+<tr>
+<th>Zone</th>
+<th>Role in Homelab v3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Internal</td>
+<td>Management, Trusted, Services, IoT</td>
+</tr>
+<tr>
+<td>Dmz</td>
+<td>Game Servers</td>
+</tr>
+<tr>
+<td>Gateway</td>
+<td>Traffic involving the UniFi gateway</td>
+</tr>
+<tr>
+<td>External</td>
+<td>WAN/internet</td>
+</tr>
+<tr>
+<td>Vpn</td>
+<td>VPN-connected clients</td>
+</tr>
+<tr>
+<td>Hotspot</td>
+<td>Reserved/system-defined hotspot zone</td>
+</tr>
+</tbody>
+</table>
+<h3 id="internal-zone">Internal Zone<a class="headerlink" href="#internal-zone" title="Permanent link">&para;</a></h3>
+<p>The Internal zone contains four networks that are further segmented through user-defined firewall policies.</p>
+<p>A system-defined Internal-to-Internal fallback allows traffic not matched by higher-priority policies.</p>
+<p>Consequently, explicit block rules are critical to the intended segmentation.</p>
+<h3 id="dmz-zone">Dmz Zone<a class="headerlink" href="#dmz-zone" title="Permanent link">&para;</a></h3>
+<p>Game Servers is assigned to the Dmz zone.</p>
+<p>The zone has its own default traffic behavior, including restrictions on new DMZ-to-Internal connections.</p>
+<p>This does not automatically provide complete isolation in every direction.</p>
+<h3 id="gateway-external-vpn-and-hotspot">Gateway, External, VPN, and Hotspot<a class="headerlink" href="#gateway-external-vpn-and-hotspot" title="Permanent link">&para;</a></h3>
+<p>These are UniFi's other system-defined zones.</p>
+<p>Their existence and names were verified through the live API.</p>
+<p>Detailed gateway service policy, VPN configuration, WAN exposure, and hotspot operation are outside the scope of this VLAN design document.</p>
+<p>The firewall runbook records additional verified policies, including the existing VPN-to-Internal allowance and Plex external-access rule.</p>
+<hr />
+<h2 id="inter-vlan-policy-summary">Inter-VLAN Policy Summary<a class="headerlink" href="#inter-vlan-policy-summary" title="Permanent link">&para;</a></h2>
+<p>The table below summarizes the currently observed policy model for the primary internal networks.</p>
+<table>
+<thead>
+<tr>
+<th>Source → Destination</th>
+<th>Management</th>
+<th>Trusted</th>
+<th>Services</th>
+<th>IoT</th>
+<th>Internet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Management</td>
+<td>—</td>
+<td>Allow</td>
+<td>Allow</td>
+<td>Allow</td>
+<td>Allow</td>
+</tr>
+<tr>
+<td>Trusted</td>
+<td>Admin ports only</td>
+<td>—</td>
+<td>Allow</td>
+<td>No explicit deny verified</td>
+<td>Allow</td>
+</tr>
+<tr>
+<td>Services</td>
+<td>Block except targeted exceptions</td>
+<td>Block</td>
+<td>—</td>
+<td>Block</td>
+<td>Allow</td>
+</tr>
+<tr>
+<td>IoT</td>
+<td>Block</td>
+<td>Block</td>
+<td>Block</td>
+<td>—</td>
+<td>Allow</td>
+</tr>
+</tbody>
+</table>
+<p>Game Servers is intentionally excluded from the Internal-to-Internal matrix because it belongs to the separate Dmz firewall zone.</p>
+<p>For DMZ traffic:</p>
+<ul>
+<li>Internal → Dmz: System-defined allow.</li>
+<li>Dmz → Internal: System-defined block for new connections, with return-traffic exceptions.</li>
+<li>Dmz → External: System-defined allow.</li>
+<li>External → Dmz: System-defined block for new connections unless another policy or NAT/forwarding configuration permits it.</li>
+</ul>
+<p><strong>Interpretation:</strong> The matrix records retrieved policies and configuration, not a comprehensive packet-level verification of every network path.</p>
+<p>See <code>architecture/network/firewall-rules.md</code> for detailed rule configuration and verification findings.</p>
+<hr />
+<h2 id="dns-architecture">DNS Architecture<a class="headerlink" href="#dns-architecture" title="Permanent link">&para;</a></h2>
+<p>Homelab v3 uses two AdGuard Home instances for resilient internal DNS.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Host</th>
+<th>Proxmox Node</th>
+<th>IP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary AdGuard</td>
+<td>dns-prod-01 (CT 100)</td>
+<td>pve-prod-01</td>
+<td>192.168.30.10</td>
+</tr>
+<tr>
+<td>Secondary AdGuard</td>
+<td>dns-prod-02 (CT 102)</td>
+<td>pve-prod-03</td>
+<td>192.168.30.15</td>
+</tr>
+</tbody>
+</table>
+<p>Secondary AdGuard configuration is synchronized from the primary using <code>adguardhome-sync</code>.</p>
+<p>The two DNS containers reside on different physical Proxmox hosts.</p>
+<h3 id="dhcp-dns-assignments">DHCP DNS Assignments<a class="headerlink" href="#dhcp-dns-assignments" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Network</th>
+<th>DHCP-Provided DNS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Management</td>
+<td>9.9.9.9, 1.1.1.1</td>
+</tr>
+<tr>
+<td>Trusted</td>
+<td>192.168.30.10, 192.168.30.15</td>
+</tr>
+<tr>
+<td>Services</td>
+<td>192.168.30.10, 192.168.30.15</td>
+</tr>
+<tr>
+<td>IoT</td>
+<td>9.9.9.9</td>
+</tr>
+<tr>
+<td>Game Servers</td>
+<td>No custom DNS override returned</td>
+</tr>
+</tbody>
+</table>
+<p>The values above were retrieved from the live UniFi network settings on November 14.</p>
+<p>These are DHCP-provided settings; individual statically configured devices may use different resolvers.</p>
+<p><strong>Design benefit:</strong> Primary DNS and secondary DNS reside on separate Proxmox nodes. A planned outage of node 01 does not directly shut down the secondary DNS container.</p>
+<p>However, DNS redundancy does not guarantee every client will immediately fail over to the secondary resolver. Actual client behavior depends on its operating system, DNS configuration, and application behavior.</p>
+<hr />
+<h2 id="proxmox-network-architecture">Proxmox Network Architecture<a class="headerlink" href="#proxmox-network-architecture" title="Permanent link">&para;</a></h2>
+<p>The Proxmox cluster consists of three voting nodes:</p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Hardware</th>
+<th>Management IP</th>
+<th>Management Bridge</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td>Minisforum MS-A2</td>
+<td>192.168.10.11</td>
+<td>vmbr0</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>Dell OptiPlex 5000 SFF</td>
+<td>192.168.10.12</td>
+<td>vmbr0</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>Lenovo ThinkCentre M90q Tiny</td>
+<td>192.168.10.13</td>
+<td>vmbr0</td>
+</tr>
+</tbody>
+</table>
+<p>Proxmox node 03 was added after removal of the former Raspberry Pi QDevice.</p>
+<p>The cluster has three voting members, with two votes required for quorum.</p>
+<p>No Proxmox HA policy is enabled.</p>
+<h3 id="guest-vlan-tagging">Guest VLAN Tagging<a class="headerlink" href="#guest-vlan-tagging" title="Permanent link">&para;</a></h3>
+<p>Proxmox guests use tagged networks according to their assigned roles.</p>
+<p>Examples:</p>
+<ul>
+<li>CT 100: Services VLAN 30.</li>
+<li>VM 101: Services VLAN 30.</li>
+<li>CT 102: Services VLAN 30.</li>
+<li>VM 104: Services VLAN 30.</li>
+<li>VM 105: Services VLAN 30.</li>
+<li>VM 106: Game Servers VLAN 50.</li>
+<li>VM 107: Services VLAN 30.</li>
+</ul>
+<p>The physical bridges are VLAN-aware to support guest traffic.</p>
+<p>The Management network is currently configured as UniFi's default/untagged network rather than a separately tagged VLAN 10.</p>
+<p>The existing switch and host management traffic should be inspected before globally updating older references to VLAN 10.</p>
+<h3 id="storage-network">Storage Network<a class="headerlink" href="#storage-network" title="Permanent link">&para;</a></h3>
+<p><code>pve-prod-01</code> and <code>nas-prod-01</code> also have a dedicated point-to-point 10 GbE DAC connection.</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>IP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01 storage interface</td>
+<td>10.0.0.1/30</td>
+</tr>
+<tr>
+<td>nas-prod-01 storage interface</td>
+<td>10.0.0.2/30</td>
+</tr>
+</tbody>
+</table>
+<p>This private connection is not routed through the UDM-SE and is not an additional VLAN.</p>
+<p>It is used for dedicated NAS-to-primary-Proxmox storage traffic.</p>
+<p>Nodes 02 and 03 access the NAS ISO export using the Services network instead.</p>
+<hr />
+<h2 id="design-principles">Design Principles<a class="headerlink" href="#design-principles" title="Permanent link">&para;</a></h2>
+<p>Homelab v3's VLAN architecture follows these principles:</p>
+<ol>
+<li>
+<p><strong>Separate management from services.</strong> Production workloads should not have unrestricted access to infrastructure control interfaces.</p>
+</li>
+<li>
+<p><strong>Keep trusted clients distinct.</strong> Personal devices can access required services without sharing the same broadcast domain.</p>
+</li>
+<li>
+<p><strong>Isolate untrusted devices.</strong> IoT devices should not have general access to trusted clients or infrastructure management.</p>
+</li>
+<li>
+<p><strong>Use targeted exceptions.</strong> Required cross-network dependencies should use the narrowest practical source, destination, and port restrictions.</p>
+</li>
+<li>
+<p><strong>Maintain dedicated workload segments where useful.</strong> Game servers use VLAN 50 and the DMZ zone rather than sharing the general Services network.</p>
+</li>
+<li>
+<p><strong>Distribute critical infrastructure.</strong> Primary and secondary DNS are hosted on different Proxmox nodes, and Authentik is separated from the primary Docker host.</p>
+</li>
+<li>
+<p><strong>Verify actual enforcement.</strong> A VLAN assignment alone does not guarantee isolation. UniFi firewall policy and connectivity must also be checked.</p>
+</li>
+<li>
+<p><strong>Distinguish design from implementation.</strong> Intended security restrictions should not be described as enforced until verified in the current configuration.</p>
+</li>
+<li>
+<p><strong>Avoid unnecessary complexity.</strong> Prefer understandable, maintainable rules and minimal host-specific exceptions appropriate for a personal homelab.</p>
+</li>
+</ol>
+<hr />
+<h2 id="open-verification-and-documentation-items">Open Verification and Documentation Items<a class="headerlink" href="#open-verification-and-documentation-items" title="Permanent link">&para;</a></h2>
+<h3 id="network-configuration_3">Network Configuration<a class="headerlink" href="#network-configuration_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Verify the physical switch-port profiles and host interface tagging for the default Management network.</li>
+<li>Reconcile historical "VLAN 10" terminology with UniFi's actual VLAN ID 1 configuration.</li>
+<li>Confirm the effective Trusted-to-IoT firewall behavior.</li>
+<li>Review whether the Internal-to-DMZ default allowance is appropriate.</li>
+<li>Verify the intended IoT-to-DMZ security policy.</li>
+<li>Confirm IoT DNS interception/NAT behavior.</li>
+<li>Confirm the game-server VM's actual IP address and port forwards.</li>
+<li>Validate representative cross-network restrictions with safe tests.</li>
+<li>Verify the interface-level exposure of Docker PBS TCP 8007.</li>
+</ul>
+<h3 id="firewall-housekeeping">Firewall Housekeeping<a class="headerlink" href="#firewall-housekeeping" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Review the <code>Proxmox host</code> UniFi address group, which currently contains only <code>192.168.10.11</code> and <code>192.168.10.12</code>.</li>
+<li>Confirm whether <code>192.168.10.13</code> should be included after checking the group's consumers.</li>
+<li>Identify the service requiring Management administrative port 3001.</li>
+<li>Confirm protocol-specific restrictions on relevant traffic-matching-list policies.</li>
+<li>Review any inherited or unnecessary firewall objects from Homelab v2.</li>
+</ul>
+<p>No firewall modifications were performed during the November 14 documentation review.</p>
+<h3 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h3>
+<p>The following documents should be reconciled where they retain older terminology or assumptions:</p>
+<ul>
+<li><code>architecture/network/ip-addresses.md</code></li>
+<li><code>architecture/network/firewall-rules.md</code></li>
+<li><code>architecture/hardware/inventory.md</code></li>
+<li><code>architecture/hardware/rack-layout.md</code></li>
+<li><code>architecture/compute/pve-prod-01.md</code></li>
+<li><code>architecture/compute/pve-prod-02.md</code></li>
+<li><code>architecture/compute/pve-prod-03.md</code></li>
+</ul>
+<p>Do not change host networking or UniFi VLAN IDs solely to make previously written documentation consistent.</p>
+<hr />
+<h2 id="related-documentation_1">Related Documentation<a class="headerlink" href="#related-documentation_1" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>architecture/network/ip-addresses.md</code> — Infrastructure IP allocations, guest placement, and subnets.</li>
+<li><code>architecture/network/firewall-rules.md</code> — Inter-VLAN policies, rule priorities, and security exceptions.</li>
+<li><code>architecture/hardware/inventory.md</code> — Current physical hardware and guest distribution.</li>
+<li><code>architecture/hardware/rack-layout.md</code> — Rack placement, physical connections, and switch-port mapping.</li>
+<li><code>architecture/compute/pve-prod-01.md</code> — Primary Proxmox node.</li>
+<li><code>architecture/compute/pve-prod-02.md</code> — Replacement Dell Proxmox node.</li>
+<li><code>architecture/compute/pve-prod-03.md</code> — Lenovo third voting node.</li>
+<li><code>architecture/storage/nas-prod-01.md</code> — NAS interfaces and dedicated storage networking.</li>
+<li><code>services/infra/ai-observer.md</code> — AI Observer network access and security.</li>
+<li><code>services/infra/adguard.md</code> — Primary and secondary DNS.</li>
+<li><code>services/infra/authentik.md</code> — Identity provider and November 14 host migration.</li>
+<li><code>services/monitoring/beszel.md</code> — Beszel monitoring connectivity.</li>
+</ul>
+<hr />
+<h2 id="verification-status-november-14-2026">Verification Status — November 14, 2026<a class="headerlink" href="#verification-status-november-14-2026" title="Permanent link">&para;</a></h2>
+<h3 id="live-verified">Live-Verified<a class="headerlink" href="#live-verified" title="Permanent link">&para;</a></h3>
+<ul>
+<li>All five UniFi networks exist and are enabled.</li>
+<li>Management is the default network with VLAN ID 1.</li>
+<li>Trusted, Services, and IoT use VLAN IDs 20, 30, and 40.</li>
+<li>Game Servers uses VLAN ID 50 and belongs to the Dmz firewall zone.</li>
+<li>Management, Trusted, Services, and IoT belong to the Internal zone.</li>
+<li>Current subnets and gateways for all five networks.</li>
+<li>Current DHCP ranges and advertised DNS settings.</li>
+<li>Ten enabled user-defined Internal-to-Internal firewall policies.</li>
+<li>System-defined Internal-to-Internal Allow All Traffic fallback.</li>
+<li>Internal-to-Dmz allowance and Dmz-to-Internal blocking behavior at the policy level.</li>
+<li>AI Observer Proxmox API exception.</li>
+<li>Beszel monitoring exception.</li>
+<li>Three-node Proxmox cluster, online and quorate.</li>
+<li>Current VM/CT placement, including Authentik on pve-prod-03.</li>
+<li>Primary and secondary DNS on separate Proxmox nodes.</li>
+</ul>
+<h3 id="documented-but-not-fully-reverified">Documented but Not Fully Reverified<a class="headerlink" href="#documented-but-not-fully-reverified" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Exact physical switch-port profiles and Management uplink tagging.</li>
+<li>Effective packet-level firewall restrictions across every network pair.</li>
+<li>Current operating-system IP of dragonwilds-server.</li>
+<li>Game-server external port-forward configuration.</li>
+<li>Complete IoT device migration from the original Phase 1 plan.</li>
+<li>Actual client DNS selection and IoT interception behavior.</li>
+</ul>
+<h3 id="unresolved">Unresolved<a class="headerlink" href="#unresolved" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Whether the Trusted-to-IoT traffic path is intentionally permitted.</li>
+<li>Whether broader Internal-to-Dmz access is desirable.</li>
+<li>Whether the old Management VLAN 10 terminology should be globally replaced after port-profile verification.</li>
+<li>Whether the Proxmox address group should be expanded to include node 03.</li>
+<li>Whether Docker PBS port 8007 is reachable through unintended NAS interfaces.</li>
+</ul>
+<p><strong>Documentation assessment:</strong> The primary network and firewall-zone configuration is now recorded from current live evidence. Remaining discrepancies are identified explicitly rather than assumed resolved.</p>
+<p><strong>Infrastructure changes performed:</strong> None. This update documents the existing configuration only.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>

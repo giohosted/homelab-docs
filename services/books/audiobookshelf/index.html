@@ -1,0 +1,3128 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/services/books/audiobookshelf/">
+      
+      
+        <link rel="prev" href="../../media/flaresolverr/">
+      
+      
+        <link rel="next" href="../calibre-web-automated/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Audiobookshelf - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#audiobookshelf" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Audiobookshelf
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#volumes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Volumes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network &amp; Access
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network & Access">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verified-browser-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Browser Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cloudflare-access-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cloudflare Access Policies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authentik-redirect-uris" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentik Redirect URIs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs-server-redirect-uris" class="md-nav__link">
+    <span class="md-ellipsis">
+      ABS Server Redirect URIs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-app-external-access-cf-access-service-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile App External Access (CF Access Service Token)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mobile App External Access (CF Access Service Token)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cf-access-policy-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      CF Access Policy Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-app-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile App Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functional-verification-2026-11-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Functional Verification — 2026-11-14
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#library-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Library Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audiobook-download-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Audiobook Download Workflow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audiobook Download Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-torrent-seeding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Torrent Seeding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#private-tracker-myanonamouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Private Tracker — MyAnonamouse
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-public-audiobook-workflow-november-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Public Audiobook Workflow — November 2026
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backup-restore" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup &amp; Restore
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#volumes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Volumes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network &amp; Access
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Network & Access">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verified-browser-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Browser Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cloudflare-access-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cloudflare Access Policies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authentik-redirect-uris" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentik Redirect URIs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs-server-redirect-uris" class="md-nav__link">
+    <span class="md-ellipsis">
+      ABS Server Redirect URIs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mobile-app-external-access-cf-access-service-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile App External Access (CF Access Service Token)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mobile App External Access (CF Access Service Token)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cf-access-policy-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      CF Access Policy Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-app-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile App Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functional-verification-2026-11-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Functional Verification — 2026-11-14
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#library-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Library Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audiobook-download-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Audiobook Download Workflow
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audiobook Download Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-torrent-seeding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Torrent Seeding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#private-tracker-myanonamouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Private Tracker — MyAnonamouse
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-public-audiobook-workflow-november-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Public Audiobook Workflow — November 2026
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backup-restore" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup &amp; Restore
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="audiobookshelf">Audiobookshelf<a class="headerlink" href="#audiobookshelf" title="Permanent link">&para;</a></h1>
+<p><strong>Host:</strong> docker-prod-01 (192.168.30.11)<br />
+<strong>Status:</strong> Active<br />
+<strong>Last Updated:</strong> 2026-11-14</p>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Audiobookshelf (ABS) is the audiobook server.</p>
+<p>Users request audiobooks through Shelfmark, which can submit audiobook torrents to qBittorrent. Once downloaded, Shelfmark imports the completed content into the ABS library, using hardlinks where supported.</p>
+<p>ABS indexes the imported content and makes it available for playback.</p>
+<p>qBitrr manages torrent seeding and cleanup independently of Audiobookshelf.</p>
+<p><strong>Important:</strong> Audiobook torrents do not seed indefinitely by default. The verified public-torrent policy is approximately one hour, with separate protection configured for MyAnonamouse private-tracker torrents.</p>
+<hr />
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Image</strong></td>
+<td><code>ghcr.io/advplyr/audiobookshelf:latest</code></td>
+</tr>
+<tr>
+<td><strong>Compose</strong></td>
+<td><code>/opt/stacks/books/compose.yaml</code></td>
+</tr>
+<tr>
+<td><strong>Appdata</strong></td>
+<td><code>/opt/appdata/audiobookshelf/</code></td>
+</tr>
+<tr>
+<td><strong>URL</strong></td>
+<td><code>https://audiobooks.giohosted.com</code></td>
+</tr>
+<tr>
+<td><strong>Internal port</strong></td>
+<td>80</td>
+</tr>
+<tr>
+<td><strong>PUID/PGID</strong></td>
+<td>2000:2000</td>
+</tr>
+<tr>
+<td><strong>TZ</strong></td>
+<td>America/Chicago</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="volumes">Volumes<a class="headerlink" href="#volumes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Host Path</th>
+<th>Container Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/data/media/books/audiobooks</code></td>
+<td><code>/audiobooks</code></td>
+<td>Audiobook library</td>
+</tr>
+<tr>
+<td><code>/opt/appdata/audiobookshelf/config</code></td>
+<td><code>/config</code></td>
+<td>ABS config and database</td>
+</tr>
+<tr>
+<td><code>/opt/appdata/audiobookshelf/metadata</code></td>
+<td><code>/metadata</code></td>
+<td>Cover art, metadata cache</td>
+</tr>
+</tbody>
+</table>
+<p>The library storage is part of the shared <code>/data</code> NFS architecture on docker-prod-01.</p>
+<p>The single-share arrangement supports the intended hardlink workflow between torrent downloads and imported library files.</p>
+<hr />
+<h2 id="network-access">Network &amp; Access<a class="headerlink" href="#network-access" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Docker network</strong></td>
+<td><code>proxy</code> (external, shared with Traefik)</td>
+</tr>
+<tr>
+<td><strong>Traefik router</strong></td>
+<td><code>audiobookshelf</code></td>
+</tr>
+<tr>
+<td><strong>Middleware</strong></td>
+<td>No <code>local-only@docker</code> — intentionally externally accessible</td>
+</tr>
+<tr>
+<td><strong>External access</strong></td>
+<td>Cloudflare Tunnel at <code>audiobooks.giohosted.com</code></td>
+</tr>
+<tr>
+<td><strong>Cloudflare Access</strong></td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td><strong>Browser access</strong></td>
+<td>Cloudflare Access with Authentik OIDC</td>
+</tr>
+<tr>
+<td><strong>Mobile access</strong></td>
+<td>Cloudflare Access service token plus application authentication</td>
+</tr>
+</tbody>
+</table>
+<p>The external-access design was reviewed and functionally tested on November 14, 2026.</p>
+<p>The absence of the Traefik <code>local-only@docker</code> middleware is intentional because remote browser and mobile access are required.</p>
+<h3 id="verified-browser-access">Verified Browser Access<a class="headerlink" href="#verified-browser-access" title="Permanent link">&para;</a></h3>
+<p>In a fresh unauthenticated browser session, the operator visited:</p>
+<p><code>https://audiobooks.giohosted.com</code></p>
+<p>Cloudflare Access presented its login page, offering Authentik OIDC.</p>
+<p><strong>Result:</strong> The tested unauthenticated browser could not proceed directly to the Audiobookshelf interface without encountering Cloudflare Access.</p>
+<h3 id="cloudflare-access-policies">Cloudflare Access Policies<a class="headerlink" href="#cloudflare-access-policies" title="Permanent link">&para;</a></h3>
+<p>The Audiobookshelf Access application has three configured policies:</p>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Action</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>abs-mobile-token</code></td>
+<td>Service Auth</td>
+<td>Authenticate clients presenting the valid <code>abs-mobile</code> token</td>
+</tr>
+<tr>
+<td><code>allow-users-authentik</code></td>
+<td>Allow</td>
+<td>Permit eligible browser users through Authentik</td>
+</tr>
+<tr>
+<td><code>block-all-others</code></td>
+<td>Block</td>
+<td>Deny requests that do not satisfy the permitted authentication paths</td>
+</tr>
+</tbody>
+</table>
+<p>These policies were inspected in the Cloudflare dashboard during the November 14 security review.</p>
+<p>The <code>allow-users-authentik</code> policy is shared with Shelfmark.</p>
+<p>The reviewed Allow policy uses:</p>
+<ul>
+<li>An Authentik <code>users</code> entitlement or explicitly permitted email addresses.</li>
+<li>A United States geographic requirement.</li>
+</ul>
+<p>The operator confirmed that the Authentik <code>users</code> group contains only the two intended personal accounts.</p>
+<p>The exact mapping between that group and the entitlement returned to Cloudflare was not independently tested.</p>
+<p><strong>Important:</strong> The geographic requirement belongs to the shared browser Allow policy. Do not assume it also restricts service-token-authenticated mobile requests.</p>
+<hr />
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Method:</strong> OIDC via Authentik</li>
+<li><strong>Authentik application:</strong> <code>Audiobookshelf</code></li>
+<li><strong>Authentik provider:</strong> Carried forward from v2 backup — existing configuration and accounts restored</li>
+<li><strong>Admin group:</strong> <code>admins</code></li>
+<li><strong>Auto-provision users:</strong> Enabled</li>
+<li><strong>Local admin:</strong> Retained as break-glass — do not delete</li>
+</ul>
+<p>The operator confirmed that MFA is configured in Authentik.</p>
+<p>The security review did not independently establish MFA enforcement for every account or every possible authentication path.</p>
+<h3 id="authentik-redirect-uris">Authentik Redirect URIs<a class="headerlink" href="#authentik-redirect-uris" title="Permanent link">&para;</a></h3>
+<p>The following redirect URIs are documented as registered on the Authentik provider:</p>
+<ul>
+<li><code>https://audiobooks.giohosted.com/audiobookshelf/auth/openid/callback</code> (strict)</li>
+<li><code>https://audiobooks.giohosted.com/audiobookshelf/auth/openid/mobile-redirect</code> (strict)</li>
+<li><code>audiobooth://oauth</code> (strict) — required for iOS/Android mobile app OIDC login</li>
+</ul>
+<p>These are retained from the established authentication configuration documentation.</p>
+<h3 id="abs-server-redirect-uris">ABS Server Redirect URIs<a class="headerlink" href="#abs-server-redirect-uris" title="Permanent link">&para;</a></h3>
+<p><code>audiobooth://oauth</code> must also be added in ABS itself under <strong>Settings → Authentication → OpenID Connect → Mobile Redirect URIs</strong>.</p>
+<p>Both Authentik and ABS must have the required redirect URI for the documented mobile SSO flow.</p>
+<hr />
+<h2 id="mobile-app-external-access-cf-access-service-token">Mobile App External Access (CF Access Service Token)<a class="headerlink" href="#mobile-app-external-access-cf-access-service-token" title="Permanent link">&para;</a></h2>
+<p>The ABS mobile app uses a Cloudflare Access service token to authenticate non-interactive requests without requiring the browser-based Cloudflare login challenge.</p>
+<p><strong>CF Access application:</strong> <code>Audiobookshelf</code> (<code>audiobooks.giohosted.com</code>)<br />
+<strong>Service token name:</strong> <code>abs-mobile</code><br />
+<strong>Policy:</strong> <code>abs-mobile-token</code><br />
+<strong>Action:</strong> Service Auth<br />
+<strong>Token location:</strong> Password manager (Client ID and Client Secret)</p>
+<p>The service token allows clients possessing the valid credentials to satisfy the Cloudflare Access Service Auth policy.</p>
+<p>It does <strong>not</strong> automatically authenticate a user inside Audiobookshelf. Application-level authentication and authorization remain separate.</p>
+<h3 id="cf-access-policy-order">CF Access Policy Order<a class="headerlink" href="#cf-access-policy-order" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Policy</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>abs-mobile-token</code></td>
+<td>SERVICE AUTH — valid service token</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>allow-users-authentik</code></td>
+<td>ALLOW — eligible Authentik users</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>block-all-others</code></td>
+<td>BLOCK — other requests</td>
+</tr>
+</tbody>
+</table>
+<p>The existing policy documentation notes that Service Auth policies have separate evaluation behavior from interactive Allow policies.</p>
+<p>The service-token rule must remain scoped to the intended Audiobookshelf Access application.</p>
+<h3 id="mobile-app-configuration">Mobile App Configuration<a class="headerlink" href="#mobile-app-configuration" title="Permanent link">&para;</a></h3>
+<p>In the ABS iOS/Android app, open the server connection settings and configure the following <strong>Custom Headers</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Header Name</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CF-Access-Client-Id</code></td>
+<td>Client ID from the <code>abs-mobile</code> service token</td>
+</tr>
+<tr>
+<td><code>CF-Access-Client-Secret</code></td>
+<td>Client Secret from the <code>abs-mobile</code> service token</td>
+</tr>
+</tbody>
+</table>
+<p>Never place these values in Git, documentation, screenshots, or application logs.</p>
+<h3 id="functional-verification-2026-11-14">Functional Verification — 2026-11-14<a class="headerlink" href="#functional-verification-2026-11-14" title="Permanent link">&para;</a></h3>
+<p>The Cloudflare Access policy configuration was reviewed.</p>
+<p>The operator then:</p>
+<ol>
+<li>Confirmed unauthenticated browser access displayed the Cloudflare Access login screen.</li>
+<li>Used the Audiobookshelf mobile application through an external cellular connection.</li>
+<li>Confirmed the mobile application worked and audiobook playback was available.</li>
+</ol>
+<p><strong>Result:</strong> Both the browser-protected access path and the externally accessible mobile application worked during the test.</p>
+<p>The review did not independently inspect individual service-token HTTP headers, token expiration, or token rotation history.</p>
+<h3 id="security-considerations">Security Considerations<a class="headerlink" href="#security-considerations" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Protect the <code>abs-mobile</code> credentials as application secrets.</li>
+<li>Keep the Service Auth policy scoped to Audiobookshelf.</li>
+<li>Rotate or revoke the token if it is suspected to be compromised.</li>
+<li>Review token expiration and rotation arrangements periodically.</li>
+<li>Do not replace the Service Auth policy with a broad Bypass rule.</li>
+<li>Verify both browser and mobile access after changing Cloudflare Access policies.</li>
+<li>Keep Audiobookshelf's application authentication enabled.</li>
+<li>Consider the service token a sensitive credential even though Cloudflare Access is not itself the application's user authorization layer.</li>
+</ul>
+<hr />
+<h2 id="library-configuration">Library Configuration<a class="headerlink" href="#library-configuration" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Audiobooks</td>
+<td><code>/audiobooks</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> After restoring from the v2 backup, the library path was still pointing to the old path (<code>/books/audiobooks</code>). It was manually repointed to <code>/audiobooks</code> in ABS → Settings → Libraries.</p>
+</blockquote>
+<hr />
+<h2 id="audiobook-download-workflow">Audiobook Download Workflow<a class="headerlink" href="#audiobook-download-workflow" title="Permanent link">&para;</a></h2>
+<p>The current torrent-based workflow is:</p>
+<ol>
+<li>User requests an audiobook in Shelfmark.</li>
+<li>Shelfmark submits a torrent to qBittorrent with category <code>audiobooks</code>.</li>
+<li>qBittorrent downloads the content to <code>/data/downloads/books/audiobooks/downloads</code>.</li>
+<li>Shelfmark imports the completed audiobook using a hardlink into <code>/audiobooks</code>, mapped to <code>/data/media/books/audiobooks</code>.</li>
+<li>ABS detects the imported content and makes it available for playback.</li>
+<li>qBittorrent continues seeding the torrent according to the applicable settings.</li>
+<li>qBitrr applies the configured category and tracker-specific seeding policy.</li>
+<li>When the applicable cleanup conditions are satisfied, qBitrr can remove the torrent and its download-side data.</li>
+<li>The separate hardlinked audiobook library entry remains available when import completed successfully.</li>
+</ol>
+<h3 id="public-torrent-seeding">Public Torrent Seeding<a class="headerlink" href="#public-torrent-seeding" title="Permanent link">&para;</a></h3>
+<p>The verified qBitrr category-level policy uses:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[qBit.CategorySeeding]</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">MaxUploadRatio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">MaxSeedingTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3600</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">RemoveTorrent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
+</code></pre></div>
+<p>This represents an intended default public-torrent seeding period of approximately one hour, with automatic cleanup managed by qBitrr.</p>
+<p>It replaces the original documentation's claim that audiobook torrents seed permanently.</p>
+<h3 id="private-tracker-myanonamouse">Private Tracker — MyAnonamouse<a class="headerlink" href="#private-tracker-myanonamouse" title="Permanent link">&para;</a></h3>
+<p>MyAnonamouse (MAM) torrents have a separate configured policy:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[[qBit.Trackers]]</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">Name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MyAnonamouse"</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">URI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"myanonamouse.net"</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">Priority</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">MaxUploadRatio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">MaxSeedingTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1209600</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">HitAndRunMode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"and"</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">MinSeedRatio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">MinSeedingTimeDays</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">14</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">TrackerUpdateBuffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3600</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">AddTrackerIfMissing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">RemoveIfExists</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+</code></pre></div>
+<p>The intended policy requires both:</p>
+<ul>
+<li>At least 14 days of seeding.</li>
+<li>At least a 1.0 upload ratio.</li>
+</ul>
+<p><strong>Verification status:</strong> The tracker-specific configuration has been reviewed, but the required MAM behavior has not been verified end-to-end using a real private-tracker torrent.</p>
+<p>Do not treat the intended configuration as proof of tracker compliance.</p>
+<p>See <code>services/torrent/qbitrr.md</code> for authoritative settings and any subsequent changes.</p>
+<h3 id="verified-public-audiobook-workflow-november-2026">Verified Public Audiobook Workflow — November 2026<a class="headerlink" href="#verified-public-audiobook-workflow-november-2026" title="Permanent link">&para;</a></h3>
+<p>A public audiobook torrent, <em>Threshing Day</em>, was used to test the complete workflow.</p>
+<p>The following were confirmed:</p>
+<ul>
+<li>Shelfmark submitted the audiobook torrent.</li>
+<li>qBittorrent downloaded it and began seeding.</li>
+<li>Shelfmark imported the audiobook to the ABS library.</li>
+<li>Audiobookshelf successfully played the audiobook.</li>
+<li>qBitrr automatically removed the public torrent after the configured seeding period.</li>
+<li>The audiobook remained present and playable after cleanup.</li>
+</ul>
+<p><strong>Result:</strong> Public audiobook import, playback, automatic torrent cleanup, and retention were verified.</p>
+<p>This does not establish the untested MAM-specific seeding requirements.</p>
+<hr />
+<h2 id="backup-restore">Backup &amp; Restore<a class="headerlink" href="#backup-restore" title="Permanent link">&para;</a></h2>
+<p>The established documentation records:</p>
+<ul>
+<li><strong>Appdata backup destination:</strong> <code>/mnt/user/backups/</code> through the Phase 5 rsync workflow.</li>
+<li><strong>v2 backup location:</strong> <code>/mnt/user/backups/docker-v2/appdata/books-stack/audiobookshelf/</code></li>
+<li><strong>Restore procedure:</strong> Copy <code>config/</code> and <code>metadata/</code> to <code>/opt/appdata/audiobookshelf/</code>, set ownership to <code>2000:2000</code>, start the container, and verify the library path.</li>
+</ul>
+<p>These are documented recovery arrangements, not evidence of a freshly tested Audiobookshelf restoration during the November 14 security review.</p>
+<p>Before restoring:</p>
+<ol>
+<li>Verify a suitable backup exists.</li>
+<li>Preserve the current configuration if needed for troubleshooting.</li>
+<li>Restore compatible configuration and metadata.</li>
+<li>Confirm ownership and permissions.</li>
+<li>Verify the <code>/audiobooks</code> mount and library path.</li>
+<li>Validate application authentication.</li>
+<li>Test browser and mobile playback.</li>
+</ol>
+<p>Cloudflare Access policies and service tokens are managed separately from Audiobookshelf appdata. A Docker appdata restore alone does not recreate all external-access configuration.</p>
+<hr />
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>No <code>local-only@docker</code> middleware — ABS is externally accessible by design.</li>
+<li>Browser access is protected by Cloudflare Access with Authentik OIDC.</li>
+<li>Mobile access uses a scoped Cloudflare Access Service Auth token.</li>
+<li>The browser authentication challenge and external mobile playback were verified on 2026-11-14.</li>
+<li>The service token must be protected and never committed to Git.</li>
+<li>The shared browser policy includes a US geographic requirement; the Service Auth path is separately evaluated.</li>
+<li>Audiobookshelf retains application authentication independently of Cloudflare Access.</li>
+<li>Public audiobook torrents use qBitrr-managed seeding and cleanup, not indefinite seeding.</li>
+<li>A public audiobook remained playable after its torrent was removed.</li>
+<li>MAM-specific seeding protection is configured but has not been verified end-to-end.</li>
+<li>qBittorrent's previous global 60-minute stop rule was disabled to avoid conflicts with private-tracker policies.</li>
+<li>Podcasts are not currently used — audiobooks only.</li>
+</ul>
+<hr />
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>services/infra/cloudflared.md</code> — Cloudflare Tunnel, Access applications, and external authentication.</li>
+<li><code>services/infra/traefik.md</code> — Reverse proxy and external router behavior.</li>
+<li><code>services/books/shelfmark.md</code> — Ebook and audiobook discovery, download, and import.</li>
+<li><code>services/torrent/qbittorrent.md</code> — Torrent downloading and storage architecture.</li>
+<li><code>services/torrent/qbitrr.md</code> — Seeding policies, tracker overrides, and cleanup.</li>
+<li><code>runbooks/updating-containers.md</code> — Docker updates and recovery procedures.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>

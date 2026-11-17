@@ -1,0 +1,3545 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/runbooks/updating-containers/">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Updating a Docker Container - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#updating-a-docker-container" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Updating a Docker Container
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-management-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update Management Strategy
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Update Management Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#komodo-update-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      Komodo Update Monitoring
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moving-image-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moving Image Tags
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#before-updating" class="md-nav__link">
+    <span class="md-ellipsis">
+      Before Updating
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Before Updating">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-review-the-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Review the Release
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-verify-backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Verify Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-review-the-git-working-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Review the Git Working Tree
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Review the Git Working Tree">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#git-synchronization-and-runtime-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Git Synchronization and Runtime Data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-check-the-current-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Check the Current Deployment
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method-1-komodo-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 1 — Komodo (UI)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method 1 — Komodo (UI)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Procedure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updating-individual-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating Individual Services
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method-2-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 2 — CLI
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method 2 — CLI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#standard-stack-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standard Stack Update
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updating-one-compose-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating One Compose Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deploying-an-already-reviewed-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploying an Already-Reviewed Image
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-compose-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      Important Compose Behavior
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-updating-the-media-stack-on-docker-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example — Updating the Media Stack on docker-prod-01
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-updating-traefik-on-docker-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example — Updating Traefik on docker-prod-01
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example — Updating Traefik on docker-prod-01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-review-the-target-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Review the Target Release
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-verify-persistent-data-and-backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Verify Persistent Data and Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-establish-a-routing-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Establish a Routing Baseline
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-download-and-inspect-the-target-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Download and Inspect the Target Image
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-validate-configuration-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Validate Configuration Changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-deploy-traefik" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6 — Deploy Traefik
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-7-verify-the-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 7 — Verify the Deployment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rollback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-updating-authentik-on-auth-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example — Updating Authentik on auth-prod-01
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-updating-immich-on-immich-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example — Updating Immich on immich-prod-01
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#method-3-proxmox-mcp-on-observer-prod-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      Method 3 — Proxmox MCP on observer-prod-01
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method 3 — Proxmox MCP on observer-prod-01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#update-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Update Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-connect-to-the-observer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Connect to the Observer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-inspect-the-existing-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Inspect the Existing Deployment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-verify-mcp-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Verify MCP Health
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-pull-the-updated-mcp-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Pull the Updated MCP Image
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-recreate-the-mcp-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Recreate the MCP Container
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-verify-the-updated-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6 — Verify the Updated Container
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-7-verify-tunnel-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 7 — Verify Tunnel Connectivity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-8-verify-end-to-end-mcp-functionality" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 8 — Verify End-to-End MCP Functionality
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-9-verify-security-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 9 — Verify Security Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updating-the-openai-tunnel-client" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating the OpenAI Tunnel Client
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retired-management-tool-dockman-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retired Management Tool — Dockman (Historical)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleaning-up-old-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cleaning Up Old Images
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollback-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rollback Considerations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rollback Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#before-updating_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Before Updating
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-an-update-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      If an Update Fails
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stack-locations-by-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stack Locations by Host
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stack Locations by Host">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#observer-specific-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Observer-Specific Services
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="updating-a-docker-container">Updating a Docker Container<a class="headerlink" href="#updating-a-docker-container" title="Permanent link">&para;</a></h1>
+<p><strong>Applies to:</strong> docker-prod-01, auth-prod-01, immich-prod-01, observer-prod-01<br />
+<strong>Last Updated:</strong> 2026-11-16</p>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Docker containers in Homelab v3 are managed through Docker Compose stacks under <code>/opt/stacks</code>.</p>
+<p>Updating a container generally involves:</p>
+<ol>
+<li>Reviewing the target application's release notes.</li>
+<li>Verifying configuration and backup readiness.</li>
+<li>Identifying and downloading the intended Docker image.</li>
+<li>Recreating the affected container.</li>
+<li>Verifying the application and its dependencies.</li>
+</ol>
+<p>Docker Compose updates can be performed through supported management interfaces or directly through the CLI.</p>
+<p>Komodo provides centralized update visibility and stack management for its managed hosts. Dockman was retired and removed from docker-prod-01 in November 2026; use Komodo or the controlled Docker Compose CLI workflow below.</p>
+<p>Not all services should follow the same update procedure. Applications with databases, migrations, or special dependencies may require service-specific runbooks.</p>
+<p><strong>Important:</strong> An image update is different from a Compose configuration change. Pulling a newer image does not require a Git commit unless a version-controlled file was modified.</p>
+<p>A successful Docker deployment does not establish that the application is functioning correctly. Operational verification is always required.</p>
+<hr />
+<h2 id="update-management-strategy">Update Management Strategy<a class="headerlink" href="#update-management-strategy" title="Permanent link">&para;</a></h2>
+<h3 id="komodo-update-monitoring">Komodo Update Monitoring<a class="headerlink" href="#komodo-update-monitoring" title="Permanent link">&para;</a></h3>
+<p><strong>Verified configuration — 2026-11-14</strong></p>
+<p>Komodo is used to identify available image updates across managed Docker stacks.</p>
+<p>The following settings were reviewed and configured:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Poll for Updates</td>
+<td>Enabled on managed stacks</td>
+</tr>
+<tr>
+<td>Auto Update</td>
+<td>Disabled on stacks</td>
+</tr>
+<tr>
+<td>Pre Pull Images</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Full Stack Auto Update</td>
+<td>Disabled</td>
+</tr>
+<tr>
+<td>Global Auto Update schedule</td>
+<td>Daily, 03:00</td>
+</tr>
+</tbody>
+</table>
+<p>The global schedule supports Komodo's update processing, but automatic stack deployment remains disabled under the verified per-stack settings.</p>
+<p><strong>Operational policy:</strong></p>
+<ul>
+<li>Use Komodo to identify available updates.</li>
+<li>Review release notes and compatibility before deploying.</li>
+<li>Verify application-specific backup requirements.</li>
+<li>Prefer targeted updates for services with independent dependencies.</li>
+<li>Use specialized procedures for Authentik, Immich, reverse proxies, and infrastructure management services.</li>
+<li>Do not enable automatic deployment of critical application updates without a separate risk review.</li>
+</ul>
+<p><strong>Important distinction:</strong> Update notifications, image pre-pulling, and container recreation are different operations.</p>
+<p>An available or downloaded image does not mean the running container has been updated.</p>
+<h3 id="moving-image-tags">Moving Image Tags<a class="headerlink" href="#moving-image-tags" title="Permanent link">&para;</a></h3>
+<p>Several Homelab v3 applications use moving image tags, including <code>latest</code> and application-specific stable-release tags.</p>
+<p>Examples include:</p>
+<ul>
+<li>Traefik: <code>traefik:latest</code></li>
+<li>Immich: <code>release</code></li>
+<li>Other applications using <code>latest</code> or equivalent rolling tags</li>
+</ul>
+<p>Moving tags are intentional where appropriate, but they introduce additional maintenance considerations.</p>
+<p>A moving tag can reference a new major version without any change to the Compose file.</p>
+<p>Before deploying an update:</p>
+<ol>
+<li>Identify the currently running application version.</li>
+<li>Review the version represented by the target tag.</li>
+<li>Read the relevant migration notes.</li>
+<li>Verify backup and rollback readiness.</li>
+<li>Avoid silently pulling an unreviewed image during deployment.</li>
+</ol>
+<p>For critical services, consider preserving a locally available version-specific image or recording the previous image digest as part of the rollback plan.</p>
+<hr />
+<h2 id="before-updating">Before Updating<a class="headerlink" href="#before-updating" title="Permanent link">&para;</a></h2>
+<h3 id="1-review-the-release">1. Review the Release<a class="headerlink" href="#1-review-the-release" title="Permanent link">&para;</a></h3>
+<p>Before making changes:</p>
+<ul>
+<li>Identify the currently deployed version or image.</li>
+<li>Review the target release notes for breaking changes.</li>
+<li>Check whether database migrations or configuration changes are required.</li>
+<li>Identify dependencies that may be affected.</li>
+<li>Review the relevant service documentation or specialized update runbook.</li>
+</ul>
+<p>Avoid blindly updating critical services simply because a newer image is available.</p>
+<p>Containers using the <code>latest</code> tag require particular care because the tag can point to a different image without a Compose file change.</p>
+<h3 id="2-verify-backups">2. Verify Backups<a class="headerlink" href="#2-verify-backups" title="Permanent link">&para;</a></h3>
+<p>Confirm that the affected application's required configuration and persistent data are protected.</p>
+<p>Depending on the service, this may include:</p>
+<ul>
+<li>Proxmox Backup Server VM backups.</li>
+<li>Docker appdata backups.</li>
+<li>Database-specific backups.</li>
+<li>Git-excluded <code>.env</code> files.</li>
+<li>Host-level configuration outside <code>/opt/stacks</code>.</li>
+<li>Application-generated secrets, certificates, and persistent identifiers.</li>
+</ul>
+<p>An existing backup schedule is not proof that a usable backup exists.</p>
+<p>For database-backed or management-critical services, verify recent successful backups before proceeding with nonurgent updates.</p>
+<p><strong>AI Observer:</strong> VM 107 was included in the configured Proxmox backup-job selection, but no archive was visible during the October 30, 2026 UTC verification. Its recoverable backup status must be checked again before a routine update. This historical finding does not establish its present backup status.</p>
+<p>See <code>runbooks/backup-schedule.md</code>.</p>
+<h3 id="3-review-the-git-working-tree">3. Review the Git Working Tree<a class="headerlink" href="#3-review-the-git-working-tree" title="Permanent link">&para;</a></h3>
+<p>On hosts using <code>homelab-infra</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>git<span class="w"> </span>status<span class="w"> </span>-sb
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>git<span class="w"> </span>status<span class="w"> </span>--short<span class="w"> </span>--untracked-files<span class="o">=</span>all
+</code></pre></div>
+<p>Before synchronizing, fetch and inspect the remote state:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>git<span class="w"> </span>fetch<span class="w"> </span>origin
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>git<span class="w"> </span>status<span class="w"> </span>-sb
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span>--left-right<span class="w"> </span>origin/main...HEAD
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>git<span class="w"> </span>diff<span class="w"> </span>--name-only<span class="w"> </span>HEAD..origin/main
+</code></pre></div>
+<p>If the working tree is clean and the branch can fast-forward:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>merge<span class="w"> </span>--ff-only<span class="w"> </span>origin/main
+</code></pre></div>
+<p>Alternatively, <code>git pull --ff-only</code> performs the fetch and fast-forward together.</p>
+<p>On observer-prod-01, authenticated Git operations use the credential-helper-disabled procedure described in <code>runbooks/git-workflow.md</code>.</p>
+<p>If local changes are present, review and reconcile them before pulling.</p>
+<p>Do not reset or discard changes merely to make an update proceed.</p>
+<h4 id="git-synchronization-and-runtime-data">Git Synchronization and Runtime Data<a class="headerlink" href="#git-synchronization-and-runtime-data" title="Permanent link">&para;</a></h4>
+<p><strong>Operational finding — 2026-11-14</strong></p>
+<p>During synchronization of the four Docker hosts, the repository was discovered tracking:</p>
+<p><code>beszel-agent/beszel_agent_data/fingerprint</code></p>
+<p>The fingerprint belongs to host-specific Beszel agent runtime state and should not be distributed between hosts through Git.</p>
+<p>The shared repository was corrected to ignore:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>/beszel-agent/beszel_agent_data/
+</code></pre></div>
+<p>The previously tracked fingerprint was removed from Git's index without intentionally deleting the original file on the source host.</p>
+<p><strong>Important:</strong> Removing a tracked runtime file from Git can still cause Git to delete that file during a subsequent fast-forward on another host.</p>
+<p>On immich-prod-01, the incoming change also removed the now-empty runtime directory. The original fingerprint was recovered from a verified backup, but the running Docker container retained a stale bind mount to the former directory.</p>
+<p>The agent was recovered by recreating only the Beszel container and verifying that:</p>
+<ul>
+<li>The host and container bind-mounted directories had matching device and inode identities.</li>
+<li>The container could read the original fingerprint.</li>
+<li>The container was running without restart loops.</li>
+<li>The Beszel dashboard displayed current metrics.</li>
+</ul>
+<p><strong>Prevention:</strong></p>
+<ul>
+<li>Do not commit generated runtime data or host-specific identifiers.</li>
+<li>Inspect incoming Git deletions before synchronizing production hosts.</li>
+<li>Preserve affected runtime files before an incoming deletion.</li>
+<li>Verify Docker bind mounts after changes that remove or recreate host directories.</li>
+<li>Do not assume a running container is healthy merely because its process remains active.</li>
+</ul>
+<p>See <code>runbooks/git-workflow.md</code> and <code>services/monitoring/beszel.md</code>.</p>
+<h3 id="4-check-the-current-deployment">4. Check the Current Deployment<a class="headerlink" href="#4-check-the-current-deployment" title="Permanent link">&para;</a></h3>
+<p>From the target stack directory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>docker<span class="w"> </span>compose<span class="w"> </span>images
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+</code></pre></div>
+<p>Use <code>sudo docker</code> where Docker access requires elevated privileges.</p>
+<p><code>docker compose config --quiet</code> validates the Compose configuration without printing its resolved environment values.</p>
+<p>If the current configuration is invalid or the service is already unhealthy, investigate before updating.</p>
+<p>For critical infrastructure services, also record the running application version and image reference:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>docker<span class="w"> </span>inspect<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--format<span class="w"> </span><span class="s1">'{{.Name}} =&gt; {{.Config.Image}}'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>&lt;container-name&gt;
+</code></pre></div>
+<p>Where necessary, record the image ID or digest separately.</p>
+<p><strong>Important:</strong> <code>docker compose config --quiet</code> validates Docker Compose syntax and structure. It does not guarantee that the application inside the image accepts every configuration option.</p>
+<p>Application-specific configuration should be validated independently when possible.</p>
+<hr />
+<h2 id="method-1-komodo-ui">Method 1 — Komodo (UI)<a class="headerlink" href="#method-1-komodo-ui" title="Permanent link">&para;</a></h2>
+<p><strong>Supported scope:</strong> Docker hosts and Compose stacks registered with Komodo (including docker-prod-01, auth-prod-01, and immich-prod-01). Verify the current registration and permissions before taking action. <code>observer-prod-01</code> continues to use its documented CLI and systemd procedures for the MCP/tunnel services.</p>
+<p>Komodo provides the centralized UI for update visibility and managed Compose stacks. <strong>Automatic stack deployment remains disabled</strong> under the documented November 14 configuration; image update detection and pre-pull do not mean an update has been deployed.</p>
+<h3 id="procedure">Procedure<a class="headerlink" href="#procedure" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Open the existing internal Komodo instance and select the correct server and Compose stack.</li>
+<li>Review the current container status, image references and whether an update is available.</li>
+<li>Read release notes and verify backups, dependencies, persistent data, and the repository working tree.</li>
+<li>Review <strong>exactly which services</strong> the proposed operation would recreate; use the CLI method when precise single-service scope or rollback control is needed.</li>
+<li>Perform only the reviewed, operator-approved update.</li>
+<li>Verify container health <strong>and application functionality</strong>, including dependent services, then inspect logs.</li>
+<li>If any Compose files changed, review and commit those changes through <code>runbooks/git-workflow.md</code>.</li>
+</ol>
+<p><strong>Do not assume</strong> that every Komodo update action affects only the selected container. A Compose-stack operation can recreate multiple services depending on its settings and dependencies. Current UI labels/actions should be checked before use.</p>
+<h3 id="updating-individual-services">Updating Individual Services<a class="headerlink" href="#updating-individual-services" title="Permanent link">&para;</a></h3>
+<p>For independent Compose services, prefer a targeted, reviewed operation instead of needlessly restarting a full stack. Where the UI cannot clearly guarantee the intended scope, use <strong>Method 2 — CLI</strong> with explicit service names and dependencies.</p>
+<p>Applications requiring coordinated migrations (notably Authentik and Immich) must follow their service-specific runbooks regardless of UI availability.</p>
+<hr />
+<h2 id="method-2-cli">Method 2 — CLI<a class="headerlink" href="#method-2-cli" title="Permanent link">&para;</a></h2>
+<p>CLI updates are supported on all Docker Compose hosts.</p>
+<p>They are the preferred method for:</p>
+<ul>
+<li>observer-prod-01</li>
+<li>Services requiring precise dependency control</li>
+<li>Troubleshooting failed updates</li>
+<li>Service-specific maintenance procedures</li>
+<li>Critical infrastructure services requiring controlled image and configuration verification</li>
+</ul>
+<h3 id="standard-stack-update">Standard Stack Update<a class="headerlink" href="#standard-stack-update" title="Permanent link">&para;</a></h3>
+<p>SSH into the host running the container.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Navigate to the stack directory</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/&lt;stack-name&gt;
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Review the current deployment</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>docker<span class="w"> </span>compose<span class="w"> </span>images
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1"># Validate configuration</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="c1"># Pull the images referenced by the stack</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>docker<span class="w"> </span>compose<span class="w"> </span>pull
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="c1"># Recreate services whose image or configuration changed</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="c1"># Verify container status</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="c1"># Inspect recent logs</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">50</span>
+</code></pre></div>
+<p>Use <code>sudo docker</code> if required by the host's permissions.</p>
+<p>This is a general procedure. Critical or migration-sensitive applications may require additional checks or a different update sequence.</p>
+<h3 id="updating-one-compose-service">Updating One Compose Service<a class="headerlink" href="#updating-one-compose-service" title="Permanent link">&para;</a></h3>
+<p>When a stack contains multiple services and only one needs updating:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/&lt;stack-name&gt;
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># Pull the selected service image</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>docker<span class="w"> </span>compose<span class="w"> </span>pull<span class="w"> </span>&lt;service-name&gt;
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1"># Recreate only the selected service</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--no-deps<span class="w"> </span>&lt;service-name&gt;
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># Verify</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">50</span><span class="w"> </span>&lt;service-name&gt;
+</code></pre></div>
+<p><code>--no-deps</code> prevents Docker Compose from starting or updating the service's dependencies as part of this command.</p>
+<p><strong>Use this only when dependencies do not require coordinated updates.</strong></p>
+<p>For example, an application version requiring a database migration may need its own documented update sequence.</p>
+<h3 id="deploying-an-already-reviewed-image">Deploying an Already-Reviewed Image<a class="headerlink" href="#deploying-an-already-reviewed-image" title="Permanent link">&para;</a></h3>
+<p>For a critical service using a moving image tag, the new image can be downloaded and inspected before deploying it.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>docker<span class="w"> </span>pull<span class="w"> </span>&lt;image&gt;:&lt;tag&gt;
+</code></pre></div>
+<p>Where supported, use the application image to inspect the downloaded version without replacing the production container.</p>
+<p>After verification:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span>--no-deps<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--pull<span class="w"> </span>never<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>&lt;service-name&gt;
+</code></pre></div>
+<p><code>--pull never</code> instructs Docker Compose not to download another image during that deployment operation.</p>
+<p>This is useful when a moving tag might change between image review and deployment.</p>
+<p>It does not guarantee rollback availability unless the previous image is retained separately.</p>
+<h3 id="important-compose-behavior">Important Compose Behavior<a class="headerlink" href="#important-compose-behavior" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>docker compose pull</code> downloads images but does not recreate running containers.</li>
+<li><code>docker compose up -d</code> reconciles the stack against its Compose configuration and available images.</li>
+<li>Containers with changed images or configuration may be recreated.</li>
+<li>Unchanged containers are generally left running.</li>
+<li><code>docker compose up -d --no-deps &lt;service-name&gt;</code> restricts the operation to the specified service.</li>
+<li><code>docker compose up -d --pull never</code> avoids pulling a new image during deployment.</li>
+<li>A recreated container may be running before its application is actually ready.</li>
+</ul>
+<p>Container status alone is not sufficient verification.</p>
+<p><strong>Git synchronization and Docker deployment are separate operations.</strong></p>
+<p>Pulling a changed Compose file does not automatically apply those changes to existing containers.</p>
+<hr />
+<h2 id="example-updating-the-media-stack-on-docker-prod-01">Example — Updating the Media Stack on docker-prod-01<a class="headerlink" href="#example-updating-the-media-stack-on-docker-prod-01" title="Permanent link">&para;</a></h2>
+<p><strong>Host:</strong> docker-prod-01<br />
+<strong>IP:</strong> 192.168.30.11</p>
+<p>First identify the appropriate Compose stack and service.</p>
+<p>For the existing media stack:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>ssh<span class="w"> </span>gio@192.168.30.11
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/media
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>docker<span class="w"> </span>compose<span class="w"> </span>images
+</code></pre></div>
+<p>For an approved full-stack update:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>docker<span class="w"> </span>compose<span class="w"> </span>pull
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">50</span>
+</code></pre></div>
+<p>Afterward, verify the affected applications through their normal interfaces.</p>
+<p>When updating only one service, use the targeted Compose procedure if compatible with that application's dependencies.</p>
+<p>Avoid unnecessary restarts of unrelated services.</p>
+<hr />
+<h2 id="example-updating-traefik-on-docker-prod-01">Example — Updating Traefik on docker-prod-01<a class="headerlink" href="#example-updating-traefik-on-docker-prod-01" title="Permanent link">&para;</a></h2>
+<p><strong>Host:</strong> docker-prod-01<br />
+<strong>IP:</strong> 192.168.30.11<br />
+<strong>Stack:</strong> <code>/opt/stacks/traefik</code><br />
+<strong>Image:</strong> <code>traefik:latest</code></p>
+<p>Traefik provides reverse-proxy and TLS services for multiple Homelab applications. Its updates should be deliberate because recreating the container temporarily interrupts HTTP and HTTPS routing.</p>
+<p><strong>Verified implementation:</strong> On 2026-11-14, Traefik was upgraded from v3.6.25 to v3.7.19.</p>
+<p>The image tag was changed from <code>traefik:v3.6</code> to <code>traefik:latest</code>.</p>
+<p>The upgrade was followed by additional HTTP header-alias and encoded-character security hardening.</p>
+<p>See <code>services/infra/traefik.md</code> for the complete deployed configuration and implementation record.</p>
+<h3 id="step-1-review-the-target-release">Step 1 — Review the Target Release<a class="headerlink" href="#step-1-review-the-target-release" title="Permanent link">&para;</a></h3>
+<p>Identify the current running version:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>traefik<span class="w"> </span>traefik<span class="w"> </span>version
+</code></pre></div>
+<p>Read the target release notes and migration documentation.</p>
+<p>Because <code>latest</code> is a moving tag, do not assume the next available image belongs to the same major release.</p>
+<h3 id="step-2-verify-persistent-data-and-backups">Step 2 — Verify Persistent Data and Backups<a class="headerlink" href="#step-2-verify-persistent-data-and-backups" title="Permanent link">&para;</a></h3>
+<p>Identify the critical configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/opt/stacks/traefik/compose.yaml</code></td>
+<td>Compose configuration</td>
+</tr>
+<tr>
+<td><code>/opt/stacks/traefik/.env</code></td>
+<td>Cloudflare API token</td>
+</tr>
+<tr>
+<td><code>/opt/appdata/traefik/acme.json</code></td>
+<td>TLS certificate state and private keys</td>
+</tr>
+<tr>
+<td><code>/opt/appdata/traefik/config/</code></td>
+<td>Dynamic routing configuration</td>
+</tr>
+</tbody>
+</table>
+<p>Verify that suitable backups are available.</p>
+<p>The November 14 upgrade used a root-protected archive containing these files.</p>
+<p>Backup contents containing <code>.env</code> and certificate private keys must not be committed to Git or stored in an unprotected location.</p>
+<h3 id="step-3-establish-a-routing-baseline">Step 3 — Establish a Routing Baseline<a class="headerlink" href="#step-3-establish-a-routing-baseline" title="Permanent link">&para;</a></h3>
+<p>Before changing Traefik, verify important application routes and TLS behavior.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">for</span><span class="w"> </span>host<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>auth.giohosted.com<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>photos.giohosted.com
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="k">do</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"===== </span><span class="nv">$host</span><span class="s2"> ====="</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span>curl<span class="w"> </span>--noproxy<span class="w"> </span><span class="s1">'*'</span><span class="w"> </span>-sS<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span>--connect-timeout<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span>--max-time<span class="w"> </span><span class="m">15</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span>--resolve<span class="w"> </span><span class="s2">"</span><span class="nv">$host</span><span class="s2">:443:127.0.0.1"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span>-o<span class="w"> </span>/dev/null<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">    </span>-w<span class="w"> </span><span class="s1">'HTTP=%{http_code} TLS=%{ssl_verify_result}\n'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">    </span><span class="s2">"https://</span><span class="nv">$host</span><span class="s2">/"</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="k">done</span>
+</code></pre></div>
+<p>The November 14 baseline was:</p>
+<ul>
+<li>Authentik: HTTP <code>302</code></li>
+<li>Immich: HTTP <code>200</code></li>
+<li>TLS verification: <code>0</code> for both</li>
+</ul>
+<p>These values are historical expected responses, not a guarantee that future application versions will return identical status codes.</p>
+<p>Also verify any other services relevant to the planned maintenance.</p>
+<h3 id="step-4-download-and-inspect-the-target-image">Step 4 — Download and Inspect the Target Image<a class="headerlink" href="#step-4-download-and-inspect-the-target-image" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/traefik
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>pull<span class="w"> </span>traefik:latest
+</code></pre></div>
+<p>Inspect the downloaded version without replacing production:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span>--network<span class="w"> </span>none<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>--entrypoint<span class="w"> </span>traefik<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span>traefik:latest<span class="w"> </span>version
+</code></pre></div>
+<p>On November 14, this confirmed v3.7.19 before deployment.</p>
+<h3 id="step-5-validate-configuration-changes">Step 5 — Validate Configuration Changes<a class="headerlink" href="#step-5-validate-configuration-changes" title="Permanent link">&para;</a></h3>
+<p>If a version-controlled Compose change is required:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>git<span class="w"> </span>-C<span class="w"> </span>/opt/stacks<span class="w"> </span>diff<span class="w"> </span>--<span class="w"> </span>traefik/compose.yaml
+</code></pre></div>
+<p>For newly introduced static Traefik options, use a safe application-level validation method where practical.</p>
+<p>Compose validation alone does not establish that the target Traefik binary recognizes every command-line flag.</p>
+<p>Commit and push reviewed Compose changes before deployment when practical.</p>
+<p>Never stage <code>.env</code>, certificate storage, or other secrets.</p>
+<h3 id="step-6-deploy-traefik">Step 6 — Deploy Traefik<a class="headerlink" href="#step-6-deploy-traefik" title="Permanent link">&para;</a></h3>
+<p>Once the image and configuration have been reviewed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>--no-deps<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>--pull<span class="w"> </span>never<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">  </span>traefik
+</code></pre></div>
+<p>This recreates only the Traefik Compose service.</p>
+<p>Expect a brief interruption to reverse-proxy access.</p>
+<h3 id="step-7-verify-the-deployment">Step 7 — Verify the Deployment<a class="headerlink" href="#step-7-verify-the-deployment" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>ps<span class="w"> </span>traefik
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>traefik<span class="w"> </span>traefik<span class="w"> </span>version
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>sudo<span class="w"> </span>docker<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">100</span><span class="w"> </span>traefik
+</code></pre></div>
+<p>Verify:</p>
+<ul>
+<li>The expected version is running.</li>
+<li>The container is not restarting repeatedly.</li>
+<li>Docker and file providers initialize correctly.</li>
+<li>ACME configuration loads without errors.</li>
+<li>TLS certificates validate.</li>
+<li>Previously working routes continue functioning.</li>
+<li>Relevant applications work through their normal browser interfaces.</li>
+</ul>
+<p>After the November 14 upgrade and hardening:</p>
+<ul>
+<li>Authentik continued returning HTTP <code>302</code>.</li>
+<li>Immich continued returning HTTP <code>200</code>.</li>
+<li>Both applications worked normally in a browser.</li>
+<li>Encoded null characters (<code>%00</code>) and backslashes (<code>%5C</code>) returned HTTP <code>400</code>.</li>
+<li>The relevant security startup warnings were no longer present.</li>
+</ul>
+<h3 id="rollback">Rollback<a class="headerlink" href="#rollback" title="Permanent link">&para;</a></h3>
+<p>If Traefik fails after upgrading:</p>
+<ol>
+<li>Stop further changes.</li>
+<li>Inspect container startup errors.</li>
+<li>Confirm the previous image is still available.</li>
+<li>Review the previous Compose configuration.</li>
+<li>Determine whether certificate or persistent configuration recovery is necessary.</li>
+<li>Restore a compatible known-good configuration or image.</li>
+<li>Recreate only Traefik.</li>
+<li>Repeat TLS, routing, and application verification.</li>
+</ol>
+<p>Do not blindly overwrite <code>acme.json</code> when recovering an unrelated configuration problem.</p>
+<p><strong>Important:</strong> Preserving the previous image and backup provides a possible rollback path. It does not establish that a complete rollback was tested.</p>
+<hr />
+<h2 id="example-updating-authentik-on-auth-prod-01">Example — Updating Authentik on auth-prod-01<a class="headerlink" href="#example-updating-authentik-on-auth-prod-01" title="Permanent link">&para;</a></h2>
+<p><strong>Host:</strong> auth-prod-01<br />
+<strong>IP:</strong> 192.168.30.13</p>
+<p><strong>Do not use the generic Docker update procedure for Authentik.</strong></p>
+<p>Authentik uses database migrations and may require intermediate version upgrades.</p>
+<p>The supported operational workflow is documented in:</p>
+<p><code>runbooks/authentik-update.md</code></p>
+<p>Before updating:</p>
+<ol>
+<li>Read the specialized runbook.</li>
+<li>Identify the currently deployed version.</li>
+<li>Determine the required upgrade path.</li>
+<li>Verify the database backup.</li>
+<li>Follow the documented upgrade sequence.</li>
+<li>Verify application health and OIDC authentication after each upgrade step.</li>
+</ol>
+<p>Do not bypass the required checks by simply pulling <code>latest</code> or blindly recreating the stack.</p>
+<p><strong>Verified deployment — 2026-11-14:</strong></p>
+<p>Authentik was upgraded through the required intermediate versions to <code>2026.8.5</code>.</p>
+<p>The final deployment was verified using:</p>
+<ul>
+<li>Docker Compose's resolved image configuration.</li>
+<li>Running server and worker image references.</li>
+<li>Authentik's administrative interface.</li>
+<li>A functional Immich SSO sign-in test.</li>
+</ul>
+<p>The runtime version is explicitly provided through the Git-excluded <code>.env</code> file using <code>AUTHENTIK_TAG</code>.</p>
+<p>The shared Compose fallback was also updated to <code>2026.8.5</code>.</p>
+<p>Do not commit the Authentik <code>.env</code> file or assume changing a fallback tag automatically upgrades the running application.</p>
+<p>See <code>services/infra/authentik.md</code> and <code>runbooks/authentik-update.md</code>.</p>
+<hr />
+<h2 id="example-updating-immich-on-immich-prod-01">Example — Updating Immich on immich-prod-01<a class="headerlink" href="#example-updating-immich-on-immich-prod-01" title="Permanent link">&para;</a></h2>
+<p><strong>Host:</strong> immich-prod-01<br />
+<strong>IP:</strong> 192.168.30.14</p>
+<p>Immich updates require special attention to release compatibility and database migrations.</p>
+<p>Before updating:</p>
+<ul>
+<li>Read the official release notes.</li>
+<li>Confirm the current and target versions.</li>
+<li>Review changes to the supported Compose configuration.</li>
+<li>Verify the required database and application backups.</li>
+<li>Confirm that persistent photo storage is available.</li>
+</ul>
+<p>The Compose stack is located at:</p>
+<p><code>/opt/stacks/immich</code></p>
+<p>Follow the version-appropriate Immich upgrade instructions rather than assuming a generic image pull is sufficient.</p>
+<p>Verify the application UI, database connectivity, and photo access after updating.</p>
+<p><strong>Additional reverse-proxy consideration:</strong> Immich uses Traefik for HTTPS routing. When changing reverse-proxy timeouts, URL handling, request headers, or other shared entrypoint behavior, verify Immich functionality separately from container health.</p>
+<hr />
+<h2 id="method-3-proxmox-mcp-on-observer-prod-01">Method 3 — Proxmox MCP on observer-prod-01<a class="headerlink" href="#method-3-proxmox-mcp-on-observer-prod-01" title="Permanent link">&para;</a></h2>
+<p><strong>Host:</strong> observer-prod-01<br />
+<strong>IP:</strong> 192.168.30.17<br />
+<strong>Container:</strong> proxmox-mcp<br />
+<strong>Compose:</strong> <code>/opt/stacks/proxmox-mcp/compose.yaml</code><br />
+<strong>Image:</strong> <code>ghcr.io/mattoddie/proxmox-mcp:latest</code></p>
+<p>The Proxmox MCP service runs as a dedicated Docker Compose stack on the AI Observer VM.</p>
+<p>It is managed through SSH and the CLI.</p>
+<p>The observer MCP container is managed through SSH and the Docker Compose CLI, not through the retired Dockman service.</p>
+<h3 id="update-requirements">Update Requirements<a class="headerlink" href="#update-requirements" title="Permanent link">&para;</a></h3>
+<p>Before updating Proxmox MCP:</p>
+<ol>
+<li>Review the upstream project's release notes and changes.</li>
+<li>Verify that the target version remains compatible with the current MCP transport and tool configuration.</li>
+<li>Verify that a usable recovery point exists for observer-prod-01 or establish an approved recovery procedure.</li>
+<li>Check that the existing MCP and tunnel services are healthy.</li>
+<li>Record the currently deployed image version or image ID.</li>
+<li>Preserve the existing read-only configuration and credentials.</li>
+</ol>
+<p>The current documented deployment uses the <code>latest</code> image tag.</p>
+<p>Because <code>latest</code> is mutable, record the existing image ID before pulling a replacement. A prior Compose file alone may not identify the previously deployed image.</p>
+<h3 id="step-1-connect-to-the-observer">Step 1 — Connect to the Observer<a class="headerlink" href="#step-1-connect-to-the-observer" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>ssh<span class="w"> </span>gio@192.168.30.17
+</code></pre></div>
+<p>Navigate to the MCP stack:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/proxmox-mcp
+</code></pre></div>
+<h3 id="step-2-inspect-the-existing-deployment">Step 2 — Inspect the Existing Deployment<a class="headerlink" href="#step-2-inspect-the-existing-deployment" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Check the current container</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># Show the currently referenced image</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>images
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="c1"># Record the current image ID</span>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>sudo<span class="w"> </span>docker<span class="w"> </span>image<span class="w"> </span>inspect<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="w">  </span>ghcr.io/mattoddie/proxmox-mcp:latest<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="w">  </span>--format<span class="w"> </span><span class="s1">'{{.Id}}'</span>
+<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>
+<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="c1"># Validate the Compose configuration</span>
+<a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+</code></pre></div>
+<p>Record the image ID in the maintenance notes before proceeding.</p>
+<p>Do not display or share the full contents of the credential-bearing <code>.env</code> file.</p>
+<h3 id="step-3-verify-mcp-health">Step 3 — Verify MCP Health<a class="headerlink" href="#step-3-verify-mcp-health" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:8080/health
+</code></pre></div>
+<p>Expected response:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
+</code></pre></div>
+<p>Check the tunnel service:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>tunnel-client<span class="w"> </span>--no-pager
+</code></pre></div>
+<p>Check tunnel readiness:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:8081/readyz
+</code></pre></div>
+<p>Expected response:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>ready
+</code></pre></div>
+<p>If either component is unhealthy before the update, investigate the cause first.</p>
+<h3 id="step-4-pull-the-updated-mcp-image">Step 4 — Pull the Updated MCP Image<a class="headerlink" href="#step-4-pull-the-updated-mcp-image" title="Permanent link">&para;</a></h3>
+<p>After reviewing the release and confirming backup readiness:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/proxmox-mcp
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>pull<span class="w"> </span>proxmox-mcp
+</code></pre></div>
+<p>This downloads the image referenced by the existing Compose configuration.</p>
+<p>It does not restart the running container.</p>
+<h3 id="step-5-recreate-the-mcp-container">Step 5 — Recreate the MCP Container<a class="headerlink" href="#step-5-recreate-the-mcp-container" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--no-deps<span class="w"> </span>proxmox-mcp
+</code></pre></div>
+<p>The service name is <code>proxmox-mcp</code>.</p>
+<p>This updates the MCP container without deliberately restarting the separate OpenAI tunnel systemd service.</p>
+<p>There may still be a brief interruption to MCP requests while the container is recreated.</p>
+<h3 id="step-6-verify-the-updated-container">Step 6 — Verify the Updated Container<a class="headerlink" href="#step-6-verify-the-updated-container" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">100</span><span class="w"> </span>proxmox-mcp
+<a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>
+<a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:8080/health
+</code></pre></div>
+<p>Confirm:</p>
+<ul>
+<li>The container is running.</li>
+<li>The expected image is deployed.</li>
+<li>No startup or configuration errors are present.</li>
+<li>The health endpoint responds successfully.</li>
+</ul>
+<h3 id="step-7-verify-tunnel-connectivity">Step 7 — Verify Tunnel Connectivity<a class="headerlink" href="#step-7-verify-tunnel-connectivity" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>tunnel-client<span class="w"> </span>--no-pager
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:8081/readyz
+</code></pre></div>
+<p>Review tunnel logs if necessary:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>sudo<span class="w"> </span>journalctl<span class="w"> </span>-u<span class="w"> </span>tunnel-client<span class="w"> </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>--no-pager
+</code></pre></div>
+<p>The tunnel should remain active and able to reach the local MCP endpoint.</p>
+<h3 id="step-8-verify-end-to-end-mcp-functionality">Step 8 — Verify End-to-End MCP Functionality<a class="headerlink" href="#step-8-verify-end-to-end-mcp-functionality" title="Permanent link">&para;</a></h3>
+<p>From ChatGPT, request a live Proxmox query through the Homelab Proxmox plugin.</p>
+<p>Example:</p>
+<blockquote>
+<p>Check the live Proxmox cluster status using the Homelab Proxmox integration.</p>
+</blockquote>
+<p>Confirm that the tool successfully returns current cluster information.</p>
+<p>This is the final functional verification after an update.</p>
+<p>If the upstream release changes tool definitions or MCP discovery behavior, the ChatGPT plugin configuration may need to be reviewed.</p>
+<p>Do not mark the update successful based solely on Docker container status or the local health endpoint.</p>
+<h3 id="step-9-verify-security-settings">Step 9 — Verify Security Settings<a class="headerlink" href="#step-9-verify-security-settings" title="Permanent link">&para;</a></h3>
+<p>Confirm that the deployed configuration continues to enforce:</p>
+<ul>
+<li><code>PROXMOX_ALLOW_WRITES=false</code></li>
+<li><code>PROXMOX_ALLOW_DELETES=false</code></li>
+<li><code>PROXMOX_ALLOW_EXEC=false</code></li>
+<li>Proxmox API access through the dedicated audit-only identity.</li>
+<li>MCP HTTP binding to <code>127.0.0.1:8080</code>.</li>
+<li>No new external listeners or unnecessary Docker privileges.</li>
+</ul>
+<p>Do not enable additional permissions as part of a routine update.</p>
+<h3 id="updating-the-openai-tunnel-client">Updating the OpenAI Tunnel Client<a class="headerlink" href="#updating-the-openai-tunnel-client" title="Permanent link">&para;</a></h3>
+<p><strong>The tunnel client is not a Docker container.</strong></p>
+<p>It runs as a native Linux systemd service:</p>
+<p><code>tunnel-client.service</code></p>
+<p>Its binary is installed at:</p>
+<p><code>/opt/tunnel-client/tunnel-client</code></p>
+<p>Do not use Docker Compose commands to update the tunnel client.</p>
+<p>Tunnel-client upgrades require a separate procedure covering:</p>
+<ul>
+<li>Review of the official OpenAI tunnel-client release.</li>
+<li>Verification of the downloaded artifact and checksum.</li>
+<li>Preservation of <code>/etc/tunnel-client</code> configuration and protected credentials.</li>
+<li>Compatible binary installation.</li>
+<li>Controlled systemd restart.</li>
+<li>Readiness verification.</li>
+<li>End-to-end ChatGPT MCP testing.</li>
+</ul>
+<p>The detailed procedure belongs in <code>runbooks/ai-observer-operations.md</code>.</p>
+<p><strong>Do not update the MCP container and tunnel-client binary simultaneously during routine maintenance.</strong></p>
+<p>Update and verify one component at a time to simplify troubleshooting and rollback.</p>
+<hr />
+<h2 id="retired-management-tool-dockman-historical">Retired Management Tool — Dockman (Historical)<a class="headerlink" href="#retired-management-tool-dockman-historical" title="Permanent link">&para;</a></h2>
+<p>Dockman was decommissioned from <code>docker-prod-01</code> in November 2026. Its container, Komodo stack registration, <code>/opt/stacks/dockman/</code> Compose directory and <code>/opt/appdata/dockman/</code> state were removed. Its former self-update procedure is no longer applicable and has been removed from this active runbook.</p>
+<p>The former deployment and update incident remain recorded in <code>services/infra/dockman.md</code> for historical reference. For current Docker management use <strong>Method 1 — Komodo (UI)</strong> or <strong>Method 2 — CLI</strong> as appropriate.</p>
+<hr />
+<h2 id="cleaning-up-old-images">Cleaning Up Old Images<a class="headerlink" href="#cleaning-up-old-images" title="Permanent link">&para;</a></h2>
+<p>After updating a container, unused images may remain on disk.</p>
+<p>Inspect image usage:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>docker<span class="w"> </span>images
+</code></pre></div>
+<p>When cleanup is appropriate:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>docker<span class="w"> </span>image<span class="w"> </span>prune<span class="w"> </span>-f
+</code></pre></div>
+<p>This removes dangling images that are not associated with a running or stopped container.</p>
+<p><strong>Important:</strong> Do not automatically prune images immediately after an update.</p>
+<p>Older images may be needed for troubleshooting or rollback, especially when a service uses a mutable tag such as <code>latest</code>.</p>
+<p>Wait until the new version has been verified and the relevant rollback and backup requirements are satisfied.</p>
+<p>Avoid broad image cleanup commands unless their effect is understood.</p>
+<hr />
+<h2 id="rollback-considerations">Rollback Considerations<a class="headerlink" href="#rollback-considerations" title="Permanent link">&para;</a></h2>
+<p>A Docker image rollback is not always equivalent to a complete application rollback.</p>
+<p>For services without database migrations, restoring an earlier known-good image and configuration may be sufficient.</p>
+<p>For services with database or schema changes, downgrading the image may fail or corrupt application state.</p>
+<h3 id="before-updating_1">Before Updating<a class="headerlink" href="#before-updating_1" title="Permanent link">&para;</a></h3>
+<p>Where practical:</p>
+<ul>
+<li>Record the existing image tag and image ID.</li>
+<li>Preserve the previous Compose configuration.</li>
+<li>Verify application backups.</li>
+<li>Review the upstream rollback guidance.</li>
+<li>Keep required older images until the new deployment has been verified.</li>
+</ul>
+<h3 id="if-an-update-fails">If an Update Fails<a class="headerlink" href="#if-an-update-fails" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Stop further update attempts.</li>
+<li>Check container status and logs.</li>
+<li>Identify whether the failure is related to the image, configuration, network, or persistent application state.</li>
+<li>Review whether a supported rollback path exists.</li>
+<li>Restore the prior image or configuration only when compatible with the current persistent data.</li>
+<li>Verify the service after recovery.</li>
+</ol>
+<p>For Authentik, Immich, and other database-backed services, consult the appropriate service-specific documentation.</p>
+<p>For AI Observer, preserve the separation between the Proxmox MCP container and the OpenAI tunnel client while investigating.</p>
+<p>Do not assume that rolling back the MCP container will resolve a problem caused by tunnel authentication or network connectivity.</p>
+<hr />
+<h2 id="stack-locations-by-host">Stack Locations by Host<a class="headerlink" href="#stack-locations-by-host" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>IP</th>
+<th>Stacks Path</th>
+<th>Management</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>docker-prod-01</td>
+<td>192.168.30.11</td>
+<td><code>/opt/stacks</code></td>
+<td>Komodo and CLI</td>
+</tr>
+<tr>
+<td>auth-prod-01</td>
+<td>192.168.30.13</td>
+<td><code>/opt/stacks</code></td>
+<td>Komodo and CLI</td>
+</tr>
+<tr>
+<td>immich-prod-01</td>
+<td>192.168.30.14</td>
+<td><code>/opt/stacks</code></td>
+<td>Komodo and CLI</td>
+</tr>
+<tr>
+<td>observer-prod-01</td>
+<td>192.168.30.17</td>
+<td><code>/opt/stacks</code></td>
+<td>CLI; Komodo integration where configured</td>
+</tr>
+</tbody>
+</table>
+<p>Management interface availability and permissions should be confirmed before using a UI for a consequential operation.</p>
+<h3 id="observer-specific-services">Observer-Specific Services<a class="headerlink" href="#observer-specific-services" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Deployment</th>
+<th>Management</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>proxmox-mcp</td>
+<td>Docker Compose</td>
+<td><code>sudo docker compose</code></td>
+</tr>
+<tr>
+<td>OpenAI tunnel-client</td>
+<td>Native systemd</td>
+<td><code>sudo systemctl</code></td>
+</tr>
+<tr>
+<td>Tunnel configuration</td>
+<td>Protected local files</td>
+<td>SSH and CLI</td>
+</tr>
+</tbody>
+</table>
+<p>Dockman has been retired; manage the observer through its documented CLI and systemd procedures.</p>
+<hr />
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Inspect the Git working tree before pulling configuration changes.</li>
+<li>Use fast-forward-only Git synchronization when the branch history permits it.</li>
+<li>Review incoming deletions that could affect persistent runtime data or Docker bind mounts.</li>
+<li>On observer-prod-01, follow the credential-handling procedure in <code>runbooks/git-workflow.md</code>.</li>
+<li>Komodo update polling does not replace release-note review, backup validation, or post-deployment testing.</li>
+<li>A routine image pull does not require a Git commit.</li>
+<li>Commit only intentional version-controlled configuration changes.</li>
+<li>Do not commit <code>.env</code> files, certificates, credentials, or generated runtime state.</li>
+<li><code>docker compose up -d</code> generally recreates only services whose image or configuration changed.</li>
+<li>Use <code>--no-deps</code> for targeted updates only when dependencies do not require coordinated changes.</li>
+<li>Use <code>--pull never</code> when deploying an image that was deliberately downloaded and reviewed in advance.</li>
+<li>Verify applications after updates, not just their container processes.</li>
+<li>Authentik updates must follow <code>runbooks/authentik-update.md</code>.</li>
+<li>Immich updates may require version-specific migration and backup procedures.</li>
+<li>Traefik updates require routing, TLS, and application verification.</li>
+<li>Dockman has been decommissioned; do not use legacy Dockman update procedures.</li>
+<li>Proxmox MCP updates must preserve read-only permissions and localhost binding.</li>
+<li>OpenAI tunnel-client updates are separate from Docker Compose.</li>
+<li>Do not mark an update successful until its functional checks pass.</li>
+<li>Never assume that Git alone provides complete service recovery.</li>
+</ul>
+<hr />
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>runbooks/git-workflow.md</code> — Version control, multi-host synchronization, and secure GitHub credentials.</li>
+<li><code>runbooks/new-stack-checklist.md</code> — Creating and configuring Docker stacks on docker-prod-01.</li>
+<li><code>runbooks/authentik-update.md</code> — Authentik sequential upgrade and migration procedure.</li>
+<li><code>runbooks/backup-schedule.md</code> — Backup schedules and verification requirements.</li>
+<li><code>runbooks/ai-observer-operations.md</code> — AI Observer maintenance, troubleshooting, and recovery.</li>
+<li><code>services/infra/traefik.md</code> — Reverse-proxy configuration, verified upgrade, security hardening, and rollback.</li>
+<li><code>services/monitoring/beszel.md</code> — Beszel hub, agents, and persistent runtime state.</li>
+<li><code>services/infra/dockman.md</code> — Retired Dockman deployment and decommission record (historical).</li>
+<li><code>services/infra/ai-observer.md</code> — Proxmox MCP and OpenAI Secure MCP Tunnel architecture.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,5201 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/runbooks/backup-restore/">
+      
+      
+        <link rel="prev" href="../../phases/phase-6-kubernetes/">
+      
+      
+        <link rel="next" href="../drive-replacement/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Backup & Restore - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#backup-restore-runbook" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Backup & Restore
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backup-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-proxmox-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Proxmox Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scope-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scope Limitations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pbs-backup-incident-operational-recovery-october-2026-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Backup Incident — Operational Recovery, October 2026 (Historical)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PBS Backup Incident — Operational Recovery, October 2026 (Historical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corrective-action-and-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Corrective Action and Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-impact-and-outstanding-checks-historical-october-30-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery Impact and Outstanding Checks (Historical October 30 Assessment)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pbs-docker-deployment-current-recovery-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Docker Deployment — Current Recovery Endpoint
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PBS Docker Deployment — Current Recovery Endpoint">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#active-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Active Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-backup-and-recovery-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Backup and Recovery Capabilities
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentication-and-alerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication and Alerts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updates-and-subscription" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updates and Subscription
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outstanding-recovery-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outstanding Recovery Work
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-vm-or-lxc-from-pbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — VM or LXC from PBS
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — VM or LXC from PBS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backup-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Infrastructure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-assess-the-guest" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Assess the Guest
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-verify-the-backup-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Verify the Backup Exists
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-validate-the-recovery-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Validate the Recovery Point
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-plan-the-restore" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Plan the Restore
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-restore" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Restore
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6 — Verify
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retention
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retired-pbs-vm-103-exclusion-and-recovery-implications" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retired PBS VM 103 — Exclusion and Recovery Implications
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-ai-observer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — AI Observer
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — AI Observer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#isolated-ai-observer-full-vm-restore-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Isolated AI Observer Full-VM Restore — November 14, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#special-precautions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Special Precautions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-docker-stacks-from-rsync-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — Docker Stacks from rsync Backup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — Docker Stacks from rsync Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Source
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-identify-the-affected-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Identify the Affected Host
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-inspect-the-source-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Inspect the Source Backup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-preserve-the-existing-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Preserve the Existing Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-restore-a-single-compose-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Restore a Single Compose File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-restore-a-single-env-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Restore a Single .env File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-stacks-restore-to-a-fresh-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      Full Stacks Restore to a Fresh Host
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rsync-backup-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      rsync Backup Limitations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-appdata-from-rsync-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — Appdata from rsync Backup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — Appdata from rsync Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-identify-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Identify the Application
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-stop-the-affected-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Stop the Affected Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-restore-application-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Restore Application Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-verify-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Verify Permissions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-restart-and-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Restart and Verify
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-plex-media-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — Plex Media Server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — Plex Media Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-recovery-source-built-in-plex-database-backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Recovery Source — Built-in Plex Database Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restore-precautions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore Precautions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dedicated-full-appdata-restore-pending-phase-5-wave-8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dedicated Full-Appdata Restore — Pending Phase 5 Wave 8
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-backup-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Backup Health
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verify Backup Health">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-rsync-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check rsync Logs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-healthchecksio" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Healthchecks.io
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-pbs-backup-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check PBS Backup Status
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-ai-observer-recovery-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check AI Observer Recovery Readiness
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-plex-built-in-database-backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Plex Built-in Database Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-dedicated-plex-full-appdata-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Dedicated Plex Full-Appdata Backup
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pbs-backups-failing-with-connection-reset-or-estale" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Backups Failing with Connection Reset or ESTALE
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PBS Backups Failing with Connection Reset or ESTALE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-only-first-response-current-docker-pbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Read-Only First Response — Current Docker PBS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-nfs-failure-october-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical NFS Failure — October 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-corrective-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Corrective Action
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rsync-script-not-running" class="md-nav__link">
+    <span class="md-ellipsis">
+      rsync Script Not Running
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rsync-ssh-connection-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      rsync SSH Connection Fails
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-garbage-collection-fails-with-permission-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Garbage Collection Fails with Permission Error
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plex-dedicated-backup-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plex Dedicated Backup Missing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-observer-recovery-unavailable" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI Observer Recovery Unavailable
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recovery-safety-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery Safety Principles
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-recovery-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Known Recovery Gaps
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-summary-october-2026-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — October 2026 (Historical)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Summary — October 2026 (Historical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verification-summary-november-5-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — November 5, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-summary-november-13-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — November 13, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-summary-november-14-2026-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — November 14, 2026 (Current)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backup-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-proxmox-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current Proxmox Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scope-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scope Limitations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pbs-backup-incident-operational-recovery-october-2026-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Backup Incident — Operational Recovery, October 2026 (Historical)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PBS Backup Incident — Operational Recovery, October 2026 (Historical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corrective-action-and-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Corrective Action and Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-impact-and-outstanding-checks-historical-october-30-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery Impact and Outstanding Checks (Historical October 30 Assessment)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pbs-docker-deployment-current-recovery-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Docker Deployment — Current Recovery Endpoint
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PBS Docker Deployment — Current Recovery Endpoint">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#active-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Active Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verified-backup-and-recovery-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Backup and Recovery Capabilities
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authentication-and-alerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication and Alerts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updates-and-subscription" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updates and Subscription
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outstanding-recovery-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outstanding Recovery Work
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-vm-or-lxc-from-pbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — VM or LXC from PBS
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — VM or LXC from PBS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backup-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backup Infrastructure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-assess-the-guest" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Assess the Guest
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-verify-the-backup-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Verify the Backup Exists
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-validate-the-recovery-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Validate the Recovery Point
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-plan-the-restore" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Plan the Restore
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-restore" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Restore
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 6 — Verify
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retention
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retired-pbs-vm-103-exclusion-and-recovery-implications" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retired PBS VM 103 — Exclusion and Recovery Implications
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-ai-observer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — AI Observer
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — AI Observer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#isolated-ai-observer-full-vm-restore-november-14-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Isolated AI Observer Full-VM Restore — November 14, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#special-precautions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Special Precautions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery Requirements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-docker-stacks-from-rsync-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — Docker Stacks from rsync Backup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — Docker Stacks from rsync Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Source
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-identify-the-affected-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Identify the Affected Host
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-inspect-the-source-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Inspect the Source Backup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-preserve-the-existing-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Preserve the Existing Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-restore-a-single-compose-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Restore a Single Compose File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-restore-a-single-env-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Restore a Single .env File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#full-stacks-restore-to-a-fresh-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      Full Stacks Restore to a Fresh Host
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rsync-backup-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      rsync Backup Limitations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-appdata-from-rsync-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — Appdata from rsync Backup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — Appdata from rsync Backup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-identify-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Identify the Application
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-stop-the-affected-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 — Stop the Affected Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-restore-application-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3 — Restore Application Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-verify-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 4 — Verify Permissions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-restart-and-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 5 — Restart and Verify
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restore-plex-media-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore — Plex Media Server
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore — Plex Media Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-recovery-source-built-in-plex-database-backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Recovery Source — Built-in Plex Database Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restore-precautions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restore Precautions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dedicated-full-appdata-restore-pending-phase-5-wave-8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dedicated Full-Appdata Restore — Pending Phase 5 Wave 8
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-backup-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Backup Health
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verify Backup Health">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-rsync-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check rsync Logs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-healthchecksio" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Healthchecks.io
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-pbs-backup-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check PBS Backup Status
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-ai-observer-recovery-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check AI Observer Recovery Readiness
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-plex-built-in-database-backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Plex Built-in Database Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-dedicated-plex-full-appdata-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Dedicated Plex Full-Appdata Backup
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pbs-backups-failing-with-connection-reset-or-estale" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Backups Failing with Connection Reset or ESTALE
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PBS Backups Failing with Connection Reset or ESTALE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-only-first-response-current-docker-pbs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Read-Only First Response — Current Docker PBS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-nfs-failure-october-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical NFS Failure — October 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#historical-corrective-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Corrective Action
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rsync-script-not-running" class="md-nav__link">
+    <span class="md-ellipsis">
+      rsync Script Not Running
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rsync-ssh-connection-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      rsync SSH Connection Fails
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pbs-garbage-collection-fails-with-permission-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      PBS Garbage Collection Fails with Permission Error
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plex-dedicated-backup-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plex Dedicated Backup Missing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-observer-recovery-unavailable" class="md-nav__link">
+    <span class="md-ellipsis">
+      AI Observer Recovery Unavailable
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recovery-safety-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recovery Safety Principles
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-recovery-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Known Recovery Gaps
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-summary-october-2026-historical" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — October 2026 (Historical)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification Summary — October 2026 (Historical)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verification-summary-november-5-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — November 5, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-summary-november-13-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — November 13, 2026
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-summary-november-14-2026-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verification Summary — November 14, 2026 (Current)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="backup-restore-runbook">Backup &amp; Restore Runbook<a class="headerlink" href="#backup-restore-runbook" title="Permanent link">&para;</a></h1>
+<p><strong>Last Updated:</strong> 2026-11-14<br />
+<strong>Status:</strong> Docker-based PBS active. Scheduled backups verified across all three Proxmox nodes. Authentik VM 104 backed up successfully after migration. The November 14 <strong>isolated full-VM restore of AI Observer VM 107 to test VM 900 passed</strong> for VM boot and local services. Other guest restores, production-network recovery, PBS maintenance execution, and overall disaster recovery readiness remain unverified.</p>
+<p>Procedures for restoring Homelab v3 infrastructure following host failure, data loss, corruption, or application-level problems.</p>
+<p>See <code>runbooks/backup-schedule.md</code> for backup schedules, destinations, retention, verification status, and known failures.</p>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Homelab v3 uses several complementary backup mechanisms:</p>
+<ul>
+<li>Proxmox Backup Server (PBS) for VM and LXC backups.</li>
+<li>rsync for Docker Compose stacks and persistent application data.</li>
+<li>Plex built-in database backups.</li>
+<li>Planned dedicated Plex full-appdata backups.</li>
+<li>Planned Synology Active Backup for Business (ABB) for versioned backup storage.</li>
+</ul>
+<p>These mechanisms provide different recovery capabilities and must not be treated as interchangeable.</p>
+<p>A scheduled backup job does not guarantee that a usable recovery point exists.</p>
+<p>Before performing any restoration:</p>
+<ol>
+<li>Identify the affected service and failure scope.</li>
+<li>Determine whether restoration is necessary or whether a smaller repair is appropriate.</li>
+<li>Verify that the intended backup exists and is accessible.</li>
+<li>Confirm the backup is suitable for the required recovery.</li>
+<li>Assess the risk of overwriting existing data or configurations.</li>
+<li>Plan the restoration and any required service interruption.</li>
+<li>Perform the approved recovery operation.</li>
+<li>Verify the restored service and its dependencies.</li>
+</ol>
+<p><strong>Important:</strong> Restoration procedures can overwrite or replace production data. Follow the established one-step-at-a-time workflow and obtain authorization before consequential changes.</p>
+<h3 id="backup-types">Backup Types<a class="headerlink" href="#backup-types" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Tool</th>
+<th>What It Covers</th>
+<th>Location</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VM &amp; CT backups</td>
+<td>PBS Docker on Unraid</td>
+<td>Selected Proxmox VM/LXC disks and configurations</td>
+<td>nas-prod-01 <code>/mnt/zfs-mirror/backups/pbs</code> (direct bind mount)</td>
+<td>November 14 scheduled backups successful on all three nodes; VM 104 post-migration backup successful; isolated full-VM recovery of VM 107 passed; other guest restores untested</td>
+</tr>
+<tr>
+<td>Stacks &amp; appdata</td>
+<td>rsync</td>
+<td>Docker Compose files, <code>.env</code> files, and persistent appdata on participating Docker hosts</td>
+<td>nas-prod-01 <code>/mnt/user/backups/stacks</code> and <code>/mnt/user/backups/appdata</code></td>
+<td>Documented operational; latest runs not reverified</td>
+</tr>
+<tr>
+<td>Plex built-in DB backup</td>
+<td>Plex Scheduled Tasks</td>
+<td>Plex library and blobs databases only</td>
+<td>nas-prod-01 <code>/mnt/user/appdata/plex</code></td>
+<td>Last verified 2026-10-26</td>
+</tr>
+<tr>
+<td>Plex full-appdata backup</td>
+<td>Custom script planned</td>
+<td>Complete Plex persistent appdata</td>
+<td>NAS backups share — destination TBD</td>
+<td>Pending</td>
+</tr>
+<tr>
+<td>Versioned backup</td>
+<td>Synology ABB planned</td>
+<td>NAS backups share with historical recovery points</td>
+<td>Synology NAS</td>
+<td>Pending</td>
+</tr>
+</tbody>
+</table>
+<h3 id="current-proxmox-architecture">Current Proxmox Architecture<a class="headerlink" href="#current-proxmox-architecture" title="Permanent link">&para;</a></h3>
+<p><strong>Cluster:</strong> <code>homelab-v3</code><br />
+<strong>Topology:</strong> Three voting Proxmox nodes<br />
+<strong>Quorum:</strong> Two of three votes required<br />
+<strong>External QDevice:</strong> Removed<br />
+<strong>Proxmox HA:</strong> Disabled<br />
+<strong>Last live verification:</strong> November 14, 2026</p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Management IP</th>
+<th>Hardware</th>
+<th>Current Guests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td>192.168.10.11</td>
+<td>Minisforum MS-A2</td>
+<td>CT 100, VM 101, VM 107; VM 106 stopped</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td>192.168.10.12</td>
+<td>Dell OptiPlex 5000 SFF</td>
+<td>VM 105</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td>192.168.10.13</td>
+<td>Lenovo ThinkCentre M90q Tiny</td>
+<td>CT 102, VM 104</td>
+</tr>
+</tbody>
+</table>
+<p>The cluster was confirmed quorate with all three nodes online November 14.</p>
+<p><strong>Important recovery distinction:</strong> Three-node quorum does not provide automatic guest failover. Guest disks reside on node-local ZFS storage, and Proxmox HA policies are not enabled.</p>
+<p>Unexpected node failure therefore requires an appropriate manual recovery or restore procedure.</p>
+<h3 id="scope-limitations">Scope Limitations<a class="headerlink" href="#scope-limitations" title="Permanent link">&para;</a></h3>
+<p>PBS backs up the virtual disks and other resources included in a guest's backup configuration. It does not necessarily include external NAS shares, independently mounted remote filesystems, or guest disks explicitly excluded from the backup.</p>
+<p>The November 14 live backup-job inspection confirmed that all seven registered guests are included in the job.</p>
+<table>
+<thead>
+<tr>
+<th>VMID</th>
+<th>Guest</th>
+<th>Host</th>
+<th>Included Volumes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>100</td>
+<td>dns-prod-01</td>
+<td>pve-prod-01</td>
+<td>LXC rootfs</td>
+</tr>
+<tr>
+<td>101</td>
+<td>docker-prod-01</td>
+<td>pve-prod-01</td>
+<td>scsi0, efidisk0</td>
+</tr>
+<tr>
+<td>102</td>
+<td>dns-prod-02</td>
+<td>pve-prod-03</td>
+<td>LXC rootfs</td>
+</tr>
+<tr>
+<td>104</td>
+<td>auth-prod-01</td>
+<td>pve-prod-03</td>
+<td>scsi0, efidisk0</td>
+</tr>
+<tr>
+<td>105</td>
+<td>immich-prod-01</td>
+<td>pve-prod-02</td>
+<td>scsi0, efidisk0</td>
+</tr>
+<tr>
+<td>106</td>
+<td>dragonwilds-server</td>
+<td>pve-prod-01</td>
+<td>scsi0, efidisk0</td>
+</tr>
+<tr>
+<td>107</td>
+<td>observer-prod-01</td>
+<td>pve-prod-01</td>
+<td>scsi0, efidisk0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>External data considerations:</strong></p>
+<ul>
+<li>Immich VM 105 mounts photos from Unraid. The NAS photo library is not included merely because the VM's virtual disks are backed up.</li>
+<li>Docker workloads using NAS-mounted media or application data may have external dependencies requiring separate recovery.</li>
+<li>PBS running as a Docker container on Unraid is not itself protected by the Proxmox guest backup job.</li>
+<li>A Proxmox guest backup does not independently protect the underlying NAS, its ZFS pool, or the PBS datastore against complete NAS loss.</li>
+</ul>
+<p>Docker rsync jobs cover the documented participating hosts:</p>
+<ul>
+<li>docker-prod-01</li>
+<li>auth-prod-01</li>
+<li>immich-prod-01</li>
+</ul>
+<p>They do not automatically protect observer-prod-01 or Plex appdata running directly on Unraid.</p>
+<p>The dedicated Plex full-appdata backup and Synology ABB remain pending Phase 5 Wave 8 implementation.</p>
+<hr />
+<h2 id="pbs-backup-incident-operational-recovery-october-2026-historical">PBS Backup Incident — Operational Recovery, October 2026 (Historical)<a class="headerlink" href="#pbs-backup-incident-operational-recovery-october-2026-historical" title="Permanent link">&para;</a></h2>
+<p><strong>Status at October 30:</strong> Immediate failure mechanism identified and temporarily cleared; failures recurred October 31–November 2. The original VM NFS path was replaced by Docker-based PBS November 3–5, while the original invalidation trigger remains unconfirmed.</p>
+<p><strong>Identified:</strong> October 29, 2026<br />
+<strong>Affected:</strong> Both then-existing PVE nodes and the PBS datastore accessed over Unraid NFS</p>
+<p>The October 29 scheduled jobs failed for all seven selected guests on the two PVE nodes with <code>connection reset</code> and <code>HTTP/2.0 connection failed</code>.</p>
+<p>Repeated task errors were visible through at least September 30–October 29 on pve-prod-01; the exact first failure date is not established.</p>
+<p>PBS proxy logs recorded the server-side error:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>TASK ERROR: unable to get shared lock - ESTALE: Stale file handle
+</code></pre></div>
+<p>A manual CT 100 backup reproduced this exact error at 00:31:10 CDT on October 30.</p>
+<p>PBS proxy PID 594 (running since August 11) retained an open <code>/mnt/backups/pbs/.lock</code> descriptor that returned <code>ESTALE</code> when accessed via <code>/proc/594/fd/21</code>.</p>
+<p>The current <code>.lock</code> pathname remained accessible, and a newly opened POSIX shared lock succeeded.</p>
+<p>This confirms a stale, long-lived proxy file handle as the immediate failure mechanism; the upstream event that invalidated it is not confirmed.</p>
+<p>The datastore was on Unraid's healthy <code>zfs-mirror</code> pool at <code>/mnt/zfs-mirror/backups/pbs</code>, but the former PBS VM connected to it through an NFSv3 export of <code>/mnt/user/backups</code> (<code>fuse.shfs</code>).</p>
+<p>FUSE/NFS file-handle behavior is a leading hypothesis for the original invalidation. No FUSE/NFS setting or ZFS export was changed.</p>
+<p><strong>This describes the retired VM-based PBS deployment. The current Docker-based PBS accesses the datastore directly and does not use this NFS mount.</strong></p>
+<h3 id="corrective-action-and-verification">Corrective Action and Verification<a class="headerlink" href="#corrective-action-and-verification" title="Permanent link">&para;</a></h3>
+<ul>
+<li>On October 30 at 00:55:42 CDT, the operator restarted <code>proxmox-backup-proxy</code> after checking that no PBS tasks were running. The service came back active/running under PID 1372698.</li>
+<li>Manual CT 100 backup <code>ct/100/2026-10-30T05:57:23Z</code> completed with <code>TASK OK</code> and was visible in PBS with its manifest, configuration, catalog, and filesystem index.</li>
+<li>That CT 100 snapshot passed targeted PBS integrity verification at 01:02 CDT, reporting zero errors.</li>
+<li>The October 30 02:00 CDT scheduled backup jobs completed with <code>TASK OK</code> on both then-existing nodes: pve-prod-01 (100, 101, 104, 106, 107) and pve-prod-02 (102, 105).</li>
+<li>Existing historical snapshots were found in PBS, including older snapshots with previous <code>Verify OK</code> status. Earlier empty results from the read-only Proxmox archive API were not a reliable inventory of the datastore.</li>
+</ul>
+<h3 id="recovery-impact-and-outstanding-checks-historical-october-30-assessment">Recovery Impact and Outstanding Checks (Historical October 30 Assessment)<a class="headerlink" href="#recovery-impact-and-outstanding-checks-historical-october-30-assessment" title="Permanent link">&para;</a></h3>
+<p>Successful backup execution and one verified CT 100 snapshot demonstrated operational recovery, but did not prove full disaster recovery readiness.</p>
+<p>The other newly created archives had not all been independently integrity-verified, and no isolated restore test had been performed.</p>
+<p>At the time, PBS VM 103 was excluded from the scheduled backup job.</p>
+<p>The operator elected to monitor Discord backup alerts and leave NFS/Unraid configuration unchanged.</p>
+<p><code>Permit exclusive shares = No</code> remained in place; proposed FUSE-bypass changes were not implemented.</p>
+<p>Confirm notification delivery separately rather than assuming a task log saying notified proves receipt.</p>
+<p><strong>Subsequent disposition:</strong> The October 30 recovery did not permanently resolve the issue. Failures recurred October 31–November 2, and the VM-based PBS deployment was replaced by Docker-based PBS on Unraid during November 3–5.</p>
+<p>The former PBS VM 103 was subsequently <strong>destroyed before the November 13 Proxmox host replacement</strong>.</p>
+<p>See <code>runbooks/backup-schedule.md</code> for complete incident evidence and chronology.</p>
+<hr />
+<h2 id="pbs-docker-deployment-current-recovery-endpoint">PBS Docker Deployment — Current Recovery Endpoint<a class="headerlink" href="#pbs-docker-deployment-current-recovery-endpoint" title="Permanent link">&para;</a></h2>
+<p><strong>Deployment date:</strong> November 3–5, 2026<br />
+<strong>Last backup execution verification:</strong> November 14, 2026<br />
+<strong>Status:</strong> Active</p>
+<p>The original PBS VM 103 (<code>pbs-prod-01</code>, <code>192.168.30.12</code>) was powered off following the October 31–November 2 recurrence of <code>ESTALE</code>.</p>
+<p>At the November 5 verification, it remained stopped as a temporary rollback artifact.</p>
+<p><strong>That historical state is no longer current. VM 103 was destroyed before the November 13 replacement of the original pve-prod-02.</strong></p>
+<p>The active service is the <code>proxmox-backup-server</code> container on Unraid <code>nas-prod-01</code>, using the unofficial image <code>ayufan/proxmox-backup-server:latest</code>.</p>
+<p>The installed PBS UI version was 4.2.0 at the last direct verification.</p>
+<h3 id="active-configuration">Active Configuration<a class="headerlink" href="#active-configuration" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Active Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PVE storage ID</td>
+<td><code>pbs-prod-01</code> (unchanged)</td>
+</tr>
+<tr>
+<td>PBS UI and API</td>
+<td><code>https://192.168.30.16:8007</code></td>
+</tr>
+<tr>
+<td>PBS host</td>
+<td><code>nas-prod-01</code></td>
+</tr>
+<tr>
+<td>PBS datastore</td>
+<td><code>nas-backups</code></td>
+</tr>
+<tr>
+<td>Container mount</td>
+<td><code>/backups</code></td>
+</tr>
+<tr>
+<td>Direct ZFS host mount</td>
+<td><code>/mnt/zfs-mirror/backups/pbs</code></td>
+</tr>
+<tr>
+<td>Persistent PBS config</td>
+<td><code>/mnt/user/appdata/pbs/etc</code></td>
+</tr>
+<tr>
+<td>Persistent PBS logs</td>
+<td><code>/mnt/user/appdata/pbs/logs</code></td>
+</tr>
+<tr>
+<td>Persistent PBS runtime lib</td>
+<td><code>/mnt/user/appdata/pbs/lib</code></td>
+</tr>
+<tr>
+<td>Authentication for backup clients</td>
+<td><code>pve-backup@pbs!pve-cluster</code> API token; <code>DatastoreBackup</code> on <code>/datastore/nas-backups</code></td>
+</tr>
+<tr>
+<td>Interactive admin access</td>
+<td><code>gio@authentik</code> (Admin <code>/</code>), fallback <code>admin@pbs</code> (local PBS realm)</td>
+</tr>
+<tr>
+<td>Retention</td>
+<td>Keep-last 3, keep-daily 7, keep-weekly 4, keep-monthly 3</td>
+</tr>
+<tr>
+<td>Garbage collection</td>
+<td>Saturday 04:00</td>
+</tr>
+<tr>
+<td>Verification</td>
+<td>Saturday 05:00</td>
+</tr>
+</tbody>
+</table>
+<p>The image runs with:</p>
+<ul>
+<li>Host networking.</li>
+<li>2 GiB RAM limit.</li>
+<li><code>/run</code> tmpfs.</li>
+<li><code>--stop-signal=SIGHUP</code>.</li>
+<li><code>--restart unless-stopped</code>.</li>
+<li>Unraid Docker template with Privileged disabled.</li>
+</ul>
+<p>Host-network binding may expose TCP 8007 on the NAS management IP as well as Services VLAN; firewall reachability has not been independently reviewed.</p>
+<p>Keep the ZFS datastore available before PBS starts. Actual automatic start-after-ZFS-mount ordering has not been separately tested.</p>
+<p>The underlying <code>zfs-mirror/backups</code> dataset also contains non-PBS rsync data.</p>
+<h3 id="verified-backup-and-recovery-capabilities">Verified Backup and Recovery Capabilities<a class="headerlink" href="#verified-backup-and-recovery-capabilities" title="Permanent link">&para;</a></h3>
+<p><strong>November 5:</strong></p>
+<ul>
+<li>Manual CT 100 backup successful.</li>
+<li>Targeted snapshot integrity verification passed.</li>
+<li>Scheduled backups successful on both then-existing PVE nodes.</li>
+<li>File-level recovery from CT 100 performed by browsing and downloading <code>/etc/hostname</code> and checking its contents.</li>
+</ul>
+<p><strong>November 14:</strong></p>
+<ul>
+<li>Scheduled 02:00 PBS backup completed successfully on pve-prod-01.</li>
+<li>Scheduled 02:00 PBS backup completed successfully on replacement pve-prod-02.</li>
+<li>Scheduled 02:00 PBS backup completed successfully on pve-prod-03.</li>
+<li>All seven current guests were included in the cluster-wide backup job.</li>
+<li>After VM 104 migrated to pve-prod-03, a fresh manual snapshot backup succeeded from the destination node.</li>
+</ul>
+<p><strong>Authentik post-migration backup:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Guest</td>
+<td>VM 104 — auth-prod-01</td>
+</tr>
+<tr>
+<td>Proxmox host</td>
+<td>pve-prod-03</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>November 14, 2026</td>
+</tr>
+<tr>
+<td>Completion</td>
+<td>14:09:45 CST</td>
+</tr>
+<tr>
+<td>Mode</td>
+<td>Snapshot</td>
+</tr>
+<tr>
+<td>Included disks</td>
+<td>32 GiB scsi0 and EFI disk</td>
+</tr>
+<tr>
+<td>Reused backup data</td>
+<td>30.52 GiB (95%)</td>
+</tr>
+<tr>
+<td>Job duration</td>
+<td>Approximately 44 seconds</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><code>TASK OK</code></td>
+</tr>
+</tbody>
+</table>
+<p>These results establish successful backup execution from the three-node architecture.</p>
+<p><strong>Those backup jobs alone do not establish disaster-recovery readiness.</strong> Subsequently on November 14, VM 107 was restored and booted successfully in an isolated test; other guests and production-network recovery are still untested.</p>
+<h3 id="authentication-and-alerts">Authentication and Alerts<a class="headerlink" href="#authentication-and-alerts" title="Permanent link">&para;</a></h3>
+<p>The shared Authentik OIDC provider redirect was updated from:</p>
+<p><code>https://192.168.30.12:8007</code></p>
+<p>to:</p>
+<p><code>https://192.168.30.16:8007</code></p>
+<p>Its shared client secret was rotated, and fresh SSO logins succeeded to PBS and both then-existing PVE nodes on November 5.</p>
+<p>A fresh Authentik SSO functional test also passed following the VM 104 migration on November 14. The exact Proxmox client endpoints tested were not itemized, so this does not independently establish OIDC redirect configuration for node 03.</p>
+<p>The Discord target sent a successful test message. A warning/error matcher was configured but not independently exercised by generating a failure.</p>
+<p>Do not include secret values or webhook URLs in this runbook.</p>
+<h3 id="updates-and-subscription">Updates and Subscription<a class="headerlink" href="#updates-and-subscription" title="Permanent link">&para;</a></h3>
+<p>The Docker image is unofficial and described as unmaintained by its maintainer.</p>
+<p>Docker image updates, if published, should be evaluated and deployed through Unraid's Docker update workflow with a tested recovery path.</p>
+<p>Do not assume an <code>apt upgrade</code> in the ephemeral container updates the deployed image.</p>
+<p>As of November 5, Unraid reported no available image update, while official Proxmox Backup Server documentation covered newer PBS 4.2.8.</p>
+<p>PBS does not require a paid subscription for its core features; the GUI no-subscription warning is expected.</p>
+<h3 id="outstanding-recovery-work">Outstanding Recovery Work<a class="headerlink" href="#outstanding-recovery-work" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Verify successful scheduled prune, garbage collection, and snapshot verification operations.</li>
+<li>Continue checking daily backup execution on all three nodes.</li>
+<li>Confirm the first scheduled backup of VM 104 from pve-prod-03.</li>
+<li><strong>Completed for VM 107:</strong> An isolated full-VM restore passed on November 14; perform equivalent safe tests for other critical guests when appropriate.</li>
+<li>Review network exposure of TCP 8007.</li>
+<li>Validate PBS startup ordering relative to ZFS availability.</li>
+<li>Establish a protected recovery strategy for the Docker configuration and datastore appropriate to the accepted risk.</li>
+</ul>
+<p>The operator intentionally declined a migration-time ZFS snapshot and accepted datastore recreation if older archives became unusable.</p>
+<hr />
+<h2 id="restore-vm-or-lxc-from-pbs">Restore — VM or LXC from PBS<a class="headerlink" href="#restore-vm-or-lxc-from-pbs" title="Permanent link">&para;</a></h2>
+<p>Use this procedure when a VM or LXC has been lost, corrupted, or must be restored to an earlier recovery point.</p>
+<p><strong>Status:</strong> Backup execution verified on all three nodes November 14. CT 100 previously passed integrity verification and <code>/etc/hostname</code> file-level recovery. <strong>VM 107 passed an isolated full-VM restore and local boot/service check on November 14.</strong> Other guest restores and production connectivity remain unverified.</p>
+<h3 id="backup-infrastructure">Backup Infrastructure<a class="headerlink" href="#backup-infrastructure" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox storage ID</td>
+<td><code>pbs-prod-01</code></td>
+</tr>
+<tr>
+<td>PBS host</td>
+<td><code>192.168.30.16</code> (nas-prod-01 Docker Host networking)</td>
+</tr>
+<tr>
+<td>PBS datastore</td>
+<td><code>nas-backups</code></td>
+</tr>
+<tr>
+<td>PBS datastore mount</td>
+<td><code>/backups</code> inside container</td>
+</tr>
+<tr>
+<td>NAS destination</td>
+<td><code>/mnt/zfs-mirror/backups/pbs</code> (direct ZFS)</td>
+</tr>
+<tr>
+<td>Primary Proxmox host</td>
+<td><code>192.168.10.11</code></td>
+</tr>
+<tr>
+<td>Secondary Proxmox host</td>
+<td><code>192.168.10.12</code></td>
+</tr>
+<tr>
+<td>Third Proxmox host</td>
+<td><code>192.168.10.13</code></td>
+</tr>
+</tbody>
+</table>
+<p>All three nodes currently have access to the shared PBS storage definition.</p>
+<p>The VM or LXC's current host is not necessarily the only possible restore destination. Actual restore feasibility depends on storage, resources, network configuration, backup format, and any service-specific requirements.</p>
+<h3 id="step-1-assess-the-guest">Step 1 — Assess the Guest<a class="headerlink" href="#step-1-assess-the-guest" title="Permanent link">&para;</a></h3>
+<p>Before restoring:</p>
+<ul>
+<li>Identify the affected VMID and hostname.</li>
+<li>Confirm its current state.</li>
+<li>Determine whether its virtual disks are intact.</li>
+<li>Identify any external storage dependencies.</li>
+<li>Determine whether an in-place repair is possible.</li>
+<li>Confirm whether restoration would overwrite current data.</li>
+</ul>
+<p>Avoid replacing a VM when the problem is limited to one repairable application or configuration file.</p>
+<h3 id="step-2-verify-the-backup-exists">Step 2 — Verify the Backup Exists<a class="headerlink" href="#step-2-verify-the-backup-exists" title="Permanent link">&para;</a></h3>
+<p>Access Proxmox:</p>
+<ul>
+<li>pve-prod-01: <code>https://192.168.10.11:8006</code></li>
+<li>pve-prod-02: <code>https://192.168.10.12:8006</code></li>
+<li>pve-prod-03: <code>https://192.168.10.13:8006</code></li>
+</ul>
+<p>From the Proxmox interface:</p>
+<ol>
+<li>Select a node with access to the <code>pbs-prod-01</code> storage.</li>
+<li>Select the <code>pbs-prod-01</code> storage entry.</li>
+<li>Open its backup-content view.</li>
+<li>Locate the intended guest.</li>
+<li>Review available backup timestamps.</li>
+</ol>
+<p>Alternatively, inspect PBS directly:</p>
+<p><code>https://192.168.30.16:8007</code></p>
+<p>Navigate to the <code>nas-backups</code> datastore and review its backup content.</p>
+<p>If no usable archive is available, stop.</p>
+<p>Do not attempt to restore from an assumed or nonexistent backup.</p>
+<p><strong>Authentication dependency:</strong> If Authentik is unavailable, use the appropriate local emergency administrator rather than relying solely on OIDC SSO. Preserve and protect the configured local emergency access methods.</p>
+<h3 id="step-3-validate-the-recovery-point">Step 3 — Validate the Recovery Point<a class="headerlink" href="#step-3-validate-the-recovery-point" title="Permanent link">&para;</a></h3>
+<p>Before proceeding:</p>
+<ul>
+<li>Confirm the correct VMID or CTID.</li>
+<li>Confirm the backup date and time.</li>
+<li>Check whether the archive is accessible.</li>
+<li>Review any available verification results.</li>
+<li>Confirm the required disks and configuration are included.</li>
+<li>Check whether relevant application data resides outside the VM backup.</li>
+<li>Determine whether the backup predates the failure or corruption.</li>
+</ul>
+<p>A backup's presence alone does not guarantee its integrity.</p>
+<p>For consequential recovery, prefer an archive that has passed verification and, where practical, has been tested through a safe restoration.</p>
+<p><strong>Special cases:</strong></p>
+<ul>
+<li><strong>VM 104 — Authentik:</strong> Confirm the archive contains its primary disk and EFI disk. Recovery requires preventing conflicts with the production IdP, including its IP and authentication services.</li>
+<li><strong>VM 105 — Immich:</strong> Its system disk backup does not include the external Unraid photo-library mount. Confirm photo and database recovery requirements separately.</li>
+<li><strong>VM 107 — AI Observer:</strong> Confirm the selected recovery point includes the currently deployed four integrations, their protected runtime configuration, and tunnel clients.</li>
+<li><strong>CT 102 — Secondary DNS:</strong> Confirm the intended AdGuard configuration and synchronization behavior before reintroducing a restored instance.</li>
+</ul>
+<h3 id="step-4-plan-the-restore">Step 4 — Plan the Restore<a class="headerlink" href="#step-4-plan-the-restore" title="Permanent link">&para;</a></h3>
+<p>Decide whether the operation is:</p>
+<ul>
+<li><strong>Test restoration:</strong> Restore to an isolated environment or different VMID.</li>
+<li><strong>Production replacement:</strong> Restore the original workload after confirming the existing instance will not conflict.</li>
+</ul>
+<p>Confirm:</p>
+<ul>
+<li>Target Proxmox node.</li>
+<li>Target storage.</li>
+<li>Available capacity.</li>
+<li>Intended VMID or CTID.</li>
+<li>Networking and VLAN requirements.</li>
+<li>Whether the original guest still exists.</li>
+<li>Whether the restored guest may start automatically.</li>
+<li>Potential application and database implications.</li>
+</ul>
+<p>Do not enable automatic startup for a test restoration when the restored guest could conflict with an active production service.</p>
+<p>This is especially important for services using static IP addresses, authentication credentials, cluster membership, or externally connected tunnels.</p>
+<p><strong>Three-node architecture consideration:</strong> VM backups can be restored to a suitable different node if the destination meets the workload requirements. However, all current <code>local-zfs</code> guest storage is node-local; a failed host's guest disks are not automatically available on another node.</p>
+<h3 id="step-5-restore">Step 5 — Restore<a class="headerlink" href="#step-5-restore" title="Permanent link">&para;</a></h3>
+<p>After selecting the verified backup:</p>
+<ol>
+<li>Select <strong>Restore</strong>.</li>
+<li>Confirm the target node.</li>
+<li>Select the target storage.</li>
+<li>Confirm the VMID or CTID.</li>
+<li>Review any overwrite warnings.</li>
+<li>Confirm startup behavior.</li>
+<li>Start the approved restoration.</li>
+<li>Monitor the task log until completion.</li>
+</ol>
+<p>Do not overwrite an existing production guest without an approved recovery plan.</p>
+<p>For a test restoration, use an alternate VMID and ensure that network connectivity, startup settings, and service identities will not conflict with production.</p>
+<h3 id="step-6-verify">Step 6 — Verify<a class="headerlink" href="#step-6-verify" title="Permanent link">&para;</a></h3>
+<p>After restoring:</p>
+<ul>
+<li>Confirm the VM or LXC boots.</li>
+<li>Verify networking and storage.</li>
+<li>Check application services.</li>
+<li>Verify access to required dependencies.</li>
+<li>Review relevant service logs.</li>
+<li>Confirm user-facing functionality.</li>
+<li>Confirm that the restored service does not conflict with another active instance.</li>
+</ul>
+<p>Record the archive used, recovery actions, and verification results.</p>
+<p>A successful Proxmox restore task alone does not establish application recovery.</p>
+<h3 id="retention">Retention<a class="headerlink" href="#retention" title="Permanent link">&para;</a></h3>
+<p>Current PBS retention settings, visually verified in the Docker PBS instance on November 5:</p>
+<ul>
+<li>Keep Last: 3</li>
+<li>Keep Daily: 7</li>
+<li>Keep Weekly: 4</li>
+<li>Keep Monthly: 3</li>
+</ul>
+<p>Effective retention depends on actual backup creation, pruning, datastore state, and the current retention configuration.</p>
+<p>Do not infer available recovery dates from the retention policy alone.</p>
+<h3 id="retired-pbs-vm-103-exclusion-and-recovery-implications">Retired PBS VM 103 — Exclusion and Recovery Implications<a class="headerlink" href="#retired-pbs-vm-103-exclusion-and-recovery-implications" title="Permanent link">&para;</a></h3>
+<p><strong>Current status:</strong> VM 103 was destroyed before November 13, 2026.</p>
+<p>The original PBS VM remains listed as an exclusion in the cluster backup job:</p>
+<p><code>backup-54015f90-26e5</code></p>
+<p>That exclusion is harmless because VM 103 no longer exists.</p>
+<p><strong>The retired VM is not a rollback option.</strong></p>
+<p>Do not attempt to start or restore the historical PBS VM against the active Docker PBS datastore without a separately designed and approved recovery plan.</p>
+<p>The existing backup job does not protect the current PBS Docker instance, its configuration, or its NAS-hosted datastore.</p>
+<p>Recovery requirements for these components must be considered separately.</p>
+<p>The obsolete VM 103 exclusion may be removed during a future backup-job housekeeping review after confirming coverage remains correct.</p>
+<hr />
+<h2 id="restore-ai-observer">Restore — AI Observer<a class="headerlink" href="#restore-ai-observer" title="Permanent link">&para;</a></h2>
+<p><strong>Guest:</strong> observer-prod-01<br />
+<strong>VMID:</strong> 107<br />
+<strong>Proxmox node:</strong> pve-prod-01<br />
+<strong>IP:</strong> 192.168.30.17</p>
+<p>AI Observer has additional recovery considerations because it hosts four independent read-only MCP integrations (Proxmox, Unraid, Komodo, and UniFi) and four OpenAI Secure MCP Tunnel clients.</p>
+<p>The private <code>homelab-infra</code> repository tracks the four MCP deployment definitions, the pinned UniFi source submodule, and inert tunnel YAML/systemd recovery templates (verified Git commits <code>6502c59</code> and <code>9887296</code>, November 6, 2026).</p>
+<p>This does not cover active credentials, installed binaries, a tested runtime rebuild, or backup integrity.</p>
+<p><strong>Updated backup status:</strong></p>
+<p>VM 107 completed its scheduled October 30, 2026 backup (<code>TASK OK</code>) on pve-prod-01. That backup predated the November 1 Komodo and November 5 UniFi additions.</p>
+<p>A newer scheduled backup completed successfully on <strong>November 14, 2026</strong>. Its primary 20 GiB disk and EFI disk were included.</p>
+<p>This provides current backup-execution evidence after the four integrations were deployed.</p>
+<p>Subsequently on November 14, the selected VM 107 snapshot showed PBS <strong>Verify State: OK</strong> and was restored successfully to isolated VM 900; the recovered OS booted and all four MCP containers started. Production-network connectivity was not exercised.</p>
+<p>The operator previously opted to skip recovery testing during the Phase 4 rollout. A separate isolated restoration exercise was completed on November 14, 2026; it did not perform a production recovery or external tunnel reconnection.</p>
+<h3 id="isolated-ai-observer-full-vm-restore-november-14-2026">Isolated AI Observer Full-VM Restore — November 14, 2026<a class="headerlink" href="#isolated-ai-observer-full-vm-restore-november-14-2026" title="Permanent link">&para;</a></h3>
+<p><strong>PASSED (isolated recovery scope):</strong> A PBS-verified VM 107 backup (<code>vm/107/2026-11-14T08:03:37Z</code>; Verify State <strong>OK</strong>) was restored to temporary VM 900 on <code>pve-prod-02</code> using separate <code>local-zfs</code> disks. Unique identity was enabled; Start after restore was disabled. While stopped, the restored VM's <code>net0</code> adapter was removed and Start at boot was disabled before first boot.</p>
+<p>VM 900 booted Ubuntu 26.04.1 LTS, allowed console login, mounted its root and EFI filesystems, and started the four AI Observer MCP containers (three healthy, one running). The operator reported the tunnel units looked good. No production NIC or external connectivity was enabled for the test VM. VM 900 was shut down and deleted; final Proxmox checks showed VM 900 absent and production VM 107 running.</p>
+<p><strong>Scope boundary:</strong> This verifies restore, local boot, and local service startup—not production-network failover, recovered external MCP/tunnel connectivity, or every credential. A separate operator-confirmed Secure Boot maintenance restart of production VM 107 occurred the same evening and was not part of the restore test. The tested snapshot predates that later maintenance. Other guests and PBS recovery still require separate validation.</p>
+<p>The authoritative step-by-step test record and safety checks are maintained in <code>runbooks/ai-observer-operations.md</code> under <strong>Isolated AI Observer Full-VM Restore — November 14, 2026</strong>.</p>
+<h3 id="special-precautions">Special Precautions<a class="headerlink" href="#special-precautions" title="Permanent link">&para;</a></h3>
+<p>Before restoring observer-prod-01:</p>
+<ul>
+<li>Verify a usable VM 107 archive actually exists.</li>
+<li>Confirm required credentials are available through approved secure storage.</li>
+<li>Determine whether the original observer instance is still running.</li>
+<li>Avoid two active VMs using <code>192.168.30.17</code>.</li>
+<li>Avoid simultaneous active instances using any of the four production tunnel identities.</li>
+<li>Do not start a test-restored observer directly on the production network without isolating it first.</li>
+<li>Preserve the four integrations' approved MCP read-only boundaries; the UniFi upstream API key itself is not independently verified read-only.</li>
+</ul>
+<h3 id="recovery-requirements">Recovery Requirements<a class="headerlink" href="#recovery-requirements" title="Permanent link">&para;</a></h3>
+<p>A restored observer must be checked for:</p>
+<ul>
+<li>All four MCP Compose configurations and excluded <code>.env</code> files; initialize the pinned UniFi <code>unifi-mcp/source</code> Git submodule and restore its locally built Docker image if required.</li>
+<li>Four protected tunnel configurations and runtime keys; Proxmox/Unraid additionally use local MCP authorization files.</li>
+<li>All four installed systemd tunnel units, shared OpenAI tunnel-client release, and protected credential ownership/permissions; Git copies under <code>observer/tunnel-client/</code> are not automatically installed.</li>
+<li>Network configuration and all four upstream API connections.</li>
+<li>All four ChatGPT plugin integrations, maintaining the recorded 84 + 26 + 40 + 55 = 205 Read / 0 Write tool inventory unless an authorized change has been verified.</li>
+</ul>
+<p>A restored VM may contain all files stored on its included virtual disks, but successful recovery still depends on a complete, usable backup and valid credentials.</p>
+<h3 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h3>
+<p>After an approved production restoration:</p>
+<ol>
+<li>Confirm the original observer is no longer using the production identity.</li>
+<li>Check the restored VM's network configuration.</li>
+<li>Verify all four MCP containers and their approved local-only endpoint bindings.</li>
+<li>Verify all four tunnel systemd services and separate readiness ports (8081, 8083, 8085, 8087).</li>
+<li>Verify local MCP health/protocol and protected upstream authentication without exposing secrets.</li>
+<li>Perform one successful read-only ChatGPT query through each Homelab Proxmox, Unraid, Komodo, and UniFi integration.</li>
+<li>Confirm no unintended privilege, tool-registration, or network exposure changes were introduced.</li>
+</ol>
+<p>The full AI Observer recovery procedure is maintained in:</p>
+<p><code>runbooks/ai-observer-operations.md</code></p>
+<p>Do not duplicate or independently maintain the detailed observer recovery workflow in this general runbook.</p>
+<hr />
+<h2 id="restore-docker-stacks-from-rsync-backup">Restore — Docker Stacks from rsync Backup<a class="headerlink" href="#restore-docker-stacks-from-rsync-backup" title="Permanent link">&para;</a></h2>
+<p>Use this when a Compose file or Git-excluded <code>.env</code> file is lost or corrupted on a participating Docker host.</p>
+<h3 id="available-source">Available Source<a class="headerlink" href="#available-source" title="Permanent link">&para;</a></h3>
+<p>The documented backup directories on nas-prod-01 are:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>/mnt/user/backups/stacks/&lt;hostname&gt;/
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>/mnt/user/backups/appdata/&lt;hostname&gt;/
+</code></pre></div>
+<p>The documented backup transport uses SSH and rsync to:</p>
+<p><code>192.168.30.16</code></p>
+<p>The backup script uses the SSH key:</p>
+<p><code>/root/.ssh/backup_rsa</code></p>
+<h3 id="step-1-identify-the-affected-host">Step 1 — Identify the Affected Host<a class="headerlink" href="#step-1-identify-the-affected-host" title="Permanent link">&para;</a></h3>
+<p>Confirm whether recovery concerns:</p>
+<ul>
+<li>docker-prod-01</li>
+<li>auth-prod-01</li>
+<li>immich-prod-01</li>
+</ul>
+<p>These hosts have separate stack configurations and application data.</p>
+<p>Do not restore one host's files into another host merely because they share the <code>homelab-infra</code> Git repository.</p>
+<p><strong>Authentik migration note:</strong> <code>auth-prod-01</code> now resides on <code>pve-prod-03</code>, but its guest hostname, IP, and documented rsync locations remain unchanged.</p>
+<p>Its latest post-migration rsync execution and heartbeat have not been independently verified.</p>
+<h3 id="step-2-inspect-the-source-backup">Step 2 — Inspect the Source Backup<a class="headerlink" href="#step-2-inspect-the-source-backup" title="Permanent link">&para;</a></h3>
+<p>From the authorized host or NAS administration session, inspect the intended backup.</p>
+<p>On nas-prod-01:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ls<span class="w"> </span>-la<span class="w"> </span>/mnt/user/backups/stacks/&lt;hostname&gt;/
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ls<span class="w"> </span>-la<span class="w"> </span>/mnt/user/backups/appdata/&lt;hostname&gt;/
+</code></pre></div>
+<p>Confirm:</p>
+<ul>
+<li>The expected directory exists.</li>
+<li>The intended files are present.</li>
+<li>File timestamps are suitable for recovery.</li>
+<li>The backup is not obviously incomplete or corrupted.</li>
+</ul>
+<p>The rsync implementation is a rolling mirror, not a versioned backup.</p>
+<h3 id="step-3-preserve-the-existing-configuration">Step 3 — Preserve the Existing Configuration<a class="headerlink" href="#step-3-preserve-the-existing-configuration" title="Permanent link">&para;</a></h3>
+<p>Before overwriting any file:</p>
+<ol>
+<li>Review the current file.</li>
+<li>Determine whether it contains newer valid configuration.</li>
+<li>Preserve a copy of the current file where appropriate.</li>
+<li>Confirm the backup copy is the intended replacement.</li>
+<li>Stop affected applications if required for consistency.</li>
+</ol>
+<p>Do not use recursive replacement or deletion commands without first determining their impact.</p>
+<h3 id="step-4-restore-a-single-compose-file">Step 4 — Restore a Single Compose File<a class="headerlink" href="#step-4-restore-a-single-compose-file" title="Permanent link">&para;</a></h3>
+<p>From the affected Docker host, using <code>docker-prod-01</code> as the example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>scp<span class="w"> </span>-i<span class="w"> </span>/root/.ssh/backup_rsa<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>root@192.168.30.16:/mnt/user/backups/stacks/docker-prod-01/&lt;stack&gt;/compose.yaml<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>/opt/stacks/&lt;stack&gt;/compose.yaml
+</code></pre></div>
+<p>Replace <code>&lt;stack&gt;</code> with the actual stack directory.</p>
+<p>Verify the restored file:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/&lt;stack&gt;
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>config<span class="w"> </span>--quiet
+</code></pre></div>
+<p>Review its content and Git status before deploying changes.</p>
+<p>A valid Compose file does not guarantee that its referenced images, volumes, networks, or secrets are available.</p>
+<h3 id="step-5-restore-a-single-env-file">Step 5 — Restore a Single .env File<a class="headerlink" href="#step-5-restore-a-single-env-file" title="Permanent link">&para;</a></h3>
+<p>From the affected Docker host:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>scp<span class="w"> </span>-i<span class="w"> </span>/root/.ssh/backup_rsa<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>root@192.168.30.16:/mnt/user/backups/stacks/docker-prod-01/&lt;stack&gt;/.env<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>/opt/stacks/&lt;stack&gt;/.env
+</code></pre></div>
+<p>An <code>.env</code> file may contain credentials.</p>
+<p>After restoration:</p>
+<ul>
+<li>Apply the host's documented file ownership and permissions.</li>
+<li>Ensure the file is not world-readable.</li>
+<li>Verify it remains excluded from Git.</li>
+<li>Do not display its secret values in logs or documentation.</li>
+</ul>
+<p>For docker-prod-01, these were the established shared-editing permissions during the former Dockman deployment. Dockman has now been removed; apply only permissions that remain appropriate for the current service and repository workflow:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sudo<span class="w"> </span>chown<span class="w"> </span>gio:service<span class="w"> </span>/opt/stacks/&lt;stack&gt;/compose.yaml
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">664</span><span class="w"> </span>/opt/stacks/&lt;stack&gt;/compose.yaml
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>sudo<span class="w"> </span>chown<span class="w"> </span>gio:service<span class="w"> </span>/opt/stacks/&lt;stack&gt;/.env
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">660</span><span class="w"> </span>/opt/stacks/&lt;stack&gt;/.env
+</code></pre></div>
+<p>These permissions are <strong>historical examples</strong>, not blanket requirements of Komodo. For new stacks, check <code>runbooks/new-stack-checklist.md</code> and the service account before applying them.</p>
+<p>Do not apply them automatically to auth-prod-01, immich-prod-01, or observer-prod-01.</p>
+<p>For example, auth-prod-01 has a documented <code>gio:gio</code> ownership requirement for its Authentik <code>.env</code>.</p>
+<h3 id="full-stacks-restore-to-a-fresh-host">Full Stacks Restore to a Fresh Host<a class="headerlink" href="#full-stacks-restore-to-a-fresh-host" title="Permanent link">&para;</a></h3>
+<p>If a participating Docker host must be rebuilt, first confirm that the source backup exists and the target environment is ready.</p>
+<p>The documented recovery commands for docker-prod-01 are:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sudo<span class="w"> </span>rsync<span class="w"> </span>-av<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="s2">"ssh -i /root/.ssh/backup_rsa"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>root@192.168.30.16:/mnt/user/backups/stacks/docker-prod-01/<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span>/opt/stacks/
+</code></pre></div>
+<p>For application data:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>rsync<span class="w"> </span>-av<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="s2">"ssh -i /root/.ssh/backup_rsa"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>root@192.168.30.16:/mnt/user/backups/appdata/docker-prod-01/<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>/opt/appdata/
+</code></pre></div>
+<p>These commands restore files without using <code>--delete</code>.</p>
+<p>They can still overwrite files with matching paths. Review the destination and source before executing.</p>
+<p>After restoration:</p>
+<ul>
+<li>Validate expected stack directories.</li>
+<li>Confirm ownership and permissions.</li>
+<li>Check Docker and Compose availability.</li>
+<li>Verify external mounts and networks.</li>
+<li>Restore any necessary credentials.</li>
+<li>Start services through their documented procedures.</li>
+<li>Verify each application.</li>
+</ul>
+<p>Do not apply a blanket recursive ownership change across all restored hosts.</p>
+<h3 id="rsync-backup-limitations">rsync Backup Limitations<a class="headerlink" href="#rsync-backup-limitations" title="Permanent link">&para;</a></h3>
+<p>The documented rsync backup uses <code>--delete</code> during regular backup synchronization.</p>
+<p>It maintains a rolling mirror that reflects the source's latest synchronized state.</p>
+<p>If a file was deleted or corrupted before the last successful backup, the mirror may already contain the damaged state.</p>
+<p>The planned Synology ABB implementation is intended to add historical recovery points, but has not yet been implemented.</p>
+<hr />
+<h2 id="restore-appdata-from-rsync-backup">Restore — Appdata from rsync Backup<a class="headerlink" href="#restore-appdata-from-rsync-backup" title="Permanent link">&para;</a></h2>
+<p>Use this when persistent application data under <code>/opt/appdata</code> is lost or corrupted.</p>
+<h3 id="step-1-identify-the-application">Step 1 — Identify the Application<a class="headerlink" href="#step-1-identify-the-application" title="Permanent link">&para;</a></h3>
+<p>Before restoring:</p>
+<ul>
+<li>Confirm the affected host.</li>
+<li>Confirm the application or stack.</li>
+<li>Identify the exact appdata directory.</li>
+<li>Determine whether the application uses a database.</li>
+<li>Determine whether other containers share the same data.</li>
+<li>Verify the available backup's suitability.</li>
+</ul>
+<p>Do not restore unrelated application directories.</p>
+<h3 id="step-2-stop-the-affected-service">Step 2 — Stop the Affected Service<a class="headerlink" href="#step-2-stop-the-affected-service" title="Permanent link">&para;</a></h3>
+<p>Stop the affected service through an approved, scoped Komodo operation or Docker Compose CLI when required for a consistent restore. Confirm dependent services before any stop.</p>
+<p>For a Compose service that can be stopped independently:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/&lt;stack&gt;
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>stop<span class="w"> </span>&lt;service-name&gt;
+</code></pre></div>
+<p>Use the exact Compose service name.</p>
+<p>Some applications require coordinated shutdown of additional components, especially database-backed applications.</p>
+<p>Follow their service-specific runbooks.</p>
+<h3 id="step-3-restore-application-data">Step 3 — Restore Application Data<a class="headerlink" href="#step-3-restore-application-data" title="Permanent link">&para;</a></h3>
+<p>The original documented full-directory recovery command is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sudo<span class="w"> </span>rsync<span class="w"> </span>-av<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="s2">"ssh -i /root/.ssh/backup_rsa"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>root@192.168.30.16:/mnt/user/backups/appdata/docker-prod-01/<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>/opt/appdata/
+</code></pre></div>
+<p>For a single affected application, prefer restoring only its relevant directory after confirming the actual backup layout.</p>
+<p>Do not use <code>--delete</code> for recovery unless the consequences have been explicitly reviewed.</p>
+<p>Preserve the current appdata before overwriting it where appropriate.</p>
+<h3 id="step-4-verify-permissions">Step 4 — Verify Permissions<a class="headerlink" href="#step-4-verify-permissions" title="Permanent link">&para;</a></h3>
+<p>Confirm the application's expected UID/GID and filesystem access.</p>
+<p>The established service UID/GID on docker-prod-01 is generally <code>2000:2000</code>.</p>
+<p>However, individual applications and hosts may require different ownership or permission settings.</p>
+<p>Apply only the permissions appropriate to the affected service.</p>
+<h3 id="step-5-restart-and-verify">Step 5 — Restart and Verify<a class="headerlink" href="#step-5-restart-and-verify" title="Permanent link">&para;</a></h3>
+<p>Once restoration is complete:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">cd</span><span class="w"> </span>/opt/stacks/&lt;stack&gt;
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>&lt;service-name&gt;
+</code></pre></div>
+<p>Use the service-specific startup procedure if additional dependencies must be restored or started in a particular order.</p>
+<p>Check:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>ps
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>--tail<span class="w"> </span><span class="m">100</span><span class="w"> </span>&lt;service-name&gt;
+</code></pre></div>
+<p>Verify the application's functionality, not just container status.</p>
+<p>For databases, confirm the application can read and use its recovered data.</p>
+<hr />
+<h2 id="restore-plex-media-server">Restore — Plex Media Server<a class="headerlink" href="#restore-plex-media-server" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> Built-in database backups available; dedicated full-appdata recovery pending.</p>
+<p>Plex runs directly on nas-prod-01 under Unraid's Docker management.</p>
+<p>It is managed directly by Unraid Docker, not by Komodo on docker-prod-01, and is not included in the documented Docker-host rsync jobs.</p>
+<h3 id="available-recovery-source-built-in-plex-database-backups">Available Recovery Source — Built-in Plex Database Backups<a class="headerlink" href="#available-recovery-source-built-in-plex-database-backups" title="Permanent link">&para;</a></h3>
+<p>Plex creates dated backups of the library and blobs databases every three days during scheduled maintenance.</p>
+<p>Directory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>/mnt/user/appdata/plex/Library/Application Support/Plex Media Server/Plug-in Support/Databases/
+</code></pre></div>
+<p>Backup file patterns:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>com.plexapp.plugins.library.db-YYYY-MM-DD
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>com.plexapp.plugins.library.blobs.db-YYYY-MM-DD
+</code></pre></div>
+<p>Backup copies were verified for:</p>
+<ul>
+<li>October 16, 2026</li>
+<li>October 19, 2026</li>
+<li>October 22, 2026</li>
+<li>October 25, 2026</li>
+</ul>
+<p>These files may provide database recovery points.</p>
+<p>They do not constitute complete backups of Plex artwork, metadata directories, preferences, or other application state.</p>
+<h3 id="restore-precautions">Restore Precautions<a class="headerlink" href="#restore-precautions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Do not overwrite the running Plex database while the container is active.</li>
+<li>Preserve existing database files before restoration, including relevant SQLite journal/WAL files.</li>
+<li>Use the Plex-supported database restoration procedure appropriate to the installed version.</li>
+<li>Verify ownership and permissions after restoration.</li>
+<li>The documented Plex UID/GID is <code>2000:2000</code>.</li>
+<li>Verify library availability, metadata, and watch history after recovery.</li>
+</ul>
+<p>A complete, tested command-by-command Plex database restoration procedure has not yet been established.</p>
+<p>These precautions should not be treated as a verified recovery procedure.</p>
+<h3 id="dedicated-full-appdata-restore-pending-phase-5-wave-8">Dedicated Full-Appdata Restore — Pending Phase 5 Wave 8<a class="headerlink" href="#dedicated-full-appdata-restore-pending-phase-5-wave-8" title="Permanent link">&para;</a></h3>
+<p>The planned custom full-appdata backup has not been implemented.</p>
+<p>During Wave 8:</p>
+<ol>
+<li>Implement and verify the dedicated Plex backup.</li>
+<li>Define the restore procedure for its archive format and directory structure.</li>
+<li>Verify handling of the running Plex container and SQLite databases.</li>
+<li>Validate ownership and application startup.</li>
+<li>Test library access and user state.</li>
+<li>Perform a safe restoration test.</li>
+<li>Document the tested commands and results.</li>
+</ol>
+<p>See <code>services/media/plex.md</code> and <code>runbooks/backup-schedule.md</code>.</p>
+<hr />
+<h2 id="verify-backup-health">Verify Backup Health<a class="headerlink" href="#verify-backup-health" title="Permanent link">&para;</a></h2>
+<h3 id="check-rsync-logs">Check rsync Logs<a class="headerlink" href="#check-rsync-logs" title="Permanent link">&para;</a></h3>
+<p>On each participating Docker host:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>sudo<span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span><span class="m">50</span><span class="w"> </span>/var/log/backup-appdata.log
+</code></pre></div>
+<p>Look for the most recent successful completion.</p>
+<p>If a failure is recorded, inspect the exit status and related error messages.</p>
+<p>A successful rsync log demonstrates the script reported completion. It does not establish that every backed-up application can be restored successfully.</p>
+<h3 id="check-healthchecksio">Check Healthchecks.io<a class="headerlink" href="#check-healthchecksio" title="Permanent link">&para;</a></h3>
+<p>Review the documented checks:</p>
+<ul>
+<li><code>backup-appdata-docker-prod-01</code></li>
+<li><code>backup-appdata-auth-prod-01</code></li>
+<li><code>backup-appdata-immich-prod-01</code></li>
+</ul>
+<p>Confirm that each has received a recent successful heartbeat.</p>
+<p>Correlate heartbeat status with the actual backup logs.</p>
+<h3 id="check-pbs-backup-status">Check PBS Backup Status<a class="headerlink" href="#check-pbs-backup-status" title="Permanent link">&para;</a></h3>
+<p>Open PBS:</p>
+<p><code>https://192.168.30.16:8007</code></p>
+<p>Navigate to the <code>nas-backups</code> datastore.</p>
+<p>Verify:</p>
+<ol>
+<li>Expected backup groups are visible.</li>
+<li>Recent archive timestamps exist.</li>
+<li>Backup tasks completed successfully.</li>
+<li>Required VM/LXC disks are included.</li>
+<li>Archive verification reports no unresolved errors.</li>
+<li>A safe restoration test has been completed where appropriate.</li>
+</ol>
+<p><strong>Latest verified execution state (November 14):</strong></p>
+<ul>
+<li>Scheduled backups completed successfully on all three Proxmox nodes.</li>
+<li>CT 100 and VMs 101, 104, 106, and 107 were backed up on node 01 before the Authentik migration.</li>
+<li>VM 105 was backed up on replacement node 02.</li>
+<li>CT 102 was backed up on node 03.</li>
+<li>A separate manual snapshot of VM 104 completed successfully on node 03 after migration.</li>
+</ul>
+<p>The earlier CT 100 targeted integrity verification and file-level <code>/etc/hostname</code> recovery passed.</p>
+<p>Continue checking archive integrity and perform isolated full restoration before declaring comprehensive recovery readiness.</p>
+<h3 id="check-ai-observer-recovery-readiness">Check AI Observer Recovery Readiness<a class="headerlink" href="#check-ai-observer-recovery-readiness" title="Permanent link">&para;</a></h3>
+<p>For observer-prod-01:</p>
+<ul>
+<li>Confirm a successful backup archive exists for VM 107.</li>
+<li>Verify the selected backup is accessible.</li>
+<li>Confirm the required configuration is included.</li>
+<li>Confirm credentials remain recoverable.</li>
+<li>Review production tunnel identity and IP conflict precautions.</li>
+<li><strong>Completed for VM 107:</strong> An isolated restore and local service test passed November 14; do not infer successful production-network recovery.</li>
+<li>Verify read-only queries through all four ChatGPT MCP integrations.</li>
+</ul>
+<p>See <code>runbooks/ai-observer-operations.md</code>.</p>
+<h3 id="check-plex-built-in-database-backups">Check Plex Built-in Database Backups<a class="headerlink" href="#check-plex-built-in-database-backups" title="Permanent link">&para;</a></h3>
+<p>On nas-prod-01:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>find<span class="w"> </span><span class="s2">"/mnt/user/appdata/plex/Library/Application Support/Plex Media Server/Plug-in Support/Databases"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span>-maxdepth<span class="w"> </span><span class="m">1</span><span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span>-printf<span class="w"> </span><span class="s1">'%TY-%Tm-%Td %TH:%TM | %s bytes | %f\n'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-r<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-30
+</code></pre></div>
+<p>Verify recent dated backup copies exist for both Plex databases.</p>
+<p>This confirms backup-file creation and schedule consistency, not database integrity or recoverability.</p>
+<p>Last verified: 2026-10-26.</p>
+<h3 id="check-dedicated-plex-full-appdata-backup">Check Dedicated Plex Full-Appdata Backup<a class="headerlink" href="#check-dedicated-plex-full-appdata-backup" title="Permanent link">&para;</a></h3>
+<p>Not yet applicable.</p>
+<p>The dedicated backup remains pending Phase 5 Wave 8.</p>
+<p>After implementation, add procedures for backup verification, logging, integrity checks, and restoration testing.</p>
+<hr />
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="pbs-backups-failing-with-connection-reset-or-estale">PBS Backups Failing with Connection Reset or ESTALE<a class="headerlink" href="#pbs-backups-failing-with-connection-reset-or-estale" title="Permanent link">&para;</a></h3>
+<p><strong>Current deployment:</strong> Docker PBS on <code>nas-prod-01</code>, using direct-ZFS datastore access.</p>
+<p><strong>Historical deployment:</strong> PBS VM 103, using NFSv3 through Unraid <code>fuse.shfs</code>. That VM was deleted and is not an active recovery endpoint.</p>
+<p>Do not assume a new PBS backup failure has the same cause as the October 2026 incident.</p>
+<h4 id="read-only-first-response-current-docker-pbs">Read-Only First Response — Current Docker PBS<a class="headerlink" href="#read-only-first-response-current-docker-pbs" title="Permanent link">&para;</a></h4>
+<ol>
+<li>Identify failed Proxmox tasks and record their UPIDs, timestamps, affected guests, and error messages.</li>
+<li>Determine whether failures affect one node or all three.</li>
+<li>Check that <code>pbs-prod-01</code> storage is available through Proxmox.</li>
+<li>Confirm whether the PBS Docker container is running on <code>nas-prod-01</code>.</li>
+<li>Review the PBS container's logs through authorized Unraid Docker management.</li>
+<li>Confirm the ZFS datastore is available and healthy.</li>
+<li>Check storage capacity and relevant filesystem permissions.</li>
+<li>Identify whether errors involve networking, authentication, datastore access, locking, or container startup.</li>
+</ol>
+<p><strong>Current datastore paths:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Location</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unraid host</td>
+<td><code>/mnt/zfs-mirror/backups/pbs</code></td>
+</tr>
+<tr>
+<td>Docker container</td>
+<td><code>/backups</code></td>
+</tr>
+<tr>
+<td>Proxmox storage</td>
+<td><code>pbs-prod-01</code></td>
+</tr>
+<tr>
+<td>PBS datastore</td>
+<td><code>nas-backups</code></td>
+</tr>
+</tbody>
+</table>
+<p>The former VM's <code>/mnt/backups/pbs</code> mount is not the current Docker datastore path.</p>
+<p>Do not restart services, modify the datastore, or change NFS exports until the actual failure mechanism is identified and the potential impact reviewed.</p>
+<h4 id="historical-nfs-failure-october-2026">Historical NFS Failure — October 2026<a class="headerlink" href="#historical-nfs-failure-october-2026" title="Permanent link">&para;</a></h4>
+<p>The October 30 proxy restart was only a temporary recovery; the same error recurred October 31–November 2.</p>
+<p>The active PBS Docker path bypasses the former NFS/FUSE datastore mount.</p>
+<p>The commands below preserve the historical investigation procedure. They are <strong>not instructions to execute against the current Docker PBS deployment</strong>.</p>
+<p>Known symptoms:</p>
+<ul>
+<li>Proxmox tasks showed <code>HTTP/2.0 connection failed</code> or <code>connection reset</code>.</li>
+<li>PBS proxy journal recorded <code>unable to get shared lock - ESTALE: Stale file handle</code>.</li>
+<li>The PBS proxy held a stale, long-lived <code>.lock</code> descriptor.</li>
+</ul>
+<p>Historical read-only investigation steps:</p>
+<ol>
+<li>
+<p>Check failures on the then-existing Proxmox nodes and record task IDs, timestamps, affected guests, and error strings.</p>
+</li>
+<li>
+<p>Inspect PBS proxy logs around the failure time (use UTC consistently):</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nv">TZ</span><span class="o">=</span>UTC<span class="w"> </span>journalctl<span class="w"> </span>--utc<span class="w"> </span>-u<span class="w"> </span>proxmox-backup-proxy<span class="w"> </span>-u<span class="w"> </span>proxmox-backup<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>--since<span class="w"> </span><span class="s2">"YYYY-MM-DD HH:MM:SS"</span><span class="w"> </span>--until<span class="w"> </span><span class="s2">"YYYY-MM-DD HH:MM:SS"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>--no-pager<span class="w"> </span>-o<span class="w"> </span>short-iso
+</code></pre></div>
+<ol>
+<li>Inspect the former NFS mount and datastore directory:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>findmnt<span class="w"> </span>--kernel<span class="w"> </span>-T<span class="w"> </span>/mnt/backups/pbs<span class="w"> </span>-o<span class="w"> </span>TARGET,SOURCE,FSTYPE,OPTIONS
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>ls<span class="w"> </span>-la<span class="w"> </span>/mnt/backups/pbs
+</code></pre></div>
+<ol>
+<li>Inspect the proxy PID and its open lock descriptor. Do not assume historical PID 594 would recur:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nv">pid</span><span class="o">=</span><span class="k">$(</span>systemctl<span class="w"> </span>show<span class="w"> </span>-P<span class="w"> </span>MainPID<span class="w"> </span>proxmox-backup-proxy<span class="k">)</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"PBS proxy PID: </span><span class="nv">$pid</span><span class="s2">"</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>ls<span class="w"> </span>-l<span class="w"> </span><span class="s2">"/proc/</span><span class="nv">$pid</span><span class="s2">/fd"</span><span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">'backups|\.lock|deleted'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+</code></pre></div>
+<p>If a relevant descriptor is found, inspect only that descriptor (using its actual FD number):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>readlink<span class="w"> </span><span class="s2">"/proc/</span><span class="nv">$pid</span><span class="s2">/fd/FD_NUMBER"</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>stat<span class="w"> </span>-L<span class="w"> </span><span class="s2">"/proc/</span><span class="nv">$pid</span><span class="s2">/fd/FD_NUMBER"</span>
+</code></pre></div>
+<p>An <code>ESTALE</code> result on the open descriptor while the current pathname works is strong evidence of a stale in-process handle.</p>
+<p>The label <code>(deleted)</code> is not by itself proof that PBS files were deleted.</p>
+<ol>
+<li>From Unraid, historical read-only checks included <code>zpool status -v</code>, <code>exportfs -v</code>, and <code>findmnt --kernel -T /mnt/user/backups</code>.</li>
+</ol>
+<p>Do not attribute a new failure to FUSE without evidence.</p>
+<h4 id="historical-corrective-action">Historical Corrective Action<a class="headerlink" href="#historical-corrective-action" title="Permanent link">&para;</a></h4>
+<p>In October 2026, after checking that PBS had no running tasks, the operator performed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>systemctl<span class="w"> </span>restart<span class="w"> </span>proxmox-backup-proxy
+</code></pre></div>
+<p>This was a service-changing recovery operation, not an automatic first step.</p>
+<p>It interrupted the old PBS proxy and cleared the stale process descriptor but did not resolve the underlying recurrence.</p>
+<p><strong>Do not treat this as an approved recovery command for the current container.</strong> The previous PBS VM no longer exists, and the active container uses a different datastore access path.</p>
+<p>After any authorized current-deployment recovery, verify the service, perform an appropriate controlled backup, check the resulting archive, and observe subsequent scheduled jobs.</p>
+<p>Do not blindly:</p>
+<ul>
+<li>Run <code>exportfs -ra</code>.</li>
+<li>Change global Unraid exclusive-share settings.</li>
+<li>Remount unrelated NFS shares.</li>
+<li>Delete <code>.lock</code> files.</li>
+<li>Delete incomplete snapshot directories.</li>
+<li>Run garbage collection or pruning as a troubleshooting shortcut.</li>
+<li>Change dataset ownership recursively.</li>
+<li>Migrate the datastore without an approved plan.</li>
+</ul>
+<p>The former direct-ZFS NFS export was only a proposal during the October incident. The implemented November change instead used Docker PBS with a direct bind mount.</p>
+<h3 id="rsync-script-not-running">rsync Script Not Running<a class="headerlink" href="#rsync-script-not-running" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Check the root crontab:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>sudo<span class="w"> </span>crontab<span class="w"> </span>-l
+</code></pre></div>
+<p>Expected documented entry:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>0 3 * * * /usr/local/bin/backup-appdata.sh
+</code></pre></div>
+<ol>
+<li>Confirm the script exists:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>ls<span class="w"> </span>-la<span class="w"> </span>/usr/local/bin/backup-appdata.sh
+</code></pre></div>
+<ol>
+<li>Review the existing backup log:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>sudo<span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>/var/log/backup-appdata.log
+</code></pre></div>
+<ol>
+<li>
+<p>Investigate any reported errors.</p>
+</li>
+<li>
+<p>Run the script manually only after reviewing what it will synchronize, including the consequences of its <code>--delete</code> behavior.</p>
+</li>
+</ol>
+<p>Manual execution is a state-changing backup operation and can replace the destination's existing mirror state.</p>
+<h3 id="rsync-ssh-connection-fails">rsync SSH Connection Fails<a class="headerlink" href="#rsync-ssh-connection-fails" title="Permanent link">&para;</a></h3>
+<p>Check whether the configured SSH key exists:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>sudo<span class="w"> </span>ls<span class="w"> </span>-la<span class="w"> </span>/root/.ssh/backup_rsa
+</code></pre></div>
+<p>Test connectivity only from an authorized backup host:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>sudo<span class="w"> </span>ssh<span class="w"> </span>-i<span class="w"> </span>/root/.ssh/backup_rsa<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">  </span>root@192.168.30.16<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"test"</span>
+</code></pre></div>
+<p>If authentication fails:</p>
+<ul>
+<li>Check network connectivity.</li>
+<li>Verify the intended SSH account is available.</li>
+<li>Confirm the authorized public key is installed.</li>
+<li>Review key permissions.</li>
+<li>Review the relevant SSH logs.</li>
+</ul>
+<p>Do not print private keys or other secret material into logs or documentation.</p>
+<h3 id="pbs-garbage-collection-fails-with-permission-error">PBS Garbage Collection Fails with Permission Error<a class="headerlink" href="#pbs-garbage-collection-fails-with-permission-error" title="Permanent link">&para;</a></h3>
+<p>A previously documented failure scenario involved incorrect ownership or unexpected files within the PBS datastore directory.</p>
+<p>However, the cause of a new GC failure must be verified rather than assumed.</p>
+<p><strong>Current Docker datastore paths:</strong></p>
+<ul>
+<li>Container: <code>/backups</code></li>
+<li>Unraid host: <code>/mnt/zfs-mirror/backups/pbs</code></li>
+</ul>
+<p><strong>Historical VM datastore paths (retired):</strong></p>
+<ul>
+<li>Former PBS VM: <code>/mnt/backups/pbs</code></li>
+<li>Former Unraid share alias: <code>/mnt/user/backups/pbs</code></li>
+</ul>
+<p>Initial investigation:</p>
+<ol>
+<li>Review the PBS GC task log.</li>
+<li>Confirm the active datastore is mounted and accessible.</li>
+<li>Inspect datastore directory ownership and permissions.</li>
+<li>Identify unexpected files or directories.</li>
+<li>Determine whether the issue involves ownership, filesystem access, or datastore integrity.</li>
+</ol>
+<p>On nas-prod-01, a read-only inspection may include:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>ls<span class="w"> </span>-la<span class="w"> </span>/mnt/zfs-mirror/backups/pbs/
+</code></pre></div>
+<p>Do not manually delete, move, or change ownership of PBS datastore files merely because they appear unfamiliar.</p>
+<p>PBS manages its own datastore structures, indexes, manifests, and chunk data.</p>
+<p>Improper filesystem changes can damage recovery data.</p>
+<p>Any corrective action must be based on the confirmed problem and appropriate PBS procedures.</p>
+<h3 id="plex-dedicated-backup-missing">Plex Dedicated Backup Missing<a class="headerlink" href="#plex-dedicated-backup-missing" title="Permanent link">&para;</a></h3>
+<p>The dedicated Plex full-appdata backup had not been implemented as of the October 26, 2026 verification.</p>
+<p>Do not assume Docker-host rsync backups include Plex because Plex runs directly on Unraid.</p>
+<p>Built-in Plex database backups were verified, but they remain inside the Plex appdata directory and do not provide an independent full-appdata recovery copy.</p>
+<p>Refer to Phase 5 Wave 8 before creating or troubleshooting the planned dedicated backup.</p>
+<h3 id="ai-observer-recovery-unavailable">AI Observer Recovery Unavailable<a class="headerlink" href="#ai-observer-recovery-unavailable" title="Permanent link">&para;</a></h3>
+<p>If a usable VM 107 backup cannot be found:</p>
+<ol>
+<li>Verify the PBS datastore and archive availability.</li>
+<li>Confirm whether an older valid recovery point exists.</li>
+<li>Review the available <code>homelab-infra</code> configuration.</li>
+<li>Confirm required credentials are stored securely.</li>
+<li>Determine whether the observer can be repaired in place.</li>
+<li>Consider a controlled rebuild only if full-VM recovery is unavailable.</li>
+</ol>
+<p>The rebuild process is documented as a contingency in <code>runbooks/ai-observer-operations.md</code>.</p>
+<p>It has not yet been tested as a complete disaster recovery procedure.</p>
+<p>Do not assume the observer can be fully rebuilt from Git alone.</p>
+<hr />
+<h2 id="recovery-safety-principles">Recovery Safety Principles<a class="headerlink" href="#recovery-safety-principles" title="Permanent link">&para;</a></h2>
+<p>The following principles apply to every restoration procedure:</p>
+<ol>
+<li><strong>Verify the recovery point first.</strong> Never restore from an assumed backup.</li>
+<li><strong>Preserve existing data when practical.</strong> Avoid destructive replacement without assessing the current state.</li>
+<li><strong>Isolate test restorations.</strong> Prevent duplicate IP addresses, identities, and externally connected services.</li>
+<li><strong>Use application-specific recovery procedures.</strong> Database-backed services may require coordinated restoration.</li>
+<li><strong>Avoid unnecessary full-stack restarts.</strong> Restore and restart only the affected components where supported.</li>
+<li><strong>Preserve credentials securely.</strong> Do not expose tokens, API keys, or private keys during recovery.</li>
+<li><strong>Validate after restoration.</strong> Confirm the application works, not just that the VM or container started.</li>
+<li><strong>Document verified outcomes.</strong> Record what was restored, which backup was used, and whether the recovery succeeded.</li>
+</ol>
+<p>A documented recovery procedure is not automatically a tested recovery procedure.</p>
+<hr />
+<h2 id="known-recovery-gaps">Known Recovery Gaps<a class="headerlink" href="#known-recovery-gaps" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Current Status</th>
+<th>Required Follow-Up</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox PBS backups</td>
+<td>Docker deployment active; November 14 scheduled jobs passed on all three nodes</td>
+<td>Monitor continued execution; verify prune, GC, and scheduled snapshot verification</td>
+</tr>
+<tr>
+<td>Authentik VM 104</td>
+<td>Migrated to pve-prod-03; fresh November 14 manual backup succeeded</td>
+<td>Confirm first scheduled backup from node 03; perform isolated restore test</td>
+</tr>
+<tr>
+<td>Historical PBS recovery points</td>
+<td>Older snapshots found; completeness varies</td>
+<td>Verify required snapshots and preserve historical recovery options</td>
+</tr>
+<tr>
+<td>PBS Docker container</td>
+<td>Config/datastore not protected by PVE guest jobs; original VM 103 destroyed</td>
+<td>Plan PBS Docker configuration and datastore recovery</td>
+</tr>
+<tr>
+<td>AI Observer VM 107</td>
+<td>November 14 snapshot Verify State OK; isolated restore to VM 900 booted successfully and local MCP containers started</td>
+<td>Test production-network recovery only under an approved, conflict-safe plan; validate secure credential recovery and tunnel connectivity separately</td>
+</tr>
+<tr>
+<td>Immich VM 105</td>
+<td>November 14 scheduled backup on replacement node 02 succeeded</td>
+<td>Validate VM recovery plus separate database and NAS photo-library protection</td>
+</tr>
+<tr>
+<td>Docker-host rsync recovery</td>
+<td>Documented; latest executions not reverified</td>
+<td>Check current jobs and test appropriate file restoration</td>
+</tr>
+<tr>
+<td>Plex built-in DB backups</td>
+<td>Files last verified 2026-10-26</td>
+<td>Establish and test database restore procedure</td>
+</tr>
+<tr>
+<td>Plex full-appdata backup</td>
+<td>Pending</td>
+<td>Implement Phase 5 Wave 8</td>
+</tr>
+<tr>
+<td>Synology ABB</td>
+<td>Pending</td>
+<td>Implement and verify versioned backups</td>
+</tr>
+<tr>
+<td>PBS alerts</td>
+<td>Discord target test passed</td>
+<td>Verify warning/error routing and real notification delivery</td>
+</tr>
+<tr>
+<td>UPS-assisted recovery</td>
+<td>NUT monitoring active on all three hosts</td>
+<td>Test the actual guest/host shutdown and post-power-restoration sequence under an approved plan</td>
+</tr>
+</tbody>
+</table>
+<p>These items should remain open until the corresponding work has been completed and verified.</p>
+<hr />
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>runbooks/backup-schedule.md</code> — Backup schedules, storage destinations, verification, and historical PBS incident.</li>
+<li><code>runbooks/ai-observer-operations.md</code> — AI Observer health checks, maintenance, troubleshooting, and disaster recovery.</li>
+<li><code>services/infra/ai-observer.md</code> — AI Observer architecture, configuration, security, and credential handling.</li>
+<li><code>services/infra/authentik.md</code> — Authentik configuration, SSO, and November 14 migration.</li>
+<li><code>architecture/compute/pve-prod-01.md</code> — Primary Proxmox node, primary Docker, primary DNS, and AI Observer.</li>
+<li><code>architecture/compute/pve-prod-02.md</code> — Replacement Dell node, Immich, and VM 103 retirement history.</li>
+<li><code>architecture/compute/pve-prod-03.md</code> — Lenovo third node, secondary DNS, and Authentik.</li>
+<li><code>architecture/hardware/inventory.md</code> — Current hardware and workload placement.</li>
+<li><code>architecture/network/ip-addresses.md</code> — Current service IP and VM host assignments.</li>
+<li><code>architecture/storage/nas-prod-01.md</code> — NAS storage, PBS datastore location, and UPS server.</li>
+<li><code>runbooks/git-workflow.md</code> — Git repositories, multi-host synchronization, and credential handling.</li>
+<li><code>runbooks/updating-containers.md</code> — Container updates and maintenance procedures.</li>
+<li><code>services/infra/dockman.md</code> — Retired Dockman deployment and decommission history.</li>
+<li><code>services/media/plex.md</code> — Plex deployment, persistent storage, and backup requirements.</li>
+<li><code>phases/phase-5-hardening.md</code> — Planned backup and operational hardening work.</li>
+</ul>
+<hr />
+<h2 id="verification-summary-october-2026-historical">Verification Summary — October 2026 (Historical)<a class="headerlink" href="#verification-summary-october-2026-historical" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nightly PBS backup job configured and enabled</td>
+<td>Verified</td>
+</tr>
+<tr>
+<td>October 29 PBS backups — both then-existing nodes</td>
+<td>Failed</td>
+</tr>
+<tr>
+<td>Immediate failure mechanism</td>
+<td>Stale PBS proxy datastore <code>.lock</code> file descriptor (<code>ESTALE</code>)</td>
+</tr>
+<tr>
+<td>Original NFS handle invalidation trigger</td>
+<td>Unconfirmed; FUSE/NFS behavior suspected</td>
+</tr>
+<tr>
+<td>Proxy restart, October 30 00:55 CDT</td>
+<td>Completed; service active under new PID</td>
+</tr>
+<tr>
+<td>Manual CT 100 backup, October 30 00:57 CDT</td>
+<td><code>TASK OK</code>; visible in PBS</td>
+</tr>
+<tr>
+<td>CT 100 integrity verification, October 30 01:02 CDT</td>
+<td>Passed with 0 errors</td>
+</tr>
+<tr>
+<td>October 30 02:00 scheduled backups — pve-prod-01</td>
+<td><code>TASK OK</code> (100, 101, 104, 106, 107)</td>
+</tr>
+<tr>
+<td>October 30 02:00 scheduled backups — original pve-prod-02</td>
+<td><code>TASK OK</code> (102, 105)</td>
+</tr>
+<tr>
+<td>Integrity verification of other new snapshots</td>
+<td>Not independently completed</td>
+</tr>
+<tr>
+<td>Safe restore test, including AI Observer</td>
+<td>Not performed</td>
+</tr>
+<tr>
+<td>PBS VM 103</td>
+<td>Excluded; separate recovery strategy outstanding at that time</td>
+</tr>
+<tr>
+<td>Discord alerts</td>
+<td>Configured per operator; actual failure delivery not independently verified</td>
+</tr>
+<tr>
+<td>NFS/FUSE mount/export changes</td>
+<td>Not performed; operator elected monitoring</td>
+</tr>
+<tr>
+<td>Docker rsync latest successful execution</td>
+<td>Not reverified</td>
+</tr>
+<tr>
+<td>Plex built-in database backup files</td>
+<td>Last verified 2026-10-26</td>
+</tr>
+<tr>
+<td>Dedicated Plex full-appdata backup / Synology ABB</td>
+<td>Not implemented</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Historical note:</strong> This October 30 state was superseded by the November Docker deployment after repeated stale-handle errors October 31–November 2.</p>
+<h3 id="verification-summary-november-5-2026">Verification Summary — November 5, 2026<a class="headerlink" href="#verification-summary-november-5-2026" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker PBS service</td>
+<td>Running on nas-prod-01 with direct ZFS datastore access</td>
+</tr>
+<tr>
+<td>Both PVE 02:00 scheduled backup tasks</td>
+<td><code>OK</code> (November 5)</td>
+</tr>
+<tr>
+<td>CT 100 manual backup</td>
+<td><code>TASK OK</code></td>
+</tr>
+<tr>
+<td>CT 100 targeted integrity verification</td>
+<td>Passed</td>
+</tr>
+<tr>
+<td>CT 100 <code>/etc/hostname</code> file restore</td>
+<td>Downloaded; operator confirmed correct content</td>
+</tr>
+<tr>
+<td>Existing group ownership</td>
+<td>All seven groups reassigned to new PVE token</td>
+</tr>
+<tr>
+<td>Fresh Authentik login after secret rotation</td>
+<td>Verified on PBS and both then-existing PVE hosts</td>
+</tr>
+<tr>
+<td>Discord target</td>
+<td>Webhook test delivered</td>
+</tr>
+<tr>
+<td>Prune / GC / scheduled verify</td>
+<td>Configured; scheduled execution not yet independently verified</td>
+</tr>
+<tr>
+<td>Full guest restore</td>
+<td>Not yet performed</td>
+</tr>
+<tr>
+<td>Original VM 103</td>
+<td>Stopped and retained at the time; subsequently destroyed before November 13</td>
+</tr>
+<tr>
+<td>Image updates</td>
+<td>Unraid showed no newer image; third-party latest lagged upstream PBS</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Historical note:</strong> VM 103's stopped/retained status describes November 5 only, not the current environment.</p>
+<h3 id="verification-summary-november-13-2026">Verification Summary — November 13, 2026<a class="headerlink" href="#verification-summary-november-13-2026" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cluster architecture</td>
+<td>Three Proxmox voting nodes, no external QDevice</td>
+</tr>
+<tr>
+<td>Original pve-prod-02</td>
+<td>OptiPlex 3070 Micro retired</td>
+</tr>
+<tr>
+<td>Replacement pve-prod-02</td>
+<td>Dell OptiPlex 5000 SFF</td>
+</tr>
+<tr>
+<td>Third node</td>
+<td>Lenovo ThinkCentre M90q Tiny</td>
+</tr>
+<tr>
+<td>Old PBS VM 103</td>
+<td>Destroyed</td>
+</tr>
+<tr>
+<td>Scheduled backups on nodes 01 and 03</td>
+<td>Successful</td>
+</tr>
+<tr>
+<td>VM 105 placement</td>
+<td>Moved from temporary node 03 to replacement node 02</td>
+</tr>
+<tr>
+<td>VM 105 manual backup on replacement node 02</td>
+<td><code>TASK OK</code></td>
+</tr>
+<tr>
+<td>Full guest restore</td>
+<td>Not performed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="verification-summary-november-14-2026-current">Verification Summary — November 14, 2026 (Current)<a class="headerlink" href="#verification-summary-november-14-2026-current" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cluster</td>
+<td>Three nodes online, quorate</td>
+</tr>
+<tr>
+<td>Proxmox HA</td>
+<td>Not enabled</td>
+</tr>
+<tr>
+<td>PBS storage</td>
+<td><code>pbs-prod-01</code> available on all three Proxmox nodes</td>
+</tr>
+<tr>
+<td>Scheduled backup job</td>
+<td>Enabled, 02:00 daily, snapshot mode, all guests except nonexistent VM 103</td>
+</tr>
+<tr>
+<td>Guest backup selection</td>
+<td>All seven current guests included</td>
+</tr>
+<tr>
+<td>Scheduled pve-prod-01 backup</td>
+<td><code>TASK OK</code>; 100, 101, 104, 106, 107</td>
+</tr>
+<tr>
+<td>Scheduled replacement pve-prod-02 backup</td>
+<td><code>TASK OK</code>; VM 105</td>
+</tr>
+<tr>
+<td>Scheduled pve-prod-03 backup</td>
+<td><code>TASK OK</code>; CT 102</td>
+</tr>
+<tr>
+<td>Authentik VM 104 migration</td>
+<td>Completed from node 01 to node 03</td>
+</tr>
+<tr>
+<td>Authentik manual backup from node 03</td>
+<td><code>TASK OK</code> at 14:09:45 CST</td>
+</tr>
+<tr>
+<td>VM 104 backup disks</td>
+<td>32 GiB system disk plus EFI disk</td>
+</tr>
+<tr>
+<td>VM 107 backup</td>
+<td><code>TASK OK</code>; system and EFI disks</td>
+</tr>
+<tr>
+<td>Former PBS VM 103</td>
+<td>Deleted; not available as rollback</td>
+</tr>
+<tr>
+<td>Full guest restoration</td>
+<td>VM 107 isolated restore/boot/local services passed November 14; other guests and external connectivity not tested</td>
+</tr>
+<tr>
+<td>PBS prune, GC, and scheduled verification</td>
+<td>Execution not independently reverified</td>
+</tr>
+<tr>
+<td>Authentik rsync after migration</td>
+<td>Latest successful execution not independently confirmed</td>
+</tr>
+<tr>
+<td>Warning/error notification delivery</td>
+<td>Not failure-tested</td>
+</tr>
+<tr>
+<td>PBS Docker/datastore recovery</td>
+<td>No end-to-end restoration test</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Current assessment:</strong> Backups run successfully across the three-node Proxmox cluster. AI Observer VM 107 additionally passed an isolated full-VM restoration, guest boot, and local Docker startup test. This is a meaningful recovery milestone, but end-to-end network/application recovery, other guest restores, PBS maintenance, and notification testing remain open.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>

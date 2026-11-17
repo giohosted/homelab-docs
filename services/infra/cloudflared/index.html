@@ -1,0 +1,3134 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/services/infra/cloudflared/">
+      
+      
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>cloudflared - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cloudflared" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              cloudflared
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#container-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Container Variables
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exposed-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Exposed Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exposed Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#intended-access-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Intended Access Model
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cloudflare-tunnel-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cloudflare Tunnel Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cloudflare Tunnel Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#route-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Route Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-no-tls-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why No TLS Verify?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Considerations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-http-causes-a-redirect-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why HTTP Causes a Redirect Loop
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cloudflare-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cloudflare Access
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cloudflare Access">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shared-browser-policy-allow-users-authentik" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shared Browser Policy — allow-users-authentik
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shared-deny-policy-block-all-others" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shared Deny Policy — block-all-others
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shelfmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shelfmark
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Shelfmark">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#functional-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Functional Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audiobookshelf" class="md-nav__link">
+    <span class="md-ellipsis">
+      Audiobookshelf
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Audiobookshelf">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#browser-authentication-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Browser Authentication Verification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobile-authentication-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mobile Authentication Verification
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#abs-mobile-app-service-token-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      ABS Mobile App — Service Token Bypass
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ABS Mobile App — Service Token Bypass">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Boundary
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seerr-plex-authentication-without-cloudflare-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Seerr — Plex Authentication Without Cloudflare Access
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Seerr — Plex Authentication Without Cloudflare Access">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verified-configuration-2026-11-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verified Configuration — 2026-11-14
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Decision
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#immich-temporary-tunnel-for-wedding-october" class="md-nav__link">
+    <span class="md-ellipsis">
+      Immich — Temporary Tunnel for Wedding (October)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Immich — Temporary Tunnel for Wedding (October)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#historical-temporary-access-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Historical Temporary Access Procedure
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-new-externally-exposed-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding a New Externally Exposed Service
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services-not-exposed-via-tunnel" class="md-nav__link">
+    <span class="md-ellipsis">
+      Services NOT Exposed via Tunnel
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#november-2026-external-access-security-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      November 2026 External Access Security Review
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="November 2026 External Access Security Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scope
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Results
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-controls-reviewed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Controls Reviewed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conclusions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remaining-general-security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Remaining General Security Considerations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cloudflare-dns-changes-made-during-v3-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cloudflare DNS Changes Made During v3 Build
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Documentation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="cloudflared">cloudflared<a class="headerlink" href="#cloudflared" title="Permanent link">&para;</a></h1>
+<p><strong>Role:</strong> Cloudflare Tunnel — external access to internal services<br />
+<strong>Host:</strong> docker-prod-01 (192.168.30.11)<br />
+<strong>Tunnel name:</strong> homelab-v3<br />
+<strong>Compose:</strong> <code>/opt/stacks/cloudflared/compose.yaml</code><br />
+<strong>Appdata:</strong> None — stateless<br />
+<strong>Last Updated:</strong> 2026-11-16</p>
+<hr />
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Image:</strong> <code>cloudflare/cloudflared:latest</code></li>
+<li><strong>Compose:</strong> <code>/opt/stacks/cloudflared/compose.yaml</code></li>
+<li><strong>Network:</strong> <code>proxy</code></li>
+<li><strong>Tunnel token:</strong> Stored in <code>/opt/stacks/cloudflared/.env</code> (gitignored)</li>
+</ul>
+<h2 id="container-variables">Container Variables<a class="headerlink" href="#container-variables" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TUNNEL_TOKEN</td>
+<td>See <code>.env</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>cloudflared creates an outbound tunnel from docker-prod-01 to Cloudflare's edge network. This allows external access to selected internal services without opening dedicated inbound ports on the UDM-SE firewall for those applications.</p>
+<p>External requests travel through Cloudflare and the tunnel to Traefik, which handles hostname-based routing.</p>
+<p>cloudflared is not a replacement for Traefik — it works alongside it.</p>
+<p>The external request path is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Internet
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  ↓
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Cloudflare edge
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  ↓
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Cloudflare Access (where configured)
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  ↓
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>cloudflared tunnel
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  ↓
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>Traefik (192.168.30.11)
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  ↓
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>Application
+</code></pre></div>
+<p>Traefik handles internal routing whether requests originate from cloudflared or directly from an authorized LAN client.</p>
+<p>Cloudflare Access is an optional application-level authentication layer. A published tunnel route is not automatically protected by an Access policy.</p>
+<hr />
+<h2 id="exposed-services">Exposed Services<a class="headerlink" href="#exposed-services" title="Permanent link">&para;</a></h2>
+<p>The following inventory reflects the established deployment documentation, updated with the November 14, 2026 external-access review.</p>
+<table>
+<thead>
+<tr>
+<th>Hostname</th>
+<th>Cloudflare Route</th>
+<th>CF Access</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>auth.giohosted.com</code></td>
+<td><code>https://192.168.30.11</code></td>
+<td>No</td>
+<td>Authentik — application authentication</td>
+</tr>
+<tr>
+<td><code>audiobooks.giohosted.com</code></td>
+<td><code>https://192.168.30.11</code></td>
+<td>Yes</td>
+<td>Audiobookshelf — Authentik for browsers, Service Auth token for mobile</td>
+</tr>
+<tr>
+<td><code>request.giohosted.com</code></td>
+<td><code>https://192.168.30.11</code></td>
+<td>No</td>
+<td>Seerr — Plex authentication</td>
+</tr>
+<tr>
+<td><code>shelf.giohosted.com</code></td>
+<td><code>https://192.168.30.11</code></td>
+<td>Yes</td>
+<td>Shelfmark — Authentik OIDC through Cloudflare Access</td>
+</tr>
+<tr>
+<td><code>photos.giohosted.com</code></td>
+<td>Documented inactive</td>
+<td>N/A</td>
+<td>Immich — temporary wedding access previously removed</td>
+</tr>
+</tbody>
+</table>
+<p>The November 14 review directly verified the Seerr published route, the Shelfmark and Audiobookshelf Access application configurations, and their tested authentication behavior.</p>
+<p>The full tunnel inventory, including Immich's inactive status, was not independently re-audited during this review.</p>
+<h3 id="intended-access-model">Intended Access Model<a class="headerlink" href="#intended-access-model" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Seerr:</strong> Externally accessible for authorized Plex users.</li>
+<li><strong>Shelfmark:</strong> Externally accessible after Cloudflare Access authentication through Authentik.</li>
+<li><strong>Audiobookshelf:</strong> Externally accessible through Cloudflare Access; mobile clients use a service token.</li>
+<li><strong>Authentik:</strong> Provides identity services for applications that use it.</li>
+<li><strong>Immich:</strong> Intended to remain LAN-only outside specifically approved temporary exposure periods.</li>
+</ul>
+<p>The three reviewed application routers intentionally omit Traefik's <code>local-only@docker</code> middleware because external access is part of their design.</p>
+<hr />
+<h2 id="cloudflare-tunnel-configuration">Cloudflare Tunnel Configuration<a class="headerlink" href="#cloudflare-tunnel-configuration" title="Permanent link">&para;</a></h2>
+<p>Published routes are managed in the Cloudflare Zero Trust dashboard under:</p>
+<p><strong>Networks → Tunnels → homelab-v3 → Published application routes</strong></p>
+<h3 id="route-settings">Route Settings<a class="headerlink" href="#route-settings" title="Permanent link">&para;</a></h3>
+<p>The established configuration uses:</p>
+<ul>
+<li><strong>Service URL:</strong> <code>https://192.168.30.11</code></li>
+<li><strong>No TLS Verify:</strong> Enabled on the documented routes</li>
+</ul>
+<p>The Seerr published route was directly verified in the Cloudflare dashboard on 2026-11-14.</p>
+<h3 id="why-no-tls-verify">Why No TLS Verify?<a class="headerlink" href="#why-no-tls-verify" title="Permanent link">&para;</a></h3>
+<p>Traefik's certificate is a hostname-based wildcard certificate (<code>*.giohosted.com</code>) issued by Let's Encrypt.</p>
+<p>The documented cloudflared origin connection uses the IP address <code>192.168.30.11</code>.</p>
+<p>Because that IP address is not covered by the certificate's hostname identity, ordinary TLS certificate name verification would fail.</p>
+<p>The existing deployment therefore uses <strong>No TLS Verify</strong> for this origin connection.</p>
+<h3 id="security-considerations">Security Considerations<a class="headerlink" href="#security-considerations" title="Permanent link">&para;</a></h3>
+<p>The Cloudflare Tunnel is an encrypted transport between cloudflared and Cloudflare's edge.</p>
+<p>The cloudflared-to-Traefik connection is on the local Services network.</p>
+<p>However, disabling origin TLS verification also disables verification of the origin certificate. A private network reduces exposure but does not eliminate every possible interception or impersonation risk.</p>
+<p><strong>Existing configuration:</strong> No TLS Verify remains enabled.</p>
+<p><strong>Future improvement opportunity:</strong> Review whether cloudflared can validate the Traefik wildcard certificate using an appropriate origin server name and certificate verification settings, without disrupting the established routing architecture.</p>
+<p>No origin TLS changes were made during the November 14 audit.</p>
+<h3 id="why-http-causes-a-redirect-loop">Why HTTP Causes a Redirect Loop<a class="headerlink" href="#why-http-causes-a-redirect-loop" title="Permanent link">&para;</a></h3>
+<p>The documented configuration uses Traefik's HTTP-to-HTTPS redirect.</p>
+<p>Using <code>http://192.168.30.11</code> as the origin can cause a redirect loop:</p>
+<ol>
+<li>cloudflared sends HTTP traffic to Traefik on port 80.</li>
+<li>Traefik redirects the request to HTTPS.</li>
+<li>The redirected request can be sent through the external hostname.</li>
+<li>Repeated external-to-origin redirects can prevent the application from loading.</li>
+</ol>
+<p>The established deployment uses HTTPS to avoid this behavior.</p>
+<p>Do not change the origin protocol without testing the effective redirect and forwarded-header behavior.</p>
+<hr />
+<h2 id="cloudflare-access">Cloudflare Access<a class="headerlink" href="#cloudflare-access" title="Permanent link">&para;</a></h2>
+<p>Cloudflare Access provides an authentication and authorization layer in front of selected externally published applications.</p>
+<p><strong>Verified application inventory — 2026-11-14:</strong></p>
+<ul>
+<li>Shelfmark</li>
+<li>Audiobookshelf</li>
+</ul>
+<p>No Cloudflare Access application covering Seerr was identified in the reviewed application inventory.</p>
+<h3 id="shared-browser-policy-allow-users-authentik">Shared Browser Policy — <code>allow-users-authentik</code><a class="headerlink" href="#shared-browser-policy-allow-users-authentik" title="Permanent link">&para;</a></h3>
+<p>The Shelfmark and Audiobookshelf Access applications use the shared policy:</p>
+<p><code>allow-users-authentik</code></p>
+<p><strong>Action:</strong> Allow</p>
+<p>The reviewed configuration includes:</p>
+<ul>
+<li>Authentik <code>users</code> entitlement as an Include condition.</li>
+<li>Explicitly authorized email addresses as another Include condition.</li>
+<li>United States geographic requirement.</li>
+</ul>
+<p>Cloudflare Access evaluates the Include conditions as alternatives and also requires the configured geographic condition.</p>
+<p>The operator confirmed that the Authentik <code>users</code> group contains only two intended personal accounts.</p>
+<p><strong>Verification limitation:</strong> The exact relationship between the Authentik group and the entitlement claim evaluated by Cloudflare was not independently tested.</p>
+<p>MFA is configured in Authentik, but universal MFA enforcement across every possible login path was not independently established during this review.</p>
+<h3 id="shared-deny-policy-block-all-others">Shared Deny Policy — <code>block-all-others</code><a class="headerlink" href="#shared-deny-policy-block-all-others" title="Permanent link">&para;</a></h3>
+<p>Both Access applications also contain:</p>
+<p><code>block-all-others</code></p>
+<p><strong>Action:</strong> Block</p>
+<p>This policy is intended to deny requests that do not satisfy the configured permitted access paths.</p>
+<p>No changes were made to the shared Allow or Block policies during the audit.</p>
+<h3 id="shelfmark">Shelfmark<a class="headerlink" href="#shelfmark" title="Permanent link">&para;</a></h3>
+<p><strong>Hostname:</strong> <code>shelf.giohosted.com</code><br />
+<strong>Cloudflare Access application:</strong> Shelfmark</p>
+<p>The reviewed application contains:</p>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>allow-users-authentik</code></td>
+<td>Allow</td>
+</tr>
+<tr>
+<td><code>block-all-others</code></td>
+<td>Block</td>
+</tr>
+</tbody>
+</table>
+<h4 id="functional-verification">Functional Verification<a class="headerlink" href="#functional-verification" title="Permanent link">&para;</a></h4>
+<p>On November 14, the operator tested Shelfmark from a phone and confirmed:</p>
+<ol>
+<li>Cloudflare Access presented its login screen.</li>
+<li>Authentik OIDC was the available login method.</li>
+<li>Shelfmark was not displayed directly to the unauthenticated client.</li>
+</ol>
+<p><strong>Result:</strong> The browser authentication boundary was verified.</p>
+<p>The review did not independently test every policy condition, including geographic restrictions or specific entitlement claims.</p>
+<p>See <code>services/books/shelfmark.md</code>.</p>
+<h3 id="audiobookshelf">Audiobookshelf<a class="headerlink" href="#audiobookshelf" title="Permanent link">&para;</a></h3>
+<p><strong>Hostname:</strong> <code>audiobooks.giohosted.com</code><br />
+<strong>Cloudflare Access application:</strong> Audiobookshelf</p>
+<p>The reviewed application contains:</p>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Action</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>abs-mobile-token</code></td>
+<td>Service Auth</td>
+<td>Authorize clients with the scoped service token</td>
+</tr>
+<tr>
+<td><code>allow-users-authentik</code></td>
+<td>Allow</td>
+<td>Authenticate eligible browser users</td>
+</tr>
+<tr>
+<td><code>block-all-others</code></td>
+<td>Block</td>
+<td>Deny other requests</td>
+</tr>
+</tbody>
+</table>
+<h4 id="browser-authentication-verification">Browser Authentication Verification<a class="headerlink" href="#browser-authentication-verification" title="Permanent link">&para;</a></h4>
+<p>On November 14, a fresh unauthenticated browser session displayed the Cloudflare Access login page and offered Authentik authentication.</p>
+<p><strong>Result:</strong> Browser authentication protection was verified.</p>
+<h4 id="mobile-authentication-verification">Mobile Authentication Verification<a class="headerlink" href="#mobile-authentication-verification" title="Permanent link">&para;</a></h4>
+<p>The operator also tested the Audiobookshelf mobile application through an external cellular connection.</p>
+<p>The mobile application connected successfully and audiobook playback worked.</p>
+<p><strong>Result:</strong> The documented mobile access path was functional during the test.</p>
+<p>The review did not independently inspect the transmitted service-token headers or perform a token-rotation test.</p>
+<p>See <code>services/books/audiobookshelf.md</code>.</p>
+<hr />
+<h2 id="abs-mobile-app-service-token-bypass">ABS Mobile App — Service Token Bypass<a class="headerlink" href="#abs-mobile-app-service-token-bypass" title="Permanent link">&para;</a></h2>
+<p>The Audiobookshelf mobile app uses a Cloudflare Access service token to satisfy a non-interactive Service Auth policy.</p>
+<p>This allows mobile requests to avoid the Cloudflare browser login challenge.</p>
+<ul>
+<li><strong>Service token name:</strong> <code>abs-mobile</code></li>
+<li><strong>CF Access application:</strong> <code>Audiobookshelf</code></li>
+<li><strong>Policy:</strong> <code>abs-mobile-token</code></li>
+<li><strong>Action:</strong> Service Auth</li>
+<li><strong>Token storage:</strong> Password manager</li>
+<li><strong>Mobile app headers:</strong> <code>CF-Access-Client-Id</code> and <code>CF-Access-Client-Secret</code></li>
+</ul>
+<p>The policy is scoped to the Audiobookshelf Access application.</p>
+<h3 id="security-boundary">Security Boundary<a class="headerlink" href="#security-boundary" title="Permanent link">&para;</a></h3>
+<p>The service token authenticates a client to Cloudflare Access.</p>
+<p>It does not replace Audiobookshelf's own application authentication and authorization.</p>
+<p>The shared browser policy's geographic requirement should not be assumed to apply to the separate Service Auth path.</p>
+<p>Keep the service token confidential and review its validity and rotation arrangements periodically.</p>
+<p>Do not create a broad anonymous Bypass policy as a replacement for the scoped service token.</p>
+<hr />
+<h2 id="seerr-plex-authentication-without-cloudflare-access">Seerr — Plex Authentication Without Cloudflare Access<a class="headerlink" href="#seerr-plex-authentication-without-cloudflare-access" title="Permanent link">&para;</a></h2>
+<p><strong>Hostname:</strong> <code>request.giohosted.com</code></p>
+<p>Seerr is intentionally accessible through Cloudflare Tunnel without a Cloudflare Access application.</p>
+<p>Access is controlled by Seerr's Plex authentication integration.</p>
+<h3 id="verified-configuration-2026-11-14">Verified Configuration — 2026-11-14<a class="headerlink" href="#verified-configuration-2026-11-14" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Cloudflare Tunnel route exists and targets <code>https://192.168.30.11</code>.</li>
+<li>No matching Cloudflare Access application was present in the reviewed application list.</li>
+<li>An incognito browser session was directed to Seerr's <code>/login</code> page.</li>
+<li>Plex Sign-In is enabled.</li>
+<li>New Plex Sign-In is enabled.</li>
+<li>Local Sign-In was disabled during the audit.</li>
+<li>Plex login continued working after Local Sign-In was disabled.</li>
+<li>Default administrative and user-management permissions were restricted.</li>
+</ul>
+<p>The operator does not use local-password accounts for Seerr.</p>
+<p>Only authorized Plex users are intended to receive Seerr access.</p>
+<p><strong>Authentik OIDC is not configured for Seerr.</strong></p>
+<h3 id="security-decision">Security Decision<a class="headerlink" href="#security-decision" title="Permanent link">&para;</a></h3>
+<p>No additional Cloudflare Access policy or Traefik <code>local-only</code> middleware was introduced.</p>
+<p>The existing Plex authentication model matches the operator's intended access workflow.</p>
+<p>If the permitted Plex user population, application requirements, or threat model changes, reassess whether an additional Cloudflare Access layer is appropriate.</p>
+<p>See <code>services/media/seerr.md</code>.</p>
+<hr />
+<h2 id="immich-temporary-tunnel-for-wedding-october">Immich — Temporary Tunnel for Wedding (October)<a class="headerlink" href="#immich-temporary-tunnel-for-wedding-october" title="Permanent link">&para;</a></h2>
+<p>Immich is LAN-only by default.</p>
+<p>The established documentation records a temporary public route for <code>photos.giohosted.com</code>, used for the October wedding event and subsequently removed.</p>
+<p><strong>Traefik file-provider route:</strong> <code>/opt/appdata/traefik/config/immich.yml</code> — points to <code>http://192.168.30.14:2283</code></p>
+<p>The continued presence of the internal Traefik route does not itself mean the service is published through Cloudflare Tunnel.</p>
+<h3 id="historical-temporary-access-procedure">Historical Temporary Access Procedure<a class="headerlink" href="#historical-temporary-access-procedure" title="Permanent link">&para;</a></h3>
+<p>The original procedure was:</p>
+<ol>
+<li>In Cloudflare Zero Trust → Networks → Tunnels → homelab-v3, add a public hostname:</li>
+<li>Subdomain: <code>photos</code></li>
+<li>Domain: <code>giohosted.com</code></li>
+<li>Service type: <code>HTTPS</code></li>
+<li>Origin URL: <code>192.168.30.11</code></li>
+<li>TLS setting: No TLS Verify enabled</li>
+<li>Test the shared album link from a device using cellular data.</li>
+<li>Use Immich's shared-album protection for the intended guests.</li>
+</ol>
+<p>After the event:</p>
+<ol>
+<li>Remove the public <code>photos.giohosted.com</code> tunnel route.</li>
+<li>Confirm that external access is no longer available.</li>
+<li>Preserve internal Traefik routing for LAN clients.</li>
+</ol>
+<p><strong>Current documentation status:</strong> The tunnel route is recorded as removed. Its current absence was not independently rechecked as part of the November 14 three-service audit.</p>
+<p>The Immich server's documented external domain is <code>https://photos.giohosted.com</code> under Administration → Server Settings.</p>
+<hr />
+<h2 id="adding-a-new-externally-exposed-service">Adding a New Externally Exposed Service<a class="headerlink" href="#adding-a-new-externally-exposed-service" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Deploy the service with Traefik labels or an appropriate file-provider route.</li>
+<li>Verify its intended audience and authentication requirements.</li>
+<li>Add the required AdGuard DNS rewrite.</li>
+<li>In Cloudflare Zero Trust → Networks → Tunnels → homelab-v3 → Published application routes, configure the hostname and origin.</li>
+<li>Review whether Cloudflare Access should protect the service.</li>
+<li>If Access is required, create or assign narrowly scoped policies.</li>
+<li>Verify application authentication independently of Cloudflare Access.</li>
+<li>Test access from an external client.</li>
+<li>Confirm that unauthorized clients cannot access protected functionality.</li>
+<li>Document the deployed route, policies, and verification results.</li>
+</ol>
+<p>The established origin configuration uses:</p>
+<ul>
+<li>Service type: HTTPS</li>
+<li>Origin: <code>192.168.30.11</code></li>
+<li>No TLS Verify: enabled</li>
+</ul>
+<p>These settings reflect the existing deployment. Evaluate origin certificate verification when making future changes rather than assuming the current exception is universally appropriate.</p>
+<p><strong>Important:</strong> Publishing a tunnel hostname does not automatically add Cloudflare Access protection.</p>
+<hr />
+<h2 id="services-not-exposed-via-tunnel">Services NOT Exposed via Tunnel<a class="headerlink" href="#services-not-exposed-via-tunnel" title="Permanent link">&para;</a></h2>
+<p>This table covers services still in scope. Dockman, previously an internal-only admin UI, was retired in November 2026 and has been removed rather than published through the tunnel.</p>
+<p>The established documentation excludes these services from Cloudflare Tunnel:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Traefik dashboard</td>
+<td>Admin tool — internal only</td>
+</tr>
+<tr>
+<td>Proxmox UI</td>
+<td>Admin tool — internal only</td>
+</tr>
+<tr>
+<td>Unraid UI</td>
+<td>Admin tool — internal only</td>
+</tr>
+<tr>
+<td>ARR stack</td>
+<td>LAN only — no external access required</td>
+</tr>
+<tr>
+<td>qBittorrent</td>
+<td>LAN only — no external access required</td>
+</tr>
+<tr>
+<td>qBitrr</td>
+<td>LAN only — no external access required</td>
+</tr>
+<tr>
+<td>CWA</td>
+<td>LAN only — no external access required</td>
+</tr>
+<tr>
+<td>PBS</td>
+<td>Admin tool — internal only</td>
+</tr>
+<tr>
+<td>Immich</td>
+<td>LAN-only by default; previously published temporarily</td>
+</tr>
+<tr>
+<td>Plex</td>
+<td>Uses the separately documented direct port-forward arrangement on TCP 32400</td>
+</tr>
+</tbody>
+</table>
+<p>Plex remains intentionally outside the Cloudflare Tunnel architecture. Review the provider's current service terms and technical suitability before considering any change to that design.</p>
+<p>The table reflects documented exposure intent. It is not a substitute for periodic live verification of Cloudflare routes, DNS, firewall rules, and other remote-access mechanisms.</p>
+<hr />
+<h2 id="november-2026-external-access-security-review">November 2026 External Access Security Review<a class="headerlink" href="#november-2026-external-access-security-review" title="Permanent link">&para;</a></h2>
+<p><strong>Audit:</strong> A-008 — Docker Update Management, external application exposure review<br />
+<strong>Date:</strong> 2026-11-14</p>
+<h3 id="scope">Scope<a class="headerlink" href="#scope" title="Permanent link">&para;</a></h3>
+<p>The review focused on three Docker applications without Traefik's <code>local-only@docker</code> middleware:</p>
+<ul>
+<li>Seerr</li>
+<li>Shelfmark</li>
+<li>Audiobookshelf</li>
+</ul>
+<h3 id="results">Results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Application</th>
+<th>Finding</th>
+<th>Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Seerr</td>
+<td>Intentionally published; Plex login working</td>
+<td>Local Sign-In disabled</td>
+</tr>
+<tr>
+<td>Shelfmark</td>
+<td>Cloudflare Access and Authentik login challenge confirmed</td>
+<td>No configuration change required</td>
+</tr>
+<tr>
+<td>Audiobookshelf</td>
+<td>Cloudflare Access browser challenge and external mobile playback verified</td>
+<td>No configuration change required</td>
+</tr>
+</tbody>
+</table>
+<h3 id="security-controls-reviewed">Security Controls Reviewed<a class="headerlink" href="#security-controls-reviewed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Cloudflare Access application inventory.</li>
+<li>Access policy actions and Include/Require conditions.</li>
+<li>Authentik login integration.</li>
+<li>Plex-only Seerr authentication.</li>
+<li>Seerr default administrative permissions.</li>
+<li>Audiobookshelf mobile Service Auth policy.</li>
+<li>External browser and mobile application functionality.</li>
+</ul>
+<h3 id="conclusions">Conclusions<a class="headerlink" href="#conclusions" title="Permanent link">&para;</a></h3>
+<p>The three applications are intentionally externally accessible.</p>
+<p>Their reviewed authentication paths were functional, and no additional <code>local-only@docker</code> middleware was recommended.</p>
+<p>Seerr's unused Local Sign-In method was disabled and Plex login was verified afterward.</p>
+<p>The review did not identify a need to add more authentication layers solely because the applications are externally accessible.</p>
+<h3 id="remaining-general-security-considerations">Remaining General Security Considerations<a class="headerlink" href="#remaining-general-security-considerations" title="Permanent link">&para;</a></h3>
+<p>The following were not fully tested and should be revisited when relevant:</p>
+<ul>
+<li>Authentik MFA enforcement for every permitted user and authentication path.</li>
+<li>Exact matching of the Authentik <code>users</code> entitlement in Cloudflare Access.</li>
+<li>Cloudflare Access geographic-policy behavior under different client locations.</li>
+<li>Audiobookshelf service-token expiration and rotation.</li>
+<li>Origin certificate verification for cloudflared-to-Traefik connections.</li>
+<li>Periodic validation that published tunnel routes match documented intent.</li>
+</ul>
+<p>These are follow-up considerations, not unverified claims that the tested access paths are insecure.</p>
+<hr />
+<h2 id="cloudflare-dns-changes-made-during-v3-build">Cloudflare DNS Changes Made During v3 Build<a class="headerlink" href="#cloudflare-dns-changes-made-during-v3-build" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Action</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*</code> A record → 69.216.122.32</td>
+<td>Deleted</td>
+<td>v2 NPM wildcard — no longer needed</td>
+</tr>
+<tr>
+<td><code>giohosted.com</code> A record → 69.216.122.32</td>
+<td>Deleted</td>
+<td>v2 NPM — no longer needed</td>
+</tr>
+<tr>
+<td><code>photos</code> A record → 69.216.122.32</td>
+<td>Deleted</td>
+<td>v2 NPM — no longer needed</td>
+</tr>
+<tr>
+<td><code>auth</code> Tunnel record → homelab-v2</td>
+<td>Deleted</td>
+<td>Dead v2 tunnel — recreated in homelab-v3 tunnel</td>
+</tr>
+</tbody>
+</table>
+<p>These are historical migration actions, not newly performed DNS changes.</p>
+<hr />
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>cloudflared is a stateless Docker container and has no separate application-data directory.</li>
+<li>The tunnel token is stored in <code>/opt/stacks/cloudflared/.env</code>, excluded from Git.</li>
+<li>The tunnel token and Cloudflare-managed route and policy configuration require separate recovery consideration.</li>
+<li>cloudflared connects to Traefik by IP; its use of the <code>proxy</code> Docker network is not required for that particular IP-based origin connection.</li>
+<li>Cloudflare Access protects Shelfmark and Audiobookshelf browser access.</li>
+<li>Audiobookshelf mobile clients use the scoped <code>abs-mobile</code> Service Auth policy.</li>
+<li>Seerr uses Plex authentication, not Authentik OIDC.</li>
+<li>Seerr Local Sign-In was disabled on November 14, 2026.</li>
+<li>MFA is configured in Authentik; universal enforcement was not separately audited.</li>
+<li>The shared Access browser policy includes a United States geographic requirement.</li>
+<li>The service-token authentication path has separate authorization conditions from the browser Allow policy.</li>
+<li>The existing No TLS Verify setting reduces origin certificate authentication assurance and remains a future hardening consideration.</li>
+<li>Plex is intentionally excluded from the tunnel and uses the established direct access arrangement.</li>
+<li>Changes to shared Cloudflare Access policies can affect multiple applications; inspect policy associations before editing.</li>
+</ul>
+<hr />
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>services/infra/traefik.md</code> — Reverse-proxy routes, TLS configuration, and security hardening.</li>
+<li><code>services/infra/authentik.md</code> — Identity provider and authentication.</li>
+<li><code>services/media/seerr.md</code> — Plex authentication and external media requests.</li>
+<li><code>services/books/shelfmark.md</code> — Book and audiobook request frontend.</li>
+<li><code>services/books/audiobookshelf.md</code> — Audiobook streaming and mobile access.</li>
+<li><code>network/firewall-rules.md</code> — Inter-VLAN and network security policies.</li>
+<li><code>runbooks/updating-containers.md</code> — Docker maintenance and verification.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>

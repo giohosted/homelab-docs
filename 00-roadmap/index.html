@@ -1,0 +1,3759 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Homelab v3.0 — Architecture, runbooks, and build documentation">
+      
+      
+        <meta name="author" content="Gio">
+      
+      
+        <link rel="canonical" href="https://giohosted.github.io/homelab-docs/00-roadmap/">
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.50">
+    
+    
+      
+        <title>Homelab v3.0 — Master Architecture & Evolution Roadmap - homelab-docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.a40c8224.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#homelab-v30-master-architecture-evolution-roadmap" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="homelab-docs" class="md-header__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            homelab-docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Homelab v3.0 — Master Architecture &amp; Evolution Roadmap
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="homelab-docs" class="md-nav__button md-logo" aria-label="homelab-docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    homelab-docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/giohosted/homelab-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    giohosted/homelab-docs
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/decisions-log/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Decisions Log
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Compute
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            Compute
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/compute/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/compute/pve-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/compute/pve-prod-02/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pve-prod-02
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/compute/pi-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    pi-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Hardware
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Hardware
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/hardware/inventory/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Inventory
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/hardware/rack-layout/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Rack Layout
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Network
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Network
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/network/overview.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/network/vlan-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    VLAN Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/network/firewall-rules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Firewall Rules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/network/ip-addresses/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IP Addresses
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/network/dns-rewrites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DNS Rewrites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/network/unifi-setup.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    UniFi Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/network/wireguard-vpn/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    WireGuard VPN
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Storage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Storage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/storage/nas-prod-01/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    nas-prod-01
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/storage/synology/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    synology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/storage/drives/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drives
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Services
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/services-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Media
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Media
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/plex/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Plex
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/sonarr-tv/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (TV)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/sonarr-anime/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sonarr (Anime)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/radarr-1080p/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (1080p)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/radarr-4k/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Radarr (4K)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/prowlarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prowlarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/bazarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bazarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/profilarr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Profilarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/maintainerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintainerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/seerr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Seerr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/tautulli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tautulli
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/media/flaresolverr/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Flaresolverr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Books
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Books
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/books/audiobookshelf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Audiobookshelf
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/books/calibre-web-automated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Calibre-Web-Automated
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/books/shelfmark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Shelfmark
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Torrent
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            Torrent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/torrent/qbittorrent/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    qBittorrent
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/torrent/gluetun/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gluetun
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/torrent/mam-seeding-automation.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MAM Seeding Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Infra
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            Infra
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/infra/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/infra/authentik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/infra/adguard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/infra/adguardhome-sync/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AdGuard Sync
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/infra/cloudflare-tunnel.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cloudflare Tunnel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/infra/dockman/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dockman
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/infra/homarr.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Homarr
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Monitoring
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            Monitoring
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/monitoring/beszel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Beszel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/monitoring/uptime-kuma/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uptime Kuma
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/monitoring/healthchecksio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Healthchecks.io
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Photos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            Photos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../services/photos/immich/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Immich
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Phases
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Phases
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phases/phase-0-procurement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 0 — Procurement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phases/phase-1-network/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 1 — Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phases/phase-2-nas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 2 — NAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phases/phase-3-proxmox/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 3 — Proxmox
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phases/phase-4-services/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 4 — Services
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phases/phase-5-hardening/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 5 — Hardening
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phases/phase-6-kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Phase 6 — Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Runbooks
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Runbooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/backup-restore/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backup & Restore
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/drive-replacement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Drive Replacement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/proxmox-update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Proxmox Update
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/new-service-checklist.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    New Service Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubernetes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kubernetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#section-1-direction-and-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 1 — DIRECTION AND DESIGN PRINCIPLES
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SECTION 1 — DIRECTION AND DESIGN PRINCIPLES">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-project-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.1 Project Evolution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.2 Design Principles
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-2-verified-current-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 2 — VERIFIED CURRENT ARCHITECTURE
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SECTION 2 — VERIFIED CURRENT ARCHITECTURE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-physical-hosts-and-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1 Physical Hosts and Cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-current-guest-placement" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2 Current Guest Placement
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-network-and-segmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3 Network and Segmentation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-nas-data-and-backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4 NAS, Data, and Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-identity-ingress-and-applications" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.5 Identity, Ingress, and Applications
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-3-roadmap-status-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 3 — ROADMAP STATUS AT A GLANCE
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-4-track-one-operational-readiness-and-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 4 — TRACK ONE: OPERATIONAL READINESS AND HARDENING
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SECTION 4 — TRACK ONE: OPERATIONAL READINESS AND HARDENING">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-phase-5-completed-configuration-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1 Phase 5 — Completed Configuration Work
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-phase-5-wave-7-security-and-operational-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2 Phase 5 Wave 7 — Security and Operational Hardening
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-phase-5-wave-8-recovery-depth-and-versioned-backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.3 Phase 5 Wave 8 — Recovery Depth and Versioned Backups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-operational-readiness-exit-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.4 Operational Readiness Exit Criteria
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-5-track-two-ai-powered-enhancement-and-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 5 — TRACK TWO: AI-POWERED ENHANCEMENT AND AUDIT
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SECTION 5 — TRACK TWO: AI-POWERED ENHANCEMENT AND AUDIT">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-current-ai-observer-implemented-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.1 Current AI Observer — Implemented Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-what-the-existing-integrations-can-do-now" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.2 What the Existing Integrations Can Do Now
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-one-time-comprehensive-baseline-audit-first-deliverable" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.3 One-Time Comprehensive Baseline Audit — First Deliverable
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-enhancement-phase-a-application-level-api-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.4 Enhancement Phase A — Application-Level API Access
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-enhancement-phase-b-read-only-system-file-and-log-inspection" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.5 Enhancement Phase B — Read-Only System, File, and Log Inspection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-enhancement-phase-c-recurring-health-audits-and-release-intelligence" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.6 Enhancement Phase C — Recurring Health Audits and Release Intelligence
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-conceptual-target-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.7 Conceptual Target Architecture
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#58-security-and-change-control-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      5.8 Security and Change-Control Contract
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-6-recommendations-audit-outputs-and-prioritization" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 6 — RECOMMENDATIONS, AUDIT OUTPUTS, AND PRIORITIZATION
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SECTION 6 — RECOMMENDATIONS, AUDIT OUTPUTS, AND PRIORITIZATION">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-standard-finding-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.1 Standard Finding Format
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-priority-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.2 Priority Model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-reporting-quality-and-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      6.3 Reporting Quality and History
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-7-execution-order-and-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 7 — EXECUTION ORDER AND DEPENDENCIES
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SECTION 7 — EXECUTION ORDER AND DEPENDENCIES">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-near-term-focus" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1 Near-Term Focus
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-decisions-needed-during-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2 Decisions Needed During Implementation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-8-future-phase-kubernetes-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 8 — FUTURE PHASE: KUBERNETES SANDBOX
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-9-documentation-repositories-and-decision-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 9 — DOCUMENTATION, REPOSITORIES, AND DECISION HISTORY
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SECTION 9 — DOCUMENTATION, REPOSITORIES, AND DECISION HISTORY">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-documentation-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      9.1 Documentation System
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-infrastructure-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      9.2 Infrastructure Repository
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-naming-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      9.3 Naming Conventions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#94-documentation-change-procedure" class="md-nav__link">
+    <span class="md-ellipsis">
+      9.4 Documentation Change Procedure
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-10-roadmap-change-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      SECTION 10 — ROADMAP CHANGE RECORD
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="homelab-v30-master-architecture-evolution-roadmap">Homelab v3.0 — Master Architecture &amp; Evolution Roadmap<a class="headerlink" href="#homelab-v30-master-architecture-evolution-roadmap" title="Permanent link">&para;</a></h1>
+<p><strong>Version:</strong> 8.0<br />
+<strong>Owner:</strong> Gio<br />
+<strong>Status:</strong> Operational — hardening in progress; AI-powered audit and observer enhancements planned<br />
+<strong>Last Updated:</strong> 2026-11-14<br />
+<strong>Scope:</strong> Current architecture, remaining operational work, AI Observer evolution, and future learning initiatives</p>
+<hr />
+<blockquote>
+<p><strong>ROADMAP PURPOSE</strong><br />
+This is the <em>forward-looking project plan and architecture overview</em>, not a second inventory, runbook, or historical implementation transcript. Detailed current configurations belong in <code>architecture/</code>, <code>services/</code>, and <code>runbooks/</code>; implementation history belongs in <code>phases/</code> and <code>architecture/decisions-log.md</code>. Where historical plans differ from verified production, the verified production state and its detailed documentation take precedence.</p>
+<p><strong>STATUS CONVENTIONS</strong><br />
+<strong>Implemented / verified:</strong> Tested or observed in the current environment.<br />
+<strong>Implemented / partially verified:</strong> Configured, but an important health, security, or recovery test remains.<br />
+<strong>Planned:</strong> Approved direction or candidate scope, but not deployed.<br />
+<strong>Proposed:</strong> A design to assess before committing to it.<br />
+<strong>Historical / superseded:</strong> Records an original plan, not an instruction for the current environment.</p>
+</blockquote>
+<h2 id="section-1-direction-and-design-principles">SECTION 1 — DIRECTION AND DESIGN PRINCIPLES<a class="headerlink" href="#section-1-direction-and-design-principles" title="Permanent link">&para;</a></h2>
+<h3 id="11-project-evolution">1.1 Project Evolution<a class="headerlink" href="#11-project-evolution" title="Permanent link">&para;</a></h3>
+<p>Homelab v3 began as a deliberate rebuild of the v2 environment: a dedicated Unraid NAS, redundant Proxmox boot storage, segmented networks, consistent Docker layouts, Authentik SSO, backups, and monitoring. The original roadmap assumed <strong>two Proxmox nodes, a Raspberry Pi QDevice, and a PBS VM</strong>. That design has materially changed.</p>
+<p>As of November 14, 2026, Homelab v3 is an operating three-node Proxmox environment. The old QDevice has been removed; PBS runs as Docker on Unraid; the former Dell OptiPlex 3070 Micro has been replaced; and a dedicated AI Observer VM exposes four carefully scoped read-only infrastructure integrations to ChatGPT.</p>
+<p>The roadmap now has <strong>two active, parallel tracks</strong>:</p>
+<ol>
+<li><strong>Operational readiness:</strong> Complete the remaining security, backup-recovery, power-protection, and documentation verification work.</li>
+<li><strong>AI-powered enhancement and audit:</strong> Use the existing read-only integrations for a comprehensive baseline audit, then add useful application-level visibility, constrained system/file inspection, and periodic, actionable reporting.</li>
+</ol>
+<p><strong>Future Kubernetes exploration is retained</strong>, but remains subordinate to a stable, recoverable Homelab and is not presumed to be the next immediate project.</p>
+<h3 id="12-design-principles">1.2 Design Principles<a class="headerlink" href="#12-design-principles" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Current direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reliability over novelty</td>
+<td>Protect backups, DNS, identity, storage, and restore ability before adding complexity</td>
+</tr>
+<tr>
+<td>Documentation-first</td>
+<td>Review authoritative Obsidian Markdown before proposing changes; use live integrations to verify current state</td>
+</tr>
+<tr>
+<td>Read-only AI by default</td>
+<td>AI may inspect and recommend; operational writes require an explicit, separately authorized workflow</td>
+</tr>
+<tr>
+<td>Targeted access</td>
+<td>Narrow identities, endpoints, API methods, directories, and ports; no unrestricted shell or Docker socket for the assistant</td>
+</tr>
+<tr>
+<td>Evidence-driven work</td>
+<td>Distinguish an observed issue from a historical incident, hypothesis, or untested recommendation</td>
+</tr>
+<tr>
+<td>Incremental implementation</td>
+<td>One consequential change at a time; verify, then update the relevant existing documentation</td>
+</tr>
+<tr>
+<td>Home-lab scale</td>
+<td>Avoid enterprise-grade machinery without a proportional benefit</td>
+</tr>
+<tr>
+<td>No alert noise</td>
+<td>Report actionable failures, risk changes, and materially useful enhancements—not every available update</td>
+</tr>
+<tr>
+<td>Preserve the architecture</td>
+<td>Extend <code>observer-prod-01</code> and existing service tooling rather than create a parallel AI management platform</td>
+</tr>
+<tr>
+<td>Recovery matters</td>
+<td>A completed backup or mounted mirror is not equivalent to a tested restore</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-2-verified-current-architecture">SECTION 2 — VERIFIED CURRENT ARCHITECTURE<a class="headerlink" href="#section-2-verified-current-architecture" title="Permanent link">&para;</a></h2>
+<p><em>Point-in-time summary: November 14, 2026. Consult the linked service and architecture files for details; this section is intentionally concise.</em></p>
+<h3 id="21-physical-hosts-and-cluster">2.1 Physical Hosts and Cluster<a class="headerlink" href="#21-physical-hosts-and-cluster" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Host</th>
+<th>Hardware</th>
+<th>Management IP</th>
+<th>Current role / placement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pve-prod-01</code></td>
+<td>Minisforum MS-A2, Ryzen 9 7945HX, 32 GiB class RAM</td>
+<td><code>192.168.10.11</code></td>
+<td>Primary Proxmox node; PVE 9.1.6; U5–U6</td>
+</tr>
+<tr>
+<td><code>pve-prod-02</code></td>
+<td>Dell OptiPlex 5000 SFF, i7-12700, 48 GB RAM, mirrored NVMe</td>
+<td><code>192.168.10.12</code></td>
+<td>Replacement Proxmox node; PVE 9.2.26; U17; switch port 19</td>
+</tr>
+<tr>
+<td><code>pve-prod-03</code></td>
+<td>Lenovo ThinkCentre M90q Tiny, i7-10700, 24 GB RAM, mirrored NVMe</td>
+<td><code>192.168.10.13</code></td>
+<td>Third Proxmox voting node; PVE 9.2.26; U7; switch port 16</td>
+</tr>
+<tr>
+<td><code>nas-prod-01</code></td>
+<td>i5-13400, 32 GB RAM, Rosewill RSV-L4412U, Unraid 7.3.4</td>
+<td><code>192.168.10.10</code></td>
+<td>NAS, Plex, Docker PBS, NUT server; U8–U11</td>
+</tr>
+<tr>
+<td><code>pi-prod-01</code></td>
+<td>Raspberry Pi 4B</td>
+<td><code>192.168.10.20</code></td>
+<td>Beszel hub, Uptime Kuma; shares U7 shelf with Lenovo; <strong>no QDevice</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>homelab-v3</code> has <strong>three online voting nodes, quorum of two, and no Proxmox HA</strong>. Cluster quorum does not provide automatic recovery of guests stored on local ZFS. The physical boot redundancy of nodes 02/03 is implemented, but destructive single-drive boot-failover testing has not been performed.</p>
+<p>The original OptiPlex 3070 Micro and PBS VM 103 are <strong>retired</strong>, not reserve production nodes.</p>
+<h3 id="22-current-guest-placement">2.2 Current Guest Placement<a class="headerlink" href="#22-current-guest-placement" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Guest</th>
+<th>ID</th>
+<th>Services IP / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pve-prod-01</td>
+<td><code>dns-prod-01</code></td>
+<td>CT 100</td>
+<td><code>192.168.30.10</code> — primary AdGuard</td>
+</tr>
+<tr>
+<td>pve-prod-01</td>
+<td><code>docker-prod-01</code></td>
+<td>VM 101</td>
+<td><code>192.168.30.11</code> — Docker/Traefik/media/books/torrent stacks; 7 GiB allocation</td>
+</tr>
+<tr>
+<td>pve-prod-01</td>
+<td><code>observer-prod-01</code></td>
+<td>VM 107</td>
+<td><code>192.168.30.17</code> — dedicated AI Observer; 2 GiB</td>
+</tr>
+<tr>
+<td>pve-prod-01</td>
+<td><code>dragonwilds-server</code></td>
+<td>VM 106</td>
+<td>Game Servers VLAN 50; stopped at last check; guest IP not verified</td>
+</tr>
+<tr>
+<td>pve-prod-02</td>
+<td><code>immich-prod-01</code></td>
+<td>VM 105</td>
+<td><code>192.168.30.14</code> — Immich; 6 GiB</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td><code>dns-prod-02</code></td>
+<td>CT 102</td>
+<td><code>192.168.30.15</code> — secondary AdGuard</td>
+</tr>
+<tr>
+<td>pve-prod-03</td>
+<td><code>auth-prod-01</code></td>
+<td>VM 104</td>
+<td><code>192.168.30.13</code> — Authentik; 4 GiB</td>
+</tr>
+</tbody>
+</table>
+<p>Authentik was migrated offline to node 03 on November 14. Application and SSO checks passed, followed by a successful fresh PBS backup from the new host. Primary and secondary DNS now reside on different physical Proxmox nodes.</p>
+<h3 id="23-network-and-segmentation">2.3 Network and Segmentation<a class="headerlink" href="#23-network-and-segmentation" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Network</th>
+<th>Actual UniFi VLAN ID</th>
+<th>Subnet</th>
+<th>UniFi firewall zone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Management</td>
+<td><strong>1</strong> (default/untagged)</td>
+<td><code>192.168.10.0/24</code></td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>Trusted</td>
+<td>20</td>
+<td><code>192.168.20.0/24</code></td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>Services</td>
+<td>30</td>
+<td><code>192.168.30.0/24</code></td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>IoT</td>
+<td>40</td>
+<td><code>192.168.40.0/24</code></td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>Game Servers</td>
+<td>50</td>
+<td><code>192.168.50.0/24</code></td>
+<td>Dmz</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Historical correction:</strong> The original roadmap mandated a dedicated Management VLAN ID 10 and said VLAN 1 would not be used. Live UniFi inspection instead shows the Management network as default VLAN ID 1 with subnet <code>192.168.10.0/24</code>. The IP subnet and VLAN tag are not synonymous. <strong>No change to the working management VLAN is proposed merely to match the original plan.</strong></p>
+<p><strong>Firewall validation:</strong> Internal-to-Internal has a system-defined fallback allow policy, with explicit user-defined deny/allow rules implementing much of the intended segmentation. Trusted-to-IoT has no confirmed explicit deny. Internal-to-Dmz is allowed by the current system-defined policy. These paths require risk review and safe testing; never claim a global default-deny policy is already enforced.</p>
+<p>The AI Observer has a targeted exception from <code>192.168.30.17</code> to <code>192.168.10.11:8006/TCP</code> rather than unrestricted Services-to-Management access.</p>
+<h3 id="24-nas-data-and-backups">2.4 NAS, Data, and Backups<a class="headerlink" href="#24-nas-data-and-backups" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Parity array:</strong> Two 12 TB parity drives and three XFS data drives; November 14 disk inventory reports all five <code>DISK_OK</code> with zero reported device errors. The October 31 breakout-cable/parity reconstruction incident is resolved; exact electrical root cause remains probable rather than proven.</li>
+<li><strong>ZFS mirror:</strong> Two 4 TB WD Red Plus drives for critical <code>photos</code>, <code>backups</code>, and <code>system</code> shares; both member devices report <code>DISK_OK</code>. A fresh native <code>zpool status</code>, scrub history, and recent snapshot execution remain verification items.</li>
+<li><strong>Media:</strong> Single <code>data</code> NFS export for media and downloads, presented as one <code>/data</code> mount to preserve hardlinks.</li>
+<li><strong>Network:</strong> NAS management <code>192.168.10.10</code>; 10GbE Services data <code>192.168.30.16</code>; implemented point-to-point DAC <code>10.0.0.2/30</code> to <code>pve-prod-01</code> (<code>10.0.0.1/30</code>).</li>
+<li><strong>PBS:</strong> <code>proxmox-backup-server</code> Docker container on Unraid, intended Services endpoint <code>192.168.30.16:8007</code>, direct-ZFS datastore <code>/mnt/zfs-mirror/backups/pbs</code>; former PBS VM 103 destroyed.</li>
+<li><strong>Cluster backup job:</strong> Enabled, daily 02:00, snapshot mode, all seven current guests selected; stale exclusion for retired VM 103 remains. November 14 scheduled backups succeeded across nodes 01/02/03, and Authentik's post-migration manual backup succeeded.</li>
+<li><strong>Recovery assurance:</strong> Prior targeted PBS integrity and file-level restore checks passed, but a full isolated VM/CT restore is not verified. PBS prune/GC/verify execution and notification delivery need separate confirmation.</li>
+<li><strong>Docker file backups:</strong> Established nightly rsync of <code>/opt/appdata</code> and <code>/opt/stacks</code> from participating Docker VMs, distinct from PBS. Versioned off-host recovery and complete Plex appdata backup remain outstanding in Phase 5.</li>
+</ul>
+<p><strong>Do not describe the original PBS NFS/<code>shfs</code>/FUSE datastore path as current.</strong> It belongs to the retired VM-based design.</p>
+<h3 id="25-identity-ingress-and-applications">2.5 Identity, Ingress, and Applications<a class="headerlink" href="#25-identity-ingress-and-applications" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>DNS:</strong> Two AdGuard instances (primary on node 01, secondary on node 03), synchronized by <code>adguardhome-sync</code>.</li>
+<li><strong>Ingress:</strong> Traefik on <code>docker-prod-01</code>, Cloudflare DNS-01 wildcard certificates, and Cloudflare Tunnel for approved external applications.</li>
+<li><strong>Identity:</strong> Authentik is a dedicated VM on node 03; existing OIDC applications and SSO should be checked against their own service documentation.</li>
+<li><strong>Plex:</strong> Native Unraid Docker container using Intel QuickSync; direct Plex access has a dedicated firewall/forwarding policy.</li>
+<li><strong>Containers:</strong> Primary media/books/torrent workloads on <code>docker-prod-01</code>; Immich and Authentik run in dedicated guest VMs with Komodo Periphery for operations visibility.</li>
+<li><strong>Monitoring:</strong> Beszel, Uptime Kuma, Healthchecks.io, Komodo, and the new AI Observer integrations complement rather than replace one another.</li>
+</ul>
+<p>This roadmap does not maintain a duplicate complete container inventory or credentials list. Consult the service documentation and live tools for current operational details.</p>
+<hr />
+<h2 id="section-3-roadmap-status-at-a-glance">SECTION 3 — ROADMAP STATUS AT A GLANCE<a class="headerlink" href="#section-3-roadmap-status-at-a-glance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Workstream</th>
+<th>Status (November 14, 2026)</th>
+<th>Next outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Original Phase 0 — Procurement / physical build</td>
+<td><strong>Historical build completed</strong>, subsequently expanded</td>
+<td>Maintain accurate hardware and rack records</td>
+</tr>
+<tr>
+<td>Original Phase 1 — Networking foundation</td>
+<td><strong>Operational; security verification incomplete</strong></td>
+<td>Validate intended inter-network restrictions and VLAN terminology</td>
+</tr>
+<tr>
+<td>Original Phase 2 — NAS / storage</td>
+<td><strong>Operational</strong>, later revised</td>
+<td>Verify current ZFS jobs and recovery readiness</td>
+</tr>
+<tr>
+<td>Original Phase 3 — Proxmox foundation</td>
+<td><strong>Operational; superseded two-node plan</strong></td>
+<td>Maintain three-node cluster; review node 01 upgrade readiness</td>
+</tr>
+<tr>
+<td>Original Phase 4 — Service migration</td>
+<td><strong>Completed in existing phase record</strong>, with later guest moves</td>
+<td>Maintain functioning services and independent backups</td>
+</tr>
+<tr>
+<td>Phase 5 — Hardening and operational readiness</td>
+<td><strong>In progress</strong></td>
+<td>Complete Waves 7–8 and close restore/UPS/security gaps</td>
+</tr>
+<tr>
+<td>AI Observer foundation (four MCP integrations and Komodo host coverage)</td>
+<td><strong>Implemented and end-to-end verified</strong></td>
+<td>Improve recovery assurance, then extend read-only visibility where justified</td>
+</tr>
+<tr>
+<td>One-time AI-powered enhancement audit</td>
+<td><strong>Planned; can begin with current access</strong></td>
+<td>Evidence-based findings and prioritized recommendations</td>
+</tr>
+<tr>
+<td>Observer Phase A — Application-level APIs</td>
+<td><strong>Proposed / not implemented</strong></td>
+<td>Narrow read-only Arr/media API discovery</td>
+</tr>
+<tr>
+<td>Observer Phase B — System and file inspection</td>
+<td><strong>Proposed / not implemented</strong></td>
+<td>Safe allowlisted configuration/log inspection</td>
+</tr>
+<tr>
+<td>Observer Phase C — Recurring audits and release intelligence</td>
+<td><strong>Proposed / not configured</strong></td>
+<td>Low-noise daily/weekly reporting after access and scheduling tests</td>
+</tr>
+<tr>
+<td>Original Phase 6 — Kubernetes sandbox</td>
+<td><strong>Deferred / not started</strong></td>
+<td>Reassess only after operational readiness is established</td>
+</tr>
+</tbody>
+</table>
+<p>These are <em>roadmap labels</em>, not certifications that every original phase exit criterion was tested. The original phase documents retain historic work and the authoritative runbooks track outstanding verification.</p>
+<hr />
+<h2 id="section-4-track-one-operational-readiness-and-hardening">SECTION 4 — TRACK ONE: OPERATIONAL READINESS AND HARDENING<a class="headerlink" href="#section-4-track-one-operational-readiness-and-hardening" title="Permanent link">&para;</a></h2>
+<p><strong>Goal:</strong> Make the current infrastructure maintainable, appropriately secured, and recoverable before layering on additional automation.</p>
+<h3 id="41-phase-5-completed-configuration-work">4.1 Phase 5 — Completed Configuration Work<a class="headerlink" href="#41-phase-5-completed-configuration-work" title="Permanent link">&para;</a></h3>
+<p>The original Phase 5 record identifies Waves 1–6 as implemented, including:</p>
+<ul>
+<li>Beszel monitoring and Uptime Kuma service checks.</li>
+<li>Nightly Docker host rsync backups and Healthchecks.io heartbeats.</li>
+<li>Authentik/OIDC integrations.</li>
+<li>External access and Cloudflare Access adjustments.</li>
+<li>qBitrr tracker-specific seeding policy configuration.</li>
+<li>Service settings, media automation, and November reliability tuning.</li>
+</ul>
+<p><strong>Verification caveat:</strong> An implemented policy is not the same as end-to-end proof. Some MAM, recovery, and edge-case scenarios remain pending in the detailed Phase 5 document. Its older two-node/PBS VM statements are historical and must not override current backup/network documentation.</p>
+<h3 id="42-phase-5-wave-7-security-and-operational-hardening">4.2 Phase 5 Wave 7 — Security and Operational Hardening<a class="headerlink" href="#42-phase-5-wave-7-security-and-operational-hardening" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Work item</th>
+<th>Current position</th>
+<th>Completion evidence required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SSH administrative access</td>
+<td>Historical plan remains open; current all-host key/password policy not fully reverified</td>
+<td>Verified keys, fallback/recovery path, staged host-by-host policy decisions</td>
+</tr>
+<tr>
+<td>Proxmox host NUT clients</td>
+<td>Configured on all three nodes</td>
+<td>Routine status verified; a planned end-to-end UPS shutdown exercise is separate</td>
+</tr>
+<tr>
+<td>Guest-level NUT requirement</td>
+<td>Original Phase 5 calls for Authentik/Immich guest clients; architecture decision needs review first</td>
+<td>Determine whether hypervisor shutdown ordering already meets the need; install only if justified</td>
+</tr>
+<tr>
+<td>UniFi rules</td>
+<td>Live rule inventory inspected</td>
+<td>Test Trusted→IoT, Internal→Dmz/IoT→Dmz, and targeted exceptions; propose changes separately</td>
+</tr>
+<tr>
+<td>Unraid/PBS access</td>
+<td>PBS runs on Docker Host networking</td>
+<td>Verify TCP 8007 exposure on Services and Management interfaces</td>
+</tr>
+<tr>
+<td>Legacy v2 systems</td>
+<td>Decommission status not independently reverified</td>
+<td>Dependency scan, confirmed shutdown/decommission, DNS cleanup</td>
+</tr>
+<tr>
+<td>Management VLAN description</td>
+<td>Historical "VLAN 10" conflicts with UniFi VLAN ID 1</td>
+<td>Verify actual switch-port tagging; correct documentation, not arbitrary live VLANs</td>
+</tr>
+<tr>
+<td>PVE software versions</td>
+<td>Node 01 9.1.6; nodes 02/03 9.2.26 (last verified)</td>
+<td>Review node 01 upgrade notes, backup/rollback readiness, then separately authorize upgrade</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Priority rule:</strong> Investigate read-only first. Change firewall, SSH, identity, or networking configuration only after impact and rollback are understood.</p>
+<h3 id="43-phase-5-wave-8-recovery-depth-and-versioned-backups">4.3 Phase 5 Wave 8 — Recovery Depth and Versioned Backups<a class="headerlink" href="#43-phase-5-wave-8-recovery-depth-and-versioned-backups" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Work item</th>
+<th>Current position</th>
+<th>Completion evidence required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Full Proxmox restore exercise</td>
+<td>Outstanding</td>
+<td>Isolated VM/CT restore with startup and data checks; no conflict with production IDs/IPs</td>
+</tr>
+<tr>
+<td>PBS maintenance</td>
+<td>Schedules documented</td>
+<td>Logs show successful recent prune, garbage collection, and verification jobs</td>
+</tr>
+<tr>
+<td>PBS alerting</td>
+<td>Warning/error matcher documented</td>
+<td>Verified notification delivery on a safe test event</td>
+</tr>
+<tr>
+<td>PBS Docker boot dependency</td>
+<td>Mount-order behavior not fully tested</td>
+<td>Confirm datastore available before service startup</td>
+</tr>
+<tr>
+<td>AI Observer recovery</td>
+<td>Configuration tracked in part in Git; secrets/tunnel runtime files protected separately</td>
+<td>Fresh backup covers all four integrations; credential recovery plan; safe restart/reconnect verification</td>
+</tr>
+<tr>
+<td>Plex full-appdata backup</td>
+<td>Not verified implemented; built-in DB backup is not full protection</td>
+<td>Consistent full-appdata archive, schedule, monitoring, and test restore</td>
+</tr>
+<tr>
+<td>Synology ABB versioning</td>
+<td>Original Phase 5 Wave 8 item remains open</td>
+<td>Verified off-NAS versioned copies, retention, and sample restore</td>
+</tr>
+<tr>
+<td>ZFS maintenance</td>
+<td>Mirror member status healthy; job success not fully rechecked</td>
+<td>Current <code>zpool</code> health, scrub results, snapshots and retention reviewed</td>
+</tr>
+<tr>
+<td>Power-loss behavior</td>
+<td>NUT clients responding; complete sequencing untested</td>
+<td>Reviewed UPS maintenance test, physical outlet mapping, guest-before-host/NAS-last behavior</td>
+</tr>
+</tbody>
+</table>
+<p>An actual restore and recovery test is the exit criterion—not simply a green backup task.</p>
+<h3 id="44-operational-readiness-exit-criteria">4.4 Operational Readiness Exit Criteria<a class="headerlink" href="#44-operational-readiness-exit-criteria" title="Permanent link">&para;</a></h3>
+<p>Phase 5 can be marked complete only when the selected scope is both implemented and verified:</p>
+<ul>
+<li>[ ] Critical data protection and sample restoration are demonstrated.</li>
+<li>[ ] Backup schedules, retention jobs, and alert paths have current evidence.</li>
+<li>[ ] Critical VM and NAS recovery dependencies are documented.</li>
+<li>[ ] Firewall intent matches effective policy, or exceptions are explicitly accepted.</li>
+<li>[ ] NUT/UPS operational behavior is verified to the agreed level, with untested areas documented.</li>
+<li>[ ] Remaining Phase 5 Wave 7/8 tasks are completed or consciously deferred with rationale.</li>
+<li>[ ] Related service, architecture, and runbook files reflect confirmed results.</li>
+</ul>
+<hr />
+<h2 id="section-5-track-two-ai-powered-enhancement-and-audit">SECTION 5 — TRACK TWO: AI-POWERED ENHANCEMENT AND AUDIT<a class="headerlink" href="#section-5-track-two-ai-powered-enhancement-and-audit" title="Permanent link">&para;</a></h2>
+<p><strong>Goal:</strong> Turn existing observability into useful, evidence-based infrastructure improvement recommendations while maintaining the current <strong>read-only AI boundary</strong>.</p>
+<p>This track has two components that can run in parallel:</p>
+<ol>
+<li><strong>One-time comprehensive baseline audit:</strong> Examine what can already be verified, identify problems and opportunities, and establish a prioritized findings register.</li>
+<li><strong>Permanent read-only enhancement assistant:</strong> Gradually expand useful visibility and, later, introduce scheduled reports if the access, privacy, and scheduler behavior are proven.</li>
+</ol>
+<p>The initial audit <strong>does not need to wait</strong> for new application APIs or a host file collector. Do not install additional agents merely to start it.</p>
+<h3 id="51-current-ai-observer-implemented-architecture">5.1 Current AI Observer — Implemented Architecture<a class="headerlink" href="#51-current-ai-observer-implemented-architecture" title="Permanent link">&para;</a></h3>
+<p><strong>VM:</strong> <code>observer-prod-01</code> (VM 107, <code>192.168.30.17</code>, Services VLAN 30), on <code>pve-prod-01</code>. Its integration services live on a dedicated VM, separate from production application Docker workloads.</p>
+<table>
+<thead>
+<tr>
+<th>Integration</th>
+<th>Deployment</th>
+<th>Exposed MCP tools</th>
+<th>Verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox</td>
+<td>Dedicated MCP + outbound OpenAI Secure MCP Tunnel</td>
+<td>84 Read / 0 Write</td>
+<td>Live cluster/API queries successful</td>
+</tr>
+<tr>
+<td>Unraid</td>
+<td>Dedicated MCP + outbound tunnel</td>
+<td>26 Read / 0 Write</td>
+<td>Live NAS/array/Docker queries successful; individual operations may vary</td>
+</tr>
+<tr>
+<td>Komodo</td>
+<td>Dedicated MCP + outbound tunnel; one Core serving three Docker hosts</td>
+<td>40 Read / 0 Write</td>
+<td>Live containers/stacks/log queries successful</td>
+</tr>
+<tr>
+<td>UniFi</td>
+<td>Dedicated MCP + outbound tunnel via UniFi cloud API</td>
+<td>55 Read / 0 Write</td>
+<td>Live network, firewall, and device queries successful</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>Four independent MCP endpoints and outbound tunnels</strong></td>
+<td><strong>205 Read / 0 Write</strong></td>
+<td>Tool discovery and representative end-to-end operations verified</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Komodo host coverage:</strong> <code>docker-prod-01</code>, <code>immich-prod-01</code>, and <code>auth-prod-01</code>. The remote guests run outbound Komodo Periphery; no additional observer MCP tunnel was required for them.</p>
+<p><strong>Important security qualification:</strong> The 205/0 count describes tools exposed to ChatGPT, not the intrinsic rights of every upstream credential. In particular, the UniFi upstream key has not been independently proven read-only. Komodo's local MCP access and remote Periphery Docker permissions also require their existing compensating controls. Tool discovery is not proof every individual read operation works or every response is nonsensitive.</p>
+<p>The observer uses localhost-only MCP listeners and outbound OpenAI tunnels. No public MCP reverse-proxy route or inbound port forward is part of the design.</p>
+<p><strong>Authoritative implementation details:</strong> <code>services/infra/ai-observer.md</code> and <code>runbooks/ai-observer-operations.md</code>.</p>
+<h3 id="52-what-the-existing-integrations-can-do-now">5.2 What the Existing Integrations Can Do Now<a class="headerlink" href="#52-what-the-existing-integrations-can-do-now" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Current status</th>
+<th>Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proxmox hardware, node, VM/LXC inventory and health</td>
+<td>Available</td>
+<td>Only exposed Proxmox read operations</td>
+</tr>
+<tr>
+<td>Unraid array, drives, parity, capacity and basic Docker status</td>
+<td>Available</td>
+<td>Some API actions can fail upstream; verify per request</td>
+</tr>
+<tr>
+<td>Komodo Docker container/stack state across three Docker hosts</td>
+<td>Available</td>
+<td>Not arbitrary guest shell/file access</td>
+</tr>
+<tr>
+<td>Selected Docker container logs</td>
+<td>Available</td>
+<td>Logs do not expose all internal application state</td>
+</tr>
+<tr>
+<td>Proxmox tasks and selected system logs</td>
+<td>Available</td>
+<td>Not unrestricted guest journal or file inspection</td>
+</tr>
+<tr>
+<td>UniFi networks, devices, firewall rules and groups</td>
+<td>Available</td>
+<td>Configuration inspection, not policy writes or full packet testing</td>
+</tr>
+<tr>
+<td>CPU/RAM/storage right-sizing recommendations</td>
+<td>Available through analysis</td>
+<td>Interpret actual utilization; recommendations are not automatic changes</td>
+</tr>
+<tr>
+<td>Public release notes, advisories and version research</td>
+<td>Available when sources are checked</td>
+<td>Actual installed version must be grounded separately</td>
+</tr>
+<tr>
+<td>Arbitrary VM configuration files</td>
+<td>Limited</td>
+<td>No general filesystem-access capability established</td>
+</tr>
+<tr>
+<td>Sonarr/Radarr/Prowlarr/Plex/Tautulli internal API state</td>
+<td>Limited</td>
+<td>Not yet a dedicated approved read-only integration</td>
+</tr>
+<tr>
+<td>Direct NAS media filesystem inspection</td>
+<td>Not connected</td>
+<td>Not available through current MCP scope</td>
+</tr>
+<tr>
+<td>Automatic recurring infrastructure investigations</td>
+<td>Not configured</td>
+<td>Needs scheduler and data-access validation</td>
+</tr>
+<tr>
+<td>Executing infrastructure changes</td>
+<td>Intentionally disabled</td>
+<td>Explicit approval and separate trusted execution would be required</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-one-time-comprehensive-baseline-audit-first-deliverable">5.3 One-Time Comprehensive Baseline Audit — First Deliverable<a class="headerlink" href="#53-one-time-comprehensive-baseline-audit-first-deliverable" title="Permanent link">&para;</a></h3>
+<p><strong>Status:</strong> Planned; can start using current integrations and documentation.<br />
+<strong>Mode:</strong> Read-only inspection and recommendations.<br />
+<strong>Deliverable:</strong> One consolidated, prioritized audit findings report, not a stack of new permanent documentation files.</p>
+<p><strong>Audit sequence:</strong></p>
+<ol>
+<li><strong>Inventory and topology:</strong> Compare current Proxmox, Unraid, Komodo, and UniFi data with authoritative Markdown. Record stale paths, guest placement, version, and role discrepancies.</li>
+<li><strong>Compute and resource allocation:</strong> Review CPU/RAM allocations, host pressure, disk utilization, guest startup policy, idle overhead, and memory/swap evidence. Avoid tuning solely on one momentary metric.</li>
+<li><strong>Backups and recovery:</strong> Validate job coverage, tasks, datastore availability, retention execution, notifications, recovery gaps, and dependency on the NAS.</li>
+<li><strong>Storage and hardware:</strong> Inspect parity and disk health, ZFS evidence where accessible, pool headroom, NAS/network paths, and unusual recurring warnings.</li>
+<li><strong>Containers and service operations:</strong> Identify unhealthy containers, restart loops, error patterns, out-of-date deployment assumptions, missing checks, and noisy logs across all three Komodo hosts.</li>
+<li><strong>Security and networking:</strong> Review UniFi zone membership, rules and exceptions, sensitive upstream API access, exposure, and privileged container patterns. Do not infer enforcement from a configuration name alone.</li>
+<li><strong>Media automation:</strong> Review Docker-visible failures first; distinguish indexer limits and application-specific problems that require later Arr API access.</li>
+<li><strong>Enhancement opportunities:</strong> Look for specific new features or sensible configuration improvements relevant to hardware, versions, workloads, and user goals.</li>
+<li><strong>Triage and validation:</strong> Classify evidence as verified, likely, historical/resolved, or not observable; request narrowly targeted additional reads only when needed.</li>
+</ol>
+<p><strong>Finding categories:</strong></p>
+<ul>
+<li><strong>Fix an existing issue:</strong> An observed problem, such as persistent error patterns, failed imports, unhealthy backups, or recurring connectivity failures.</li>
+<li><strong>Improve an existing configuration:</strong> A measurable resilience, security, performance, reliability, or maintainability gain.</li>
+<li><strong>Adopt a genuinely useful new capability:</strong> A release feature or integration with a specific benefit for this exact Homelab configuration.</li>
+</ul>
+<p><strong>Initial investigation candidates (not presumed active):</strong></p>
+<ul>
+<li>Historical Prowlarr/indexer rate-limit warnings and whether any current searches/imports remain affected.</li>
+<li>Historical Plex/Tautulli connection errors, if still present.</li>
+<li>PBS full-restore and maintenance-verification gaps.</li>
+<li>UniFi Trusted→IoT and Internal→Dmz policy scope.</li>
+<li>AI Observer credential backup and tunnel restart/recovery assurance.</li>
+<li>Recent Proxmox right-sizing decisions and remaining CPU-allocation review.</li>
+</ul>
+<p>The audit must <strong>not</strong> re-open resolved qBitrr or parity incidents as ongoing faults without fresh evidence.</p>
+<p><strong>Baseline audit exit criteria:</strong></p>
+<ul>
+<li>[ ] Current topology and integration reachability captured with timestamps.</li>
+<li>[ ] High-severity failures separated from historical alerts and unknowns.</li>
+<li>[ ] Findings ranked by benefit, risk, effort, and evidence quality.</li>
+<li>[ ] Each recommendation has exact proposed verification and rollback considerations.</li>
+<li>[ ] Nothing changed automatically.</li>
+<li>[ ] Findings point to their authoritative service/runbook documentation for future verified updates.</li>
+</ul>
+<h3 id="54-enhancement-phase-a-application-level-api-access">5.4 Enhancement Phase A — Application-Level API Access<a class="headerlink" href="#54-enhancement-phase-a-application-level-api-access" title="Permanent link">&para;</a></h3>
+<p><strong>Status:</strong> Proposed / not implemented.<br />
+<strong>Priority:</strong> Highest-value observer extension after establishing the baseline audit.</p>
+<p>Docker logs reveal container health and some application errors, but not necessarily the application state. A Sonarr container can be running while its import queue is blocked or series are missing files.</p>
+<p><strong>Candidate read targets:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Application</th>
+<th>Useful approved reads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sonarr (TV and Anime)</td>
+<td>Health warnings, queues, failed imports, activity/history, monitored/missing status, configured indexer status</td>
+</tr>
+<tr>
+<td>Radarr (1080p and 4K)</td>
+<td>Health, queue, failed imports, upgrades, monitored/missing items, indexer status</td>
+</tr>
+<tr>
+<td>Prowlarr</td>
+<td>Indexer health, sync warnings, rate-limit errors, statistics where exposed</td>
+</tr>
+<tr>
+<td>Bazarr</td>
+<td>Subtitle tasks, application health and warnings</td>
+</tr>
+<tr>
+<td>Plex</td>
+<td>Server health, libraries and activity metadata within approved privacy scope</td>
+</tr>
+<tr>
+<td>Tautulli</td>
+<td>Plex-related performance and connection history within approved privacy scope</td>
+</tr>
+<tr>
+<td>qBittorrent / qBitrr</td>
+<td>Queue and seeding-health state through a deliberately restricted read-only adapter</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Security constraint:</strong> Many application API keys allow both reads and writes. <strong>Do not give raw keys or unrestricted proxy endpoints to ChatGPT.</strong> Build or select an observer-local gateway/adapter that uses an explicit allowlist of safe read operations, blocks unapproved methods and parameters, limits response size, redacts sensitive results, and authenticates clients. Separate upstream credentials should be used where feasible. The adapter must not expose general HTTP requests simply because the user intends read-only use.</p>
+<p><strong>Implementation sequence:</strong></p>
+<ol>
+<li>Inventory current endpoints, permissions, and APIs using service documentation.</li>
+<li>Choose <strong>one pilot application</strong> (Sonarr or Prowlarr is a reasonable starting point).</li>
+<li>Define exact approved API reads and response fields; identify any read route with side effects.</li>
+<li>Implement a minimal, authenticated, loopback-bound adapter on <code>observer-prod-01</code> or another justified controlled boundary.</li>
+<li>Test allowed queries, denied writes, secrets redaction, error handling, and real application-state usefulness.</li>
+<li>Extend to the remaining applications only when the pilot adds clear diagnostic value.</li>
+</ol>
+<p><strong>Phase A exit criteria:</strong> A representative failed-import/indexer/health question can be answered from approved application data, without revealing secrets or enabling arbitrary API operations; successful results and negative permission tests are documented.</p>
+<h3 id="55-enhancement-phase-b-read-only-system-file-and-log-inspection">5.5 Enhancement Phase B — Read-Only System, File, and Log Inspection<a class="headerlink" href="#55-enhancement-phase-b-read-only-system-file-and-log-inspection" title="Permanent link">&para;</a></h3>
+<p><strong>Status:</strong> Proposed / not implemented.<br />
+<strong>Objective:</strong> Investigate approved host/VM configuration and operational evidence that existing MCP tools cannot access.</p>
+<p><strong>Candidate read scope:</strong></p>
+<ul>
+<li>Systemd service state and selected journal entries.</li>
+<li>Approved Docker Compose configurations after secret redaction.</li>
+<li>Selected application configuration fields.</li>
+<li>Mount status, NFS health, filesystem type and capacity.</li>
+<li>Kernel and storage error summaries.</li>
+<li>Backup script exit status and bounded logs.</li>
+<li>Relevant NAS filesystem metadata or designated approved directories, without general browsing of media content.</li>
+</ul>
+<p><strong>Preferred architecture:</strong> A small host-side collector or existing trustworthy API that returns <em>predefined, filtered read-only facts</em>. The collector should have an explicit command/file allowlist, constrained OS identity, bounded output, audit logging, timeouts, and network restrictions. Prefer structured results over raw shell or arbitrary file-read endpoints.</p>
+<p><strong>Must not expose:</strong> Unrestricted root SSH, arbitrary shell commands, unrestricted filesystem traversal, private media contents by default, environment secrets, full Docker inspection output containing credentials, or broad remote Docker socket access.</p>
+<p><strong>Implementation sequence:</strong> Start with one proven operational gap from the baseline audit. Test data minimization and permission denial before deploying on another host. Add new collectors only where the value warrants their attack surface.</p>
+<p><strong>Phase B exit criteria:</strong> A previously inaccessible operational question can be answered accurately from a bounded approved source, with evidence that unapproved commands and paths cannot be accessed.</p>
+<h3 id="56-enhancement-phase-c-recurring-health-audits-and-release-intelligence">5.6 Enhancement Phase C — Recurring Health Audits and Release Intelligence<a class="headerlink" href="#56-enhancement-phase-c-recurring-health-audits-and-release-intelligence" title="Permanent link">&para;</a></h3>
+<p><strong>Status:</strong> Proposed / not configured.<br />
+<strong>Prerequisites:</strong> Reliable source access, report thresholds, credential handling, and tested scheduler behavior.</p>
+<p>Two proposed recurring outputs:</p>
+<table>
+<thead>
+<tr>
+<th>Cadence</th>
+<th>Report</th>
+<th>Intended value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Daily</td>
+<td><strong>Health audit</strong></td>
+<td>New critical errors, failing backups, unhealthy containers, hardware alerts, significant resource changes, failed imports where app APIs exist</td>
+</tr>
+<tr>
+<td>Weekly</td>
+<td><strong>Optimization and release review</strong></td>
+<td>Relevant software releases, security fixes, deprecations, configuration opportunities, resource tuning, and recurring unresolved problems</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Scheduling options to evaluate:</strong></p>
+<ul>
+<li>ChatGPT scheduled tasks, <strong>only after proving that the required connected-tool access works during scheduled runs</strong>.</li>
+<li>An observer-local scheduler that collects bounded/sanitized facts and delivers them through an approved channel such as existing Discord notification infrastructure.</li>
+</ul>
+<p>Neither cadence is active merely because it is listed here. Scheduler choice, delivery channel, timezone, report thresholds, secrets storage, and error handling require a separate implementation decision. Do not create new automations implicitly from this roadmap.</p>
+<p><strong>Release intelligence should be architecture-aware:</strong></p>
+<ol>
+<li>Establish the <em>actually installed</em> version and its host/container context.</li>
+<li>Research the new version's release notes and security advisories.</li>
+<li>Explain only changes relevant to this hardware, workload, and existing configuration.</li>
+<li>Identify dependencies, compatibility issues, downtime, configuration migrations, and known upgrade risks.</li>
+<li>Recommend <strong>Update</strong>, <strong>Wait</strong>, or <strong>Investigate</strong>, with an explicit reason.</li>
+<li>Provide a staged implementation, validation plan, and rollback options if a change is worthwhile.</li>
+<li>Remember or reference prior findings so reports do not repeatedly recommend the same dismissed item.</li>
+</ol>
+<p><strong>Example of desired behavior:</strong> An Immich release adds a hardware-acceleration capability. The report checks the installed Immich version, VM placement, host hardware, existing ML configuration, and authoritative release notes before deciding whether the feature materially benefits the deployment. It does not simply say "Immich has an update."</p>
+<p><strong>Noise controls:</strong></p>
+<ul>
+<li>Do not report every image update as urgent.</li>
+<li>Prioritize newly observed changes since the last successful baseline.</li>
+<li>Separate actionable new failures from expected transient warnings.</li>
+<li>Suppress or explain known accepted risks, with a revisit condition.</li>
+<li>Use source timestamps; preserve the last successful run time and indicate stale data.</li>
+<li>Flag inaccessible sources as <strong>unverified</strong>, not healthy.</li>
+</ul>
+<p><strong>Phase C exit criteria:</strong> A real scheduled run successfully reads approved data, produces a useful report without secrets, distinguishes current vs. historical evidence, delivers as configured, and does not perform writes. A second run demonstrates deduplication and sensible thresholds.</p>
+<h3 id="57-conceptual-target-architecture">5.7 Conceptual Target Architecture<a class="headerlink" href="#57-conceptual-target-architecture" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ChatGPT — interpretation, evidence review, recommendations
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  |
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  | OpenAI Secure MCP Tunnels (outbound, dedicated, authenticated)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  v
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>observer-prod-01 — independent read-only analysis gateway
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  |
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  +-- IMPLEMENTED: Proxmox MCP -----&gt; Proxmox cluster
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  +-- IMPLEMENTED: Unraid MCP ------&gt; NAS/Unraid API
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  +-- IMPLEMENTED: Komodo MCP ------&gt; Docker hosts (3)
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  +-- IMPLEMENTED: UniFi MCP -------&gt; UniFi cloud / UDM-SE
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  |
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  +-- PROPOSED Phase A: approved application API adapter
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  |      -&gt; Sonarr / Radarr / Prowlarr / Plex / Tautulli / other pilots
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  |
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  +-- PROPOSED Phase B: bounded host/log/file collectors
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  |      -&gt; allowlisted systemd, journal, mounts, backup logs, configs
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  |
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  +-- PROPOSED Phase C: scheduler + release intelligence
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>         -&gt; daily health findings / weekly improvements
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>Recommendations -&gt; user approval -&gt; manual/authorized implementation
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  -&gt; live verification -&gt; update existing Obsidian docs
+</code></pre></div>
+<p>The lower three capabilities are <strong>conceptual future work</strong>, not current production MCP features.</p>
+<h3 id="58-security-and-change-control-contract">5.8 Security and Change-Control Contract<a class="headerlink" href="#58-security-and-change-control-contract" title="Permanent link">&para;</a></h3>
+<p><strong>The current AI Observer integrations expose no write tools. Keep that design by default.</strong></p>
+<ol>
+<li>Discover a failure, risk, or improvement with read-only evidence.</li>
+<li>Identify affected infrastructure and review authoritative documentation.</li>
+<li>Prepare exact proposed changes, commands/configuration, impact, prerequisites, validation, and rollback.</li>
+<li>Obtain explicit user approval for consequential actions.</li>
+<li>Apply changes through the established administrator workflow, not an unbounded AI tool.</li>
+<li>Verify the result through live state or appropriate command output.</li>
+<li>Update the relevant <strong>existing</strong> Obsidian Markdown files only after verification.</li>
+<li>Commit through the established user-managed Git workflow.</li>
+</ol>
+<p>Creating scripts, Compose files, systemd units, and proposed configuration is permitted as planning work. <strong>Automatically executing or deploying them is not authorized by this roadmap.</strong></p>
+<hr />
+<h2 id="section-6-recommendations-audit-outputs-and-prioritization">SECTION 6 — RECOMMENDATIONS, AUDIT OUTPUTS, AND PRIORITIZATION<a class="headerlink" href="#section-6-recommendations-audit-outputs-and-prioritization" title="Permanent link">&para;</a></h2>
+<h3 id="61-standard-finding-format">6.1 Standard Finding Format<a class="headerlink" href="#61-standard-finding-format" title="Permanent link">&para;</a></h3>
+<p>Each material audit finding should contain:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Title and category</td>
+<td>Existing issue, configuration improvement, or new useful capability</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>Exact host, VM, service, software version and relevant dependency</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>Observed logs/config/metrics with timestamp and source; historical vs current clearly marked</td>
+</tr>
+<tr>
+<td>Confidence</td>
+<td>Confirmed, probable, or needs investigation</td>
+</tr>
+<tr>
+<td>Severity / benefit</td>
+<td>Reliability, security, recovery, performance, operational efficiency, or functionality</td>
+</tr>
+<tr>
+<td>Recommendation</td>
+<td>Specific adjustment or explicit decision to leave unchanged</td>
+</tr>
+<tr>
+<td>Change risk</td>
+<td>Dependencies, downtime, external exposure, secrets/permissions effects</td>
+</tr>
+<tr>
+<td>Implementation</td>
+<td>Exact proposed steps, initially <strong>not executed</strong></td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>How to confirm the intended result</td>
+</tr>
+<tr>
+<td>Rollback</td>
+<td>Practical way to reverse a consequential change</td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td>Existing service/architecture/runbook paths to update after verification</td>
+</tr>
+<tr>
+<td>State</td>
+<td>New, investigating, accepted, scheduled, verified resolved, or deferred</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-priority-model">6.2 Priority Model<a class="headerlink" href="#62-priority-model" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Examples</th>
+<th>Expected handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0 — Immediate</td>
+<td>Active data-loss risk, serious exposure, repeated critical backup failure</td>
+<td>Investigate promptly; minimize destructive action</td>
+</tr>
+<tr>
+<td>P1 — High</td>
+<td>Unprotected critical data, recurring outages, material configuration risk</td>
+<td>Address in the next focused work session</td>
+</tr>
+<tr>
+<td>P2 — Medium</td>
+<td>Verified resource waste, preventable alert noise, useful service improvement</td>
+<td>Plan and evaluate benefit/risk</td>
+</tr>
+<tr>
+<td>P3 — Optional</td>
+<td>Cosmetic cleanup or speculative feature with no concrete benefit</td>
+<td>Defer without repeated reminders</td>
+</tr>
+</tbody>
+</table>
+<p>A public software release alone is <strong>not</strong> a severity level.</p>
+<h3 id="63-reporting-quality-and-history">6.3 Reporting Quality and History<a class="headerlink" href="#63-reporting-quality-and-history" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Do not claim an issue is fixed without verified post-change behavior.</li>
+<li>Do not claim a failed audit query proves a service is down.</li>
+<li>Avoid copying secrets, private tokens, and unnecessary application-level personal data into reports.</li>
+<li>Cite authoritative service docs, live observations, and external release sources as appropriate.</li>
+<li>Preserve a concise findings register within the chosen audit/report workflow; avoid creating duplicate permanent infrastructure inventory documents.</li>
+<li>Carry forward accepted decisions and mark obsolete findings as superseded.</li>
+</ul>
+<hr />
+<h2 id="section-7-execution-order-and-dependencies">SECTION 7 — EXECUTION ORDER AND DEPENDENCIES<a class="headerlink" href="#section-7-execution-order-and-dependencies" title="Permanent link">&para;</a></h2>
+<p>The two active tracks may progress concurrently, but neither should compromise infrastructure recovery or access boundaries.</p>
+<table>
+<thead>
+<tr>
+<th>Sequence</th>
+<th>Milestone</th>
+<th>Dependency / gate</th>
+<th>Success criterion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Complete documentation reconciliation</td>
+<td>Existing sources and verified live state</td>
+<td>Current topology accurate; obsolete PBS/two-node references removed from active docs</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Perform one-time AI baseline audit</td>
+<td>Four existing read-only integrations</td>
+<td>Actionable, evidence-ranked findings without installing new agents</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Close critical recovery and security gaps</td>
+<td>Scoped Phase 5 work</td>
+<td>Restore test, backup maintenance evidence, and agreed firewall priorities</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Review <code>pve-prod-01</code> upgrade readiness</td>
+<td>Backups, maintenance window, release notes</td>
+<td>Approved, validated upgrade plan before execution</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Pilot one application API adapter</td>
+<td>Baseline shows meaningful missing application data</td>
+<td>Narrow approved reads; verified write denial; useful diagnostics</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Pilot one system/file collector if justified</td>
+<td>Specific unanswered audit question</td>
+<td>Allowlisted reads, safe data handling, no shell delegation</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Pilot recurring health and release reporting</td>
+<td>Approved sources, tested scheduling, alert thresholds</td>
+<td>A successful report and a follow-up run without noise or data leaks</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Reassess Kubernetes sandbox</td>
+<td>Operational foundation stable; user wants to proceed</td>
+<td>Separate lab plan that cannot impact production</td>
+</tr>
+</tbody>
+</table>
+<p><strong>No invented deadlines.</strong> The milestone order is a priority and dependency guide, not a calendar commitment.</p>
+<h3 id="71-near-term-focus">7.1 Near-Term Focus<a class="headerlink" href="#71-near-term-focus" title="Permanent link">&para;</a></h3>
+<p>The best immediate use of the existing integrations is <strong>a baseline audit</strong>, alongside completing the current documentation and selecting the next Phase 5 verification item. The baseline should tell us <em>which</em> additional API or file collector is truly worth deploying. Do not build collectors, schedulers, or extensive upgrade automation solely because they are possible.</p>
+<h3 id="72-decisions-needed-during-implementation">7.2 Decisions Needed During Implementation<a class="headerlink" href="#72-decisions-needed-during-implementation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Which one or two application APIs deliver the most valuable missing data?</li>
+<li>Which endpoints can be safely exposed as read-only facts despite upstream tokens that may have write privileges?</li>
+<li>Which filesystem/log questions are not answered by existing tools?</li>
+<li>Which findings warrant ongoing alerts versus a weekly report?</li>
+<li>Which scheduling and delivery mechanism can be reliably tested in this environment?</li>
+<li>What evidence is sufficient to close recovery gaps without unnecessary disruptive testing?</li>
+</ul>
+<p>These decisions should be made when their corresponding implementation step is reached, using live evidence and explicit user authorization.</p>
+<hr />
+<h2 id="section-8-future-phase-kubernetes-sandbox">SECTION 8 — FUTURE PHASE: KUBERNETES SANDBOX<a class="headerlink" href="#section-8-future-phase-kubernetes-sandbox" title="Permanent link">&para;</a></h2>
+<p><strong>Original Phase 6:</strong> Kubernetes with k3s/Talos, sandbox first.<br />
+<strong>Current status:</strong> Deferred / not implemented.</p>
+<p>The core original principle remains sound: <strong>do not migrate production services into a Kubernetes environment until a separate learning cluster has been deliberately built, broken, restored, secured, and understood</strong>.</p>
+<p>The original two-node Talos layout is <strong>historical</strong>, because the cluster now has three heterogeneous Proxmox nodes. Reassess capacity, placement, networking, storage, and the actual learning objective when this phase is activated.</p>
+<p><strong>Potential lab scope:</strong></p>
+<ul>
+<li>Lightweight VMs or other appropriately isolated lab guests.</li>
+<li>Kubernetes fundamentals: pods, deployments, namespaces, services, ingress, and storage.</li>
+<li>Helm and reproducible cluster configuration.</li>
+<li>GitOps using Flux or Argo CD if justified.</li>
+<li>Certificate management, upgrades, failures, and recovery exercises.</li>
+<li>Optional Talos, k3s, Longhorn or alternatives only after their trade-offs are understood.</li>
+</ul>
+<p><strong>Entry criteria:</strong></p>
+<ul>
+<li>Phase 5's critical recovery/security gaps are resolved or explicitly accepted.</li>
+<li>Existing production guest resource commitments are understood.</li>
+<li>The lab cannot interrupt DNS, SSO, media, storage, backups, or the AI Observer.</li>
+<li>There is a clear learning/functional goal rather than a requirement to migrate everything.</li>
+</ul>
+<p><strong>Workloads not automatically scheduled for migration:</strong> ARR stack, qBittorrent/Gluetun, and books hardlink/ingest workflows retain their established Docker design unless a compelling, tested alternative exists. Production Immich, Authentik, monitoring, and ingress are <strong>candidates to evaluate</strong>, not promises to migrate.</p>
+<hr />
+<h2 id="section-9-documentation-repositories-and-decision-history">SECTION 9 — DOCUMENTATION, REPOSITORIES, AND DECISION HISTORY<a class="headerlink" href="#section-9-documentation-repositories-and-decision-history" title="Permanent link">&para;</a></h2>
+<h3 id="91-documentation-system">9.1 Documentation System<a class="headerlink" href="#91-documentation-system" title="Permanent link">&para;</a></h3>
+<p>The Obsidian vault is the authoring source of truth and is mirrored to a private <code>homelab-docs</code> GitHub repository and Google Drive. The Drive mirror is the primary reference when consulting current documentation from ChatGPT.</p>
+<p><strong>Authoritative paths:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Subject</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Architecture rationale/history</td>
+<td><code>architecture/decisions-log.md</code></td>
+</tr>
+<tr>
+<td>Hardware and rack</td>
+<td><code>architecture/hardware/inventory.md</code>, <code>architecture/hardware/rack-layout.md</code></td>
+</tr>
+<tr>
+<td>Proxmox nodes</td>
+<td><code>architecture/compute/pve-prod-01.md</code>, <code>pve-prod-02.md</code>, <code>pve-prod-03.md</code> in the same directory</td>
+</tr>
+<tr>
+<td>VLAN/IP/firewall</td>
+<td><code>architecture/network/vlan-design.md</code>, <code>ip-addresses.md</code>, <code>firewall-rules.md</code></td>
+</tr>
+<tr>
+<td>NAS and storage</td>
+<td><code>architecture/storage/nas-prod-01.md</code></td>
+</tr>
+<tr>
+<td>AI Observer architecture</td>
+<td><code>services/infra/ai-observer.md</code></td>
+</tr>
+<tr>
+<td>AI Observer operations</td>
+<td><code>runbooks/ai-observer-operations.md</code></td>
+</tr>
+<tr>
+<td>PBS backups and recovery</td>
+<td><code>runbooks/backup-schedule.md</code>, <code>runbooks/backup-restore.md</code></td>
+</tr>
+<tr>
+<td>Existing Phase 5 checklist</td>
+<td><code>phases/phase-5-hardening.md</code></td>
+</tr>
+<tr>
+<td>Original build history</td>
+<td>Other existing <code>phases/</code> documents</td>
+</tr>
+<tr>
+<td>Service-specific configuration</td>
+<td>Corresponding Markdown files in <code>services/</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>01-context-handoff.md</code> has been intentionally deleted because it duplicated current information and repeatedly became stale. <strong>Do not recreate a permanent handoff file.</strong> When changing conversations, produce a temporary on-demand handoff prompt and consult the actual documentation again.</p>
+<p>This roadmap should not become a second copy of full service configuration, passwords, port lists, or the entirety of the decision log.</p>
+<h3 id="92-infrastructure-repository">9.2 Infrastructure Repository<a class="headerlink" href="#92-infrastructure-repository" title="Permanent link">&para;</a></h3>
+<p>The private <code>homelab-infra</code> repository manages Compose deployments and non-secret configuration. Its working tree is used on participating Docker hosts, including the AI Observer.</p>
+<p>Typical layout:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>/opt/stacks/&lt;stack&gt;/compose.yaml   # Version-controlled deployment
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>/opt/stacks/&lt;stack&gt;/.env           # Sensitive local environment, gitignored
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>/opt/appdata/&lt;app&gt;/                # Application state; backed up separately
+</code></pre></div>
+<p>The AI Observer's four MCP deployment definitions and sanitized tunnel/systemd templates have been committed to the infrastructure repository. Runtime keys, active tunnel identities, protected <code>.env</code> files, and necessary host state are not guaranteed recoverable from Git alone.</p>
+<p>Maintain the existing separation between source-controlled configuration and secrets. Consult <code>runbooks/git-workflow.md</code> and <code>services/infra/ai-observer.md</code> before altering those workflows.</p>
+<h3 id="93-naming-conventions">9.3 Naming Conventions<a class="headerlink" href="#93-naming-conventions" title="Permanent link">&para;</a></h3>
+<p>Use <code>{role}-{env}-{index}</code> for host and guest names: e.g., <code>pve-prod-01</code>, <code>nas-prod-01</code>, <code>observer-prod-01</code>. Docker instances use role-specific names such as <code>sonarr-tv</code>, <code>sonarr-anime</code>, <code>radarr-1080p</code>, and <code>radarr-4k</code>.</p>
+<p>The PBS Proxmox storage ID <code>pbs-prod-01</code> is retained for compatibility even though the old PBS VM was deleted; it is <strong>not</strong> evidence that a VM by that name remains active.</p>
+<h3 id="94-documentation-change-procedure">9.4 Documentation Change Procedure<a class="headerlink" href="#94-documentation-change-procedure" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Read every affected existing Markdown document before proposing its replacement.</li>
+<li>Verify current configuration through live integrations or operator command output.</li>
+<li>Distinguish completed work from planned work, hypotheses, and historical incidents.</li>
+<li>Preserve valuable decision and troubleshooting history.</li>
+<li>Provide complete updated Markdown files for the operator to apply in Obsidian.</li>
+<li>Do not directly edit Google Drive or GitHub without an explicit request.</li>
+<li>Do not mark an implementation complete until the expected behavior was verified.</li>
+</ol>
+<hr />
+<h2 id="section-10-roadmap-change-record">SECTION 10 — ROADMAP CHANGE RECORD<a class="headerlink" href="#section-10-roadmap-change-record" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Change</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Original v7.0 plan</td>
+<td>Clean-slate two-node Proxmox, QDevice, PBS VM, VLAN 10/20/30/40, services migration, Phase 5 hardening, future Kubernetes</td>
+<td><strong>Historical design</strong>, superseded in several key areas</td>
+</tr>
+<tr>
+<td>November 3–5, 2026</td>
+<td>PBS moved from VM 103 to Docker on Unraid using direct ZFS</td>
+<td><strong>Implemented</strong>; old VM later deleted</td>
+</tr>
+<tr>
+<td>November 2026</td>
+<td>Third Proxmox node added; Raspberry Pi QDevice removed</td>
+<td><strong>Implemented</strong> three-vote quorum; HA remains disabled</td>
+</tr>
+<tr>
+<td>November 13, 2026</td>
+<td>Old node 02 replaced by Dell OptiPlex 5000 SFF; Immich on new node</td>
+<td><strong>Implemented and verified</strong></td>
+</tr>
+<tr>
+<td>November 14, 2026</td>
+<td>Authentik moved to Lenovo node 03; updated backup and rack verification</td>
+<td><strong>Implemented and verified</strong></td>
+</tr>
+<tr>
+<td>November 2026</td>
+<td>Four MCP integrations plus Komodo coverage of three Docker hosts</td>
+<td><strong>Implemented and end-to-end verified</strong> at the defined read-only tool boundary</td>
+</tr>
+<tr>
+<td>November 14, 2026</td>
+<td>Unified roadmap revised for a one-time AI enhancement audit and future observer phases A/B/C</td>
+<td><strong>Roadmap updated; new audit/extension phases are not yet implemented</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Roadmap maintenance rule:</strong> Update this file when project goals, milestone status, or architectural direction changes. Record detailed implementation procedures and verified service settings in their existing dedicated documents. The roadmap is a plan, not proof that a future capability is already deployed.</p>
+<hr />
+<p><em>Homelab v3.0 Master Roadmap | v8.0 | Current plan, verified architecture, and AI-assisted evolution | 2026-11-14</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.60a45f97.min.js"></script>
+      
+    
+  </body>
+</html>
