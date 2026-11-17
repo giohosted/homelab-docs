@@ -34,7 +34,7 @@
 
 Resource allocations and guest placement were verified through the live Proxmox integration on November 13, 2026.
 
-> AdGuard Home runs as an LXC, not a Docker container. It is managed through Proxmox, not Dockman.
+> AdGuard Home runs as an LXC, not a Docker container. It is managed through Proxmox, independently of the Docker management tools.
 
 ---
 
@@ -132,13 +132,12 @@ These are the previously documented settings and were not reverified during the 
 
 ## DNS Rewrites
 
-All documented `*.giohosted.com` service rewrites point to Traefik at `192.168.30.11`. Rewrites are managed on the primary (dns-prod-01) and synced to the secondary automatically.
+The documented service-specific `*.giohosted.com` rewrites below point to Traefik at `192.168.30.11`. Rewrites are managed on the primary (dns-prod-01) and synced to the secondary automatically. The operator removed the retired Dockman rewrite in November 2026; this table no longer includes it.
 
 | Domain | Answer |
 |---|---|
 | `traefik.giohosted.com` | 192.168.30.11 |
 | `auth.giohosted.com` | 192.168.30.11 |
-| `dockman.giohosted.com` | 192.168.30.11 |
 | `sonarr-tv.giohosted.com` | 192.168.30.11 |
 | `sonarr-anime.giohosted.com` | 192.168.30.11 |
 | `radarr-1080p.giohosted.com` | 192.168.30.11 |

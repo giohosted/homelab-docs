@@ -5,7 +5,7 @@
 **Proxmox Host:** pve-prod-01 (192.168.10.11)  
 **Proxmox VMID:** 107  
 **Status:** Active — Proxmox, Unraid, Komodo and UniFi integrations verified end-to-end  
-**Last Updated:** 2026-11-14
+**Last Updated:** 2026-11-16
 
 ---
 
@@ -979,7 +979,7 @@ Keep credentials in approved secure storage (Bitwarden where verified), not in G
 ## Operations and Maintenance
 ### Management Approach
 
-The observer is managed manually through SSH and the CLI. No Dockman instance is installed on `observer-prod-01`; the Dockman instance on `docker-prod-01` does not manage this observer's Docker engine. Docker Compose changes and service restarts require the operator's explicit authorization.
+The observer is managed manually through SSH and the CLI. Dockman was retired and removed from `docker-prod-01` in November 2026, and no Dockman instance is installed on `observer-prod-01`. Docker Compose changes and service restarts require the operator's explicit authorization.
 
 ### MCP Stacks
 
@@ -1032,7 +1032,7 @@ The implemented defense-in-depth model has **separate upstream identities, separ
 5. **MCP authentication difference:** Proxmox and Unraid use local MCP bearer authentication supplied by protected tunnel headers. Komodo intentionally runs `MCP_AUTH_ENABLED=false`; **UniFi also has no separate local bearer**: eligible local processes on observer loopback are not individually authenticated. Restrict observer access and preserve the dedicated upstream permissions, read-only mode and tool exclusions.
 6. **Secrets:** MCP `.env`, runtime key, and authorization files are excluded from Git. The Komodo and UniFi tunnels have **no** local MCP bearer-header files by design. No plaintext secrets are reproduced here.
 7. **Information exposure:** Even non-mutating tools may return sensitive logs, host/network configuration, scripts, API-key metadata, or potentially secrets. Komodo's secret-scrubbing mechanism is best-effort; full Docker Inspect and Compose/TOML exports remain excluded. For retained detailed `*_info` tools, review actual output before sharing.
-8. **Operational separation:** No Docker socket is mounted into any observer MCP container; the observer's Docker daemon is not remotely administered by Dockman or the Komodo MCP.
+8. **Operational separation:** No Docker socket is mounted into any observer MCP container; the observer's Docker daemon is not remotely administered by the retired Dockman application or the Komodo MCP. The Komodo MCP provides the documented read-only observational access, not host-level Docker control.
 
 Any change to upstream privileges, toolsets, local authentication, excluded tools, secret storage, or network exposure requires explicit review and post-change tool-inventory and end-to-end verification. No write automation is implemented.
 
@@ -1074,7 +1074,7 @@ No elevated permissions should be introduced for convenience. Revisit informatio
     
 - `runbooks/backup-schedule.md` — Backup coverage and verification.
     
-- `services/infra/dockman.md` — Local Docker management separation.
+- `services/infra/dockman.md` — Retired Docker management UI and verified decommission history.
 - `services/media/immich.md` — Remote Periphery deployment and adopted Immich Compose stack.
 - `services/infra/authentik.md` — Remote Periphery deployment and adopted Authentik Compose stack.
     

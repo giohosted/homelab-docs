@@ -1,7 +1,7 @@
 # Updating a Docker Container
 
 **Applies to:** docker-prod-01, auth-prod-01, immich-prod-01, observer-prod-01  
-**Last Updated:** 2026-11-14
+**Last Updated:** 2026-11-16
 
 ---
 
@@ -19,7 +19,7 @@ Updating a container generally involves:
 
 Docker Compose updates can be performed through supported management interfaces or directly through the CLI.
 
-Komodo provides centralized update visibility and stack management. Dockman remains documented for supported operations on docker-prod-01.
+Komodo provides centralized update visibility and stack management for its managed hosts. Dockman was retired and removed from docker-prod-01 in November 2026; use Komodo or the controlled Docker Compose CLI workflow below.
 
 Not all services should follow the same update procedure. Applications with databases, migrations, or special dependencies may require service-specific runbooks.
 
@@ -235,52 +235,29 @@ Application-specific configuration should be validated independently when possib
 
 ---
 
-## Method 1 — Dockman (UI)
+## Method 1 — Komodo (UI)
 
-**Supported host:** docker-prod-01  
-**URL:** `https://dockman.giohosted.com`
+**Supported scope:** Docker hosts and Compose stacks registered with Komodo (including docker-prod-01, auth-prod-01, and immich-prod-01). Verify the current registration and permissions before taking action. `observer-prod-01` continues to use its documented CLI and systemd procedures for the MCP/tunnel services.
 
-Dockman provides a web interface for managing Docker Compose stacks on docker-prod-01.
-
-It does not manage Docker engines on observer-prod-01, auth-prod-01, or immich-prod-01.
-
-Komodo is also available for centralized update monitoring and stack management. The procedures below describe Dockman's established behavior.
+Komodo provides the centralized UI for update visibility and managed Compose stacks. **Automatic stack deployment remains disabled** under the documented November 14 configuration; image update detection and pre-pull do not mean an update has been deployed.
 
 ### Procedure
 
-1. Open `https://dockman.giohosted.com`.
-2. Sign in.
-3. Locate the stack containing the application.
-4. Review the running containers and their status.
-5. Review the application's release notes and backup requirements.
-6. Select the appropriate update or image-pull operation.
-7. Check which services will be recreated.
-8. Apply the update.
-9. Verify the affected containers and application functionality.
+1. Open the existing internal Komodo instance and select the correct server and Compose stack.
+2. Review the current container status, image references and whether an update is available.
+3. Read release notes and verify backups, dependencies, persistent data, and the repository working tree.
+4. Review **exactly which services** the proposed operation would recreate; use the CLI method when precise single-service scope or rollback control is needed.
+5. Perform only the reviewed, operator-approved update.
+6. Verify container health **and application functionality**, including dependent services, then inspect logs.
+7. If any Compose files changed, review and commit those changes through `runbooks/git-workflow.md`.
 
-**Important:** Do not assume that every Dockman update action affects only one container. Confirm the scope of the selected operation before proceeding.
-
-Some operations can affect multiple services in the same Compose stack.
+**Do not assume** that every Komodo update action affects only the selected container. A Compose-stack operation can recreate multiple services depending on its settings and dependencies. Current UI labels/actions should be checked before use.
 
 ### Updating Individual Services
 
-Where the installed Dockman version supports individual service operations, prefer targeted changes when updating one component should not interrupt unrelated services.
+For independent Compose services, prefer a targeted, reviewed operation instead of needlessly restarting a full stack. Where the UI cannot clearly guarantee the intended scope, use **Method 2 — CLI** with explicit service names and dependencies.
 
-For example, updating one ARR application should not automatically require restarting the entire media stack.
-
-However, targeted updates are appropriate only when the application does not require coordinated changes to its dependencies.
-
-### Dockman Self-Updates
-
-**Do not rely on Dockman to update its own running container.**
-
-During an earlier Dockman self-update, the original container stopped and the replacement container was created but not started.
-
-The service was recovered through Docker Compose on docker-prod-01.
-
-For future Dockman self-updates, prefer the CLI.
-
-See `services/infra/dockman.md`.
+Applications requiring coordinated migrations (notably Authentik and Immich) must follow their service-specific runbooks regardless of UI availability.
 
 ---
 
@@ -292,7 +269,6 @@ They are the preferred method for:
 
 - observer-prod-01
 - Services requiring precise dependency control
-- Dockman itself
 - Troubleshooting failed updates
 - Service-specific maintenance procedures
 - Critical infrastructure services requiring controlled image and configuration verification
@@ -700,7 +676,7 @@ The Proxmox MCP service runs as a dedicated Docker Compose stack on the AI Obser
 
 It is managed through SSH and the CLI.
 
-Dockman is not installed on observer-prod-01 and does not manage this container remotely.
+The observer MCP container is managed through SSH and the Docker Compose CLI, not through the retired Dockman service.
 
 ### Update Requirements
 
@@ -903,74 +879,11 @@ Update and verify one component at a time to simplify troubleshooting and rollba
 
 ---
 
-## Updating Dockman Itself
+## Retired Management Tool — Dockman (Historical)
 
-**Host:** docker-prod-01  
-**Stack:** `/opt/stacks/dockman`  
-**Service:** `dockman`
+Dockman was decommissioned from `docker-prod-01` in November 2026. Its container, Komodo stack registration, `/opt/stacks/dockman/` Compose directory and `/opt/appdata/dockman/` state were removed. Its former self-update procedure is no longer applicable and has been removed from this active runbook.
 
-Dockman should be updated through Docker Compose rather than through its own web UI.
-
-### Procedure
-
-SSH into docker-prod-01:
-
-```bash
-ssh gio@192.168.30.11
-```
-
-Navigate to its stack:
-
-```bash
-cd /opt/stacks/dockman
-```
-
-Inspect the current deployment:
-
-```bash
-docker compose ps
-docker compose images
-```
-
-After reviewing the release and confirming configuration backup readiness, update the Dockman service:
-
-```bash
-docker compose pull dockman
-
-docker compose up -d --no-deps dockman
-```
-
-Verify:
-
-```bash
-docker compose ps
-
-docker compose logs --tail 50 dockman
-```
-
-Finally, reopen:
-
-`https://dockman.giohosted.com`
-
-Confirm that the web UI loads and can display the expected Compose stacks.
-
-### Recovery — Replacement Container Created but Not Started
-
-During a previous Dockman self-update, the existing container stopped and the replacement was created but not started.
-
-The service was successfully restored with:
-
-```bash
-cd /opt/stacks/dockman
-
-sudo docker compose up -d --no-deps dockman
-```
-
-If Dockman becomes unavailable after an update, inspect the Compose status and logs through SSH before attempting further changes.
-
-Do not repeatedly perform self-updates through the unavailable UI.
-
-See `services/infra/dockman.md`.
+The former deployment and update incident remain recorded in `services/infra/dockman.md` for historical reference. For current Docker management use **Method 1 — Komodo (UI)** or **Method 2 — CLI** as appropriate.
 
 ---
 
@@ -1041,7 +954,7 @@ Do not assume that rolling back the MCP container will resolve a problem caused 
 
 | Host | IP | Stacks Path | Management |
 |---|---|---|---|
-| docker-prod-01 | 192.168.30.11 | `/opt/stacks` | Komodo, Dockman, and CLI |
+| docker-prod-01 | 192.168.30.11 | `/opt/stacks` | Komodo and CLI |
 | auth-prod-01 | 192.168.30.13 | `/opt/stacks` | Komodo and CLI |
 | immich-prod-01 | 192.168.30.14 | `/opt/stacks` | Komodo and CLI |
 | observer-prod-01 | 192.168.30.17 | `/opt/stacks` | CLI; Komodo integration where configured |
@@ -1056,7 +969,7 @@ Management interface availability and permissions should be confirmed before usi
 | OpenAI tunnel-client | Native systemd | `sudo systemctl` |
 | Tunnel configuration | Protected local files | SSH and CLI |
 
-Dockman on docker-prod-01 does not manage the observer.
+Dockman has been retired; manage the observer through its documented CLI and systemd procedures.
 
 ---
 
@@ -1077,7 +990,7 @@ Dockman on docker-prod-01 does not manage the observer.
 - Authentik updates must follow `runbooks/authentik-update.md`.
 - Immich updates may require version-specific migration and backup procedures.
 - Traefik updates require routing, TLS, and application verification.
-- Dockman should be updated through the CLI.
+- Dockman has been decommissioned; do not use legacy Dockman update procedures.
 - Proxmox MCP updates must preserve read-only permissions and localhost binding.
 - OpenAI tunnel-client updates are separate from Docker Compose.
 - Do not mark an update successful until its functional checks pass.
@@ -1094,5 +1007,5 @@ Dockman on docker-prod-01 does not manage the observer.
 - `runbooks/ai-observer-operations.md` — AI Observer maintenance, troubleshooting, and recovery.
 - `services/infra/traefik.md` — Reverse-proxy configuration, verified upgrade, security hardening, and rollback.
 - `services/monitoring/beszel.md` — Beszel hub, agents, and persistent runtime state.
-- `services/infra/dockman.md` — Dockman deployment and management.
+- `services/infra/dockman.md` — Retired Dockman deployment and decommission record (historical).
 - `services/infra/ai-observer.md` — Proxmox MCP and OpenAI Secure MCP Tunnel architecture.

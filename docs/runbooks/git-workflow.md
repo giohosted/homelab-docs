@@ -2,7 +2,7 @@
 
 **Applies to:** docker-prod-01, auth-prod-01, immich-prod-01, observer-prod-01 (`/opt/stacks`)  
 **Repo:** `homelab-infra` (private, GitHub)  
-**Last Updated:** 2026-11-14
+**Last Updated:** 2026-11-16
 
 ---
 
@@ -20,7 +20,7 @@ Secrets are excluded from version control, including `.env` files containing API
 
 | Host | Path | What lives there | Status |
 |---|---|---|---|
-| docker-prod-01 | `/opt/stacks` | traefik, arr, books, torrent, dockman, cloudflared, adguardhome-sync, and other application stacks | Active |
+| docker-prod-01 | `/opt/stacks` | traefik, arr, books, torrent, cloudflared, adguardhome-sync, and other application stacks | Active |
 | auth-prod-01 | `/opt/stacks` | authentik, beszel-agent, local Komodo Periphery configuration | Active |
 | immich-prod-01 | `/opt/stacks` | immich, beszel-agent, local Komodo Periphery configuration | Active |
 | observer-prod-01 | `/opt/stacks` | proxmox-mcp, unraid-mcp, komodo-mcp, unifi-mcp; `observer/tunnel-client/` source templates | Active |
@@ -33,12 +33,12 @@ However, GitHub does not contain the complete operational state of each service.
 
 The repository is shared, but each host manages its own deployed workloads.
 
-- **docker-prod-01:** Docker Compose, Komodo, and Dockman.
+- **docker-prod-01:** Docker Compose and Komodo (Dockman decommissioned November 2026).
 - **auth-prod-01:** Docker Compose and Komodo.
 - **immich-prod-01:** Docker Compose and Komodo.
 - **observer-prod-01:** Docker Compose through SSH and CLI; Komodo integration where configured.
 
-The observer does not use Dockman.
+The observer is maintained through its documented SSH/CLI procedures; the former Dockman deployment has been removed from docker-prod-01.
 
 Its four OpenAI Secure MCP Tunnel clients are installed as **native systemd services** rather than Docker Compose stacks. Their Git-tracked copies and sanitized examples are in `observer/tunnel-client/`, separate from active files under `/etc`.
 
@@ -358,9 +358,9 @@ git push origin main
 
 Docker hosts do not necessarily share the same file ownership requirements.
 
-On `docker-prod-01`, Dockman requires specific ownership and permissions so it can modify Compose files.
+On `docker-prod-01`, the previously established `gio:service` ownership and group-writable Compose settings supported Dockman editing, but **Dockman has been retired**. Use permissions appropriate to the current repository operator and service; do not broaden access solely for a removed management UI.
 
-See `runbooks/new-stack-checklist.md`.
+See `runbooks/new-stack-checklist.md` for the existing baseline and per-stack cautions.
 
 Do not apply docker-prod-01's `gio:service` ownership requirements or UID/GID 2000 assumptions automatically to `observer-prod-01`.
 
@@ -1091,7 +1091,7 @@ Never routinely rebase shared published history.
 - `services/monitoring/beszel.md` — Beszel agent configuration and host-specific runtime data.
 - `services/infra/traefik.md` — Reverse proxy, security hardening, and verified November 2026 upgrade.
 - `services/infra/authentik.md` — Authentik deployment and version management.
-- `services/infra/dockman.md` — Docker Compose management on docker-prod-01.
+- `services/infra/dockman.md` — Retired Dockman deployment and November 2026 decommission record.
 - `services/infra/ai-observer.md` — Observer architecture, deployment, and credentials.
 - `runbooks/ai-observer-operations.md` — Observer operations and recovery.
 

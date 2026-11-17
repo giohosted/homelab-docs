@@ -1,13 +1,13 @@
 # New Stack Checklist
 
 **Applies to:** docker-prod-01 (`/opt/stacks`)  
-**Last Updated:** 2026-03-16
+**Last Updated:** 2026-11-16
 
 ---
 
 ## Overview
 
-Every new Docker Compose stack deployed on docker-prod-01 follows this checklist. Steps are mandatory — skipping them causes Dockman autosave failures and potential permission errors on container file writes.
+Use this checklist for new Docker Compose stacks on docker-prod-01. Komodo is the current management UI; Dockman was removed in November 2026. Check permissions for the actual editor, runtime user and service rather than applying legacy Dockman-specific ownership rules indiscriminately.
 
 ---
 
@@ -33,9 +33,9 @@ sudo nano /opt/stacks/<stack-name>/.env
 
 ---
 
-## Step 3 — Fix ownership and permissions
+## Step 3 — Review ownership and permissions
 
-**Always run this after creating files with sudo nano** — files created with sudo are owned by root and cannot be edited by Dockman.
+Files created with `sudo nano` can be owned by `root:root`. Ensure the account expected to maintain the repository can edit tracked Compose files, while keeping `.env` files restricted. The following values are the **previously established docker-prod-01 conventions**, not a new requirement imposed by Komodo.
 ```bash
 sudo chown gio:service /opt/stacks/<stack-name>/compose.yaml
 sudo chmod 664 /opt/stacks/<stack-name>/compose.yaml
@@ -50,7 +50,7 @@ sudo chmod 660 /opt/stacks/<stack-name>/.env
 ### Why these values
 | Path | Owner | Group | Mode | Reason |
 |------|-------|-------|------|--------|
-| `compose.yaml` | `gio` | `service` | `664` | Dockman runs as service user and needs write access |
+| `compose.yaml` | `gio` | `service` | `664` | Previously used for shared group editing; reevaluate group write access for each stack |
 | `.env` | `gio` | `service` | `660` | Secrets must not be world-readable |
 | `/opt/appdata/<app>/` | `2000:2000` (service) | — | `755` | Containers run as PUID/PGID 2000 |
 
@@ -58,17 +58,21 @@ sudo chmod 660 /opt/stacks/<stack-name>/.env
 
 ## Step 4 — Fix appdata ownership
 
-Appdata directories must be owned by `2000:2000` so containers can write to them:
+For containers explicitly configured to run as UID/GID `2000:2000`, the established appdata ownership may be appropriate:
 ```bash
 sudo chown -R 2000:2000 /opt/appdata/<app-name>/
 ```
+
+**Do not run this command against all appdata indiscriminately.** Databases and other containers can have different ownership requirements. Confirm the image user and volume paths before changing permissions.
 
 ---
 
 ## Step 5 — Commit to homelab-infra
 ```bash
 cd /opt/stacks
-git add .
+git status --short
+git add -- <stack-name>/compose.yaml
+git diff --cached
 git commit -m "add <stack-name> compose"
 git push
 ```
@@ -89,5 +93,6 @@ For any service exposed via Traefik, add a DNS rewrite in AdGuard at `192.168.30
 
 - `/opt/appdata` is **not** in git — it contains container state and secrets. It is rsync-backed to NAS nightly (Phase 5).
 - `.env` files are gitignored — never commit real secrets. Use `.env.example` with placeholder values if you want to document required variables.
-- The `service` user on docker-prod-01 is UID/GID 2000 — same as the PUID/PGID used by all containers.
-- This checklist will be superseded when a proper umask or ACL solution is implemented.
+- The documented `service` account/group on docker-prod-01 uses UID/GID 2000 for applicable services; do not assume every container uses that identity.
+- Existing `gio:service` permissions may still be present from the Dockman era, but Komodo does not by itself justify granting group write access. Reassess least privilege when changing a stack.
+- This checklist can be refined if a consistent host-specific umask or ACL policy is implemented.

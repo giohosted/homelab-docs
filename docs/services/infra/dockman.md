@@ -1,4 +1,4 @@
-# Dockman
+# Dockman (Retired)
 
 **Role:** Docker Compose management UI — start, stop, restart, and update containers  
 **Host:** docker-prod-01 (192.168.30.11)  
@@ -6,10 +6,35 @@
 **Compose:** `/opt/stacks/dockman/compose.yaml`  
 **Appdata:** `/opt/appdata/dockman/`  
 **URL:** `https://dockman.giohosted.com`  
-**Status:** Documented active deployment — current container health not independently reverified  
-**Last Updated:** 2026-10-29
+**Status:** Retired / decommissioned — Docker container, Komodo resource, Compose and appdata directories removed  
+**Last Updated:** 2026-11-16
 
 ---
+
+## Decommission — November 2026 (Verified)
+
+Dockman has been retired in favor of **Komodo** for Docker stack management. This document is retained as the historical deployment and troubleshooting record; the old procedures below are **not current operating instructions** and must not be used to recreate Dockman without a separate decision.
+
+**Verified removal:**
+
+- The stopped `dockman` container was removed. Its previous exit code was `143` (SIGTERM); no crash was established.
+- The `dockman` Compose stack resource was deleted from Komodo. Live Komodo inventory subsequently showed no Dockman stack or container.
+- `/opt/stacks/dockman/` (including `compose.yaml` and its Git-excluded `.env`) was removed from `docker-prod-01`.
+- `/opt/appdata/dockman/` (including the Dockman database and configuration) was removed from `docker-prod-01`.
+- No Compose-project-labeled Dockman networks, volumes, or containers remained in the final Docker checks.
+- A read-only search found no remaining `dockman` references in `/opt/appdata/traefik` or `/opt/stacks/traefik`.
+- The operator removed the `dockman.giohosted.com` AdGuard DNS rewrite and Dockman Uptime Kuma monitor.
+- The working tree of `homelab-infra` showed ` D dockman/compose.yaml`. **The Git deletion has not been confirmed committed or pushed**; carry it through the existing Git workflow.
+
+**Current management:** Komodo and Docker Compose CLI are used as appropriate for their supported hosts. Docker Engine access and approval boundaries remain host-specific. On `observer-prod-01`, MCP services continue to be maintained through the documented SSH/CLI workflow, not a centrally writable AI interface.
+
+**Scope / limitations:** Removal of the reverse-proxy route was inferred from absent live Traefik configuration references. This is not a comprehensive external DNS or access-control audit. The historical notes below describe the former deployment, not the current state.
+
+---
+
+## Archived Deployment Record (Historical)
+
+> **Historical only — Dockman is no longer installed.** Paths, URLs, commands, permission requirements and service claims in the remainder of this document record the former deployment and should not be followed as current operational procedures.
 
 ## Overview
 
@@ -395,9 +420,7 @@ The actual latest rsync execution and restoration capability were not reverified
 
 Docker host recovery also depends on the broader Proxmox and NAS backup infrastructure.
 
-**Known issue:** Scheduled PBS backup jobs on both Proxmox nodes were confirmed failing during the October 29, 2026 investigation.
-
-That issue remains open and must not be interpreted as resolved by the existence of the scheduled backup configuration.
+**Historical issue:** Scheduled PBS backup jobs on both Proxmox nodes were confirmed failing during the October 29, 2026 investigation. This described the former PBS deployment; after migration to Docker PBS, successful scheduled backups from all three current nodes and scheduled prune/GC/verification were verified in November 2026. Refer to `runbooks/backup-schedule.md` for current status.
 
 See `runbooks/backup-schedule.md`.
 

@@ -5,7 +5,7 @@
 **Tunnel name:** homelab-v3  
 **Compose:** `/opt/stacks/cloudflared/compose.yaml`  
 **Appdata:** None — stateless  
-**Last Updated:** 2026-11-14
+**Last Updated:** 2026-11-16
 
 ---
 
@@ -370,12 +370,13 @@ These settings reflect the existing deployment. Evaluate origin certificate veri
 
 ## Services NOT Exposed via Tunnel
 
+This table covers services still in scope. Dockman, previously an internal-only admin UI, was retired in November 2026 and has been removed rather than published through the tunnel.
+
 The established documentation excludes these services from Cloudflare Tunnel:
 
 | Service | Reason |
 |---|---|
 | Traefik dashboard | Admin tool — internal only |
-| Dockman | Admin tool — internal only |
 | Proxmox UI | Admin tool — internal only |
 | Unraid UI | Admin tool — internal only |
 | ARR stack | LAN only — no external access required |

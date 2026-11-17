@@ -2,7 +2,7 @@
 
 **Host:** pi-prod-01 (192.168.10.20)
 **Status:** Running
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-11-16
 
 ---
 
@@ -59,11 +59,12 @@ services:
 
 ### Infrastructure (HTTP)
 
+The operator removed the Dockman monitor after decommissioning the application in November 2026. Other monitor entries below retain their previously documented state; they have not been independently re-audited during this cleanup.
+
 | Name | URL |
 |------|-----|
 | Traefik | https://traefik.giohosted.com/dashboard/ |
 | Authentik | https://auth.giohosted.com |
-| Dockman | https://dockman.giohosted.com |
 | AdGuard Primary | http://192.168.30.10:3000 |
 | AdGuard Secondary | http://192.168.30.15:3000 |
 | Beszel | http://192.168.10.20:8090 |

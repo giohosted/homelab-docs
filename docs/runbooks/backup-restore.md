@@ -661,7 +661,7 @@ After restoration:
 - Verify it remains excluded from Git.
 - Do not display its secret values in logs or documentation.
 
-For docker-prod-01, the established Dockman-compatible permissions are:
+For docker-prod-01, these were the established shared-editing permissions during the former Dockman deployment. Dockman has now been removed; apply only permissions that remain appropriate for the current service and repository workflow:
 
 ```bash
 sudo chown gio:service /opt/stacks/<stack>/compose.yaml
@@ -671,7 +671,7 @@ sudo chown gio:service /opt/stacks/<stack>/.env
 sudo chmod 660 /opt/stacks/<stack>/.env
 ```
 
-These permissions are specific to docker-prod-01.
+These permissions are **historical examples**, not blanket requirements of Komodo. For new stacks, check `runbooks/new-stack-checklist.md` and the service account before applying them.
 
 Do not apply them automatically to auth-prod-01, immich-prod-01, or observer-prod-01.
 
@@ -746,7 +746,7 @@ Do not restore unrelated application directories.
 
 ### Step 2 — Stop the Affected Service
 
-Stop the affected service through Dockman or Docker Compose when required for a consistent restore.
+Stop the affected service through an approved, scoped Komodo operation or Docker Compose CLI when required for a consistent restore. Confirm dependent services before any stop.
 
 For a Compose service that can be stopped independently:
 
@@ -818,7 +818,7 @@ For databases, confirm the application can read and use its recovered data.
 
 Plex runs directly on nas-prod-01 under Unraid's Docker management.
 
-It is not managed by Dockman on docker-prod-01 and is not included in the documented Docker-host rsync jobs.
+It is managed directly by Unraid Docker, not by Komodo on docker-prod-01, and is not included in the documented Docker-host rsync jobs.
 
 ### Available Recovery Source — Built-in Plex Database Backups
 
@@ -1273,7 +1273,7 @@ These items should remain open until the corresponding work has been completed a
 - `architecture/storage/nas-prod-01.md` — NAS storage, PBS datastore location, and UPS server.
 - `runbooks/git-workflow.md` — Git repositories, multi-host synchronization, and credential handling.
 - `runbooks/updating-containers.md` — Container updates and maintenance procedures.
-- `services/infra/dockman.md` — Docker management on docker-prod-01.
+- `services/infra/dockman.md` — Retired Dockman deployment and decommission history.
 - `services/media/plex.md` — Plex deployment, persistent storage, and backup requirements.
 - `phases/phase-5-hardening.md` — Planned backup and operational hardening work.
 
